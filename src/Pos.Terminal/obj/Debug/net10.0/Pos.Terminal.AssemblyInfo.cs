@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Pos.Terminal")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4fb9d452435d337f2e595e30e15af4e5b86e4ff0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf4e6869644a712b0233276304340eee6cab0c09")]
 [assembly: System.Reflection.AssemblyProductAttribute("Pos.Terminal")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Pos.Terminal")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

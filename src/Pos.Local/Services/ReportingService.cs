@@ -545,4 +545,110 @@ public sealed class ReportingService
             .Take(200)
             .ToList();
     }
+    
+    // ----------------------------
+    // EXPORT HELPERS
+    // ----------------------------
+    public async Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive)
+    {
+        var sales = await _db.Sales.AsNoTracking()
+            .Where(s => s.CreatedAtUtc >= fromUtcInclusive && s.CreatedAtUtc < toUtcExclusive)
+            .Select(s => new { s.Id, s.CreatedAtUtc, s.ReceiptNo, s.Status, s.CustomerId, s.NetTotal, s.VatTotal, s.GrossTotal })
+            .ToListAsync();
+
+        var customerIds = sales
+            .Where(s => s.CustomerId.HasValue)
+            .Select(s => s.CustomerId!.Value)
+            .Distinct()
+            .ToList();
+
+        var customers = await _db.Customers.AsNoTracking()
+            .Where(c => customerIds.Contains(c.Id))
+            .Select(c => new { c.Id, c.Name })
+            .ToListAsync();
+
+        var customerMap = customers.ToDictionary(c => c.Id, c => c.Name);
+
+        return sales
+            .OrderByDescending(s => s.CreatedAtUtc)
+            .Select(s => new SalesExportRowDto(
+                s.CreatedAtUtc,
+                s.ReceiptNo,
+                s.Status,
+                s.CustomerId.HasValue && customerMap.TryGetValue(s.CustomerId.Value, out var name) ? name : "Walk-in",
+                Money(s.NetTotal),
+                Money(s.VatTotal),
+                Money(s.GrossTotal)
+            ))
+            .ToList();
+    }
+
+    public interface IReportingService
+    {
+        Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+
+        Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
+            DateTime fromUtcInclusive,
+            DateTime toUtcExclusive,
+            string locationCode = "DEFAULT");
+    }
+
+    public async Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
+        DateTime fromUtcInclusive,
+        DateTime toUtcExclusive,
+        string locationCode = "DEFAULT")
+    {
+        locationCode = string.IsNullOrWhiteSpace(locationCode) ? "DEFAULT" : locationCode.Trim();
+
+        var products = await _db.Products.AsNoTracking()
+            .Where(p => p.DeletedAtUtc == null)
+            .Select(p => new { p.Id, p.Sku, p.Name })
+            .ToDictionaryAsync(p => p.Id);
+
+        var adjustments = await _db.Outbox.AsNoTracking()
+            .Where(o => o.EntityType == "inventory_adjustment"
+                        && o.CreatedAtUtc >= fromUtcInclusive
+                        && o.CreatedAtUtc < toUtcExclusive)
+            .Select(o => new { o.CreatedAtUtc, o.PayloadJson })
+            .ToListAsync();
+
+        var rows = new List<PurchaseExportRowDto>();
+
+        foreach (var a in adjustments)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(a.PayloadJson);
+                var root = doc.RootElement;
+
+                var loc = root.TryGetProperty("location_code", out var lc) ? (lc.GetString() ?? "DEFAULT") : "DEFAULT";
+                if (!string.Equals(loc, locationCode, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var pid = root.TryGetProperty("product_id", out var p) ? p.GetGuid() : Guid.Empty;
+                var delta = root.TryGetProperty("delta", out var d) ? d.GetDecimal() : 0m;
+                var reason = root.TryGetProperty("reason", out var r) ? (r.GetString() ?? "Purchase") : "Purchase";
+
+                if (pid == Guid.Empty || delta <= 0m) continue;
+                if (!products.TryGetValue(pid, out var prod))
+                    continue;
+
+                rows.Add(new PurchaseExportRowDto(
+                    a.CreatedAtUtc,
+                    prod.Sku,
+                    prod.Name,
+                    delta.ToString("0.###", CultureInfo.InvariantCulture),
+                    reason
+                ));
+            }
+            catch
+            {
+                // ignore malformed adjustment record
+            }
+        }
+
+        return rows
+            .OrderByDescending(r => r.OccurredAtUtc)
+            .ToList();
+    }
 }

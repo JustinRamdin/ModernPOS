@@ -32,11 +32,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
+      "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
       "projectName": "Pos.Application",
-      "projectPath": "c:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
       "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-      "outputPath": "c:\\ModernPOS\\src\\Pos.Application\\obj\\",
+      "outputPath": "C:\\ModernPOS\\src\\Pos.Application\\obj\\",
       "projectStyle": "PackageReference",
       "centralPackageVersionsManagementEnabled": true,
       "configFilePaths": [
@@ -81,6 +81,7 @@
           "Avalonia.Fonts.Inter": "11.0.6",
           "Avalonia.ReactiveUI": "11.0.6",
           "Avalonia.Themes.Fluent": "11.0.6",
+          "ClosedXML": "0.102.2",
           "Microsoft.AspNetCore.OpenApi": "10.0.0",
           "Microsoft.EntityFrameworkCore": "10.0.0",
           "Microsoft.EntityFrameworkCore.Abstractions": "10.0.0",

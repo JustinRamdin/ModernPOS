@@ -101,3 +101,22 @@ public sealed record CustomerSalesRowDto(
     decimal GrossTotal,
     decimal CurrentBalance
 );
+
+// --- EXPORTS ---
+public sealed record SalesExportRowDto(
+    DateTime OccurredAtUtc,
+    string ReceiptNo,
+    string Status,
+    string CustomerName,
+    decimal NetTotal,
+    decimal VatTotal,
+    decimal GrossTotal
+);
+
+public sealed record PurchaseExportRowDto(
+    DateTime OccurredAtUtc,
+    string Sku,
+    string Name,
+    string QuantityDisplay,
+    string Reason
+);

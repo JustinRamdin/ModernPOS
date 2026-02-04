@@ -87,6 +87,7 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public ObservableCollection<InventoryMovementRowDto> InventoryMovements { get; } = new();
     public ObservableCollection<LowStockRowDto> LowStock { get; } = new();
     public ObservableCollection<CustomerSalesRowDto> CustomerSales { get; } = new();
+     public ObservableCollection<ExportTemplateDefinition> ExportTemplates { get; } = new();
 
     // Commands
     public ICommand RefreshAllCommand { get; }
@@ -102,6 +103,35 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         RefreshAllCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         RefreshInventoryCommand = new AsyncRelayCommand(async _ => await LoadInventoryAsync());
         RefreshLowStockCommand = new AsyncRelayCommand(async _ => await LoadLowStockAsync());
+        
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Sales",
+            "Receipts with totals, customer, and status.",
+            ExportTemplateKind.Sales));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Purchases",
+            "Inventory purchase adjustments captured from the outbox.",
+            ExportTemplateKind.Purchases));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Customers",
+            "Sales totals by customer for the selected period.",
+            ExportTemplateKind.Customers));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Inventory",
+            "Current inventory valuation snapshot.",
+            ExportTemplateKind.Inventory));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Low Stock",
+            "Items with low days remaining based on usage in the period.",
+            ExportTemplateKind.LowStock));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Top Products",
+            "Best-selling products by gross for the period.",
+            ExportTemplateKind.TopProducts));
+        ExportTemplates.Add(new ExportTemplateDefinition(
+            "Profit",
+            "Profit and margin by product for the period.",
+            ExportTemplateKind.Profit));
     }
 
     private static TimeZoneInfo GetTz()

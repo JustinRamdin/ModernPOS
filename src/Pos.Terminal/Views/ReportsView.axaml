@@ -75,15 +75,19 @@
               <StackPanel Spacing="10">
                 <TextBlock Classes="h2" Text="Date Range" />
 
-                <Grid ColumnDefinitions="Auto,180,Auto,180,*">
-                  <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="From" Margin="0,0,8,0"/>
-                  <DatePicker Grid.Column="1" SelectedDate="{Binding FromDate}"/>
+                <DockPanel LastChildFill="True">
+                  <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="12">
+                    <TextBlock VerticalAlignment="Center" Text="From" />
+                    <DatePicker Width="170" SelectedDate="{Binding FromDate}" />
 
-                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="To" Margin="14,0,8,0"/>
-                  <DatePicker Grid.Column="3" SelectedDate="{Binding ToDate}"/>
+                    <TextBlock VerticalAlignment="Center" Text="To" />
+                    <DatePicker Width="170" SelectedDate="{Binding ToDate}" />
+                  </StackPanel>
 
-                  <TextBlock Grid.Column="4" Classes="muted" VerticalAlignment="Center" Text="Tip: change dates then Refresh All" Margin="14,0,0,0"/>
-                </Grid>
+                  <TextBlock DockPanel.Dock="Right" Classes="muted" VerticalAlignment="Center"
+                             Text="Tip: change dates then Refresh All" />
+                </DockPanel>
+
               </StackPanel>
             </Border>
 
@@ -423,6 +427,41 @@
 
               </StackPanel>
             </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+            <!-- EXPORT -->
+      <TabItem Header="Export">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="h2" Text="Export Templates" />
+                <TextBlock Classes="muted" Text="Select a template to preview data, filter by period, and export to Excel." />
+              </StackPanel>
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding ExportTemplates}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="card" Margin="0,0,0,10">
+                    <DockPanel LastChildFill="True">
+                      <StackPanel DockPanel.Dock="Left" Spacing="4">
+                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                        <TextBlock Classes="muted" Text="{Binding Description}" />
+                      </StackPanel>
+                      <Button DockPanel.Dock="Right"
+                              Classes="primary"
+                              Content="Open"
+                              Click="OpenExportTemplate_Click" />
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
           </StackPanel>
         </ScrollViewer>

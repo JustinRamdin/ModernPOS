@@ -19,8 +19,12 @@ C:\Users\Justin\.nuget\packages\avalonia.skia\11.0.6\lib\net6.0\Avalonia.Skia.dl
 C:\Users\Justin\.nuget\packages\avalonia.themes.fluent\11.0.6\lib\net6.0\Avalonia.Themes.Fluent.dll
 C:\Users\Justin\.nuget\packages\avalonia.win32\11.0.6\lib\net6.0\Avalonia.Win32.dll
 C:\Users\Justin\.nuget\packages\avalonia.x11\11.0.6\lib\net6.0\Avalonia.X11.dll
+C:\Users\Justin\.nuget\packages\closedxml\0.102.2\lib\netstandard2.1\ClosedXML.dll
+C:\Users\Justin\.nuget\packages\documentformat.openxml\2.16.0\lib\netstandard2.0\DocumentFormat.OpenXml.dll
 C:\Users\Justin\.nuget\packages\dynamicdata\7.9.5\lib\net6.0\DynamicData.dll
+C:\Users\Justin\.nuget\packages\excelnumberformat\1.1.0\lib\netstandard2.0\ExcelNumberFormat.dll
 C:\Users\Justin\.nuget\packages\harfbuzzsharp\7.3.0\lib\net6.0\HarfBuzzSharp.dll
+C:\Users\Justin\.nuget\packages\irony.netcore\1.0.11\lib\netstandard1.6\Irony.dll
 C:\Users\Justin\.nuget\packages\microcom.runtime\0.11.0\lib\net5.0\MicroCom.Runtime.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\Microsoft.CSharp.dll
 C:\Users\Justin\.nuget\packages\microsoft.data.sqlite.core\10.0.0\lib\net8.0\Microsoft.Data.Sqlite.dll
@@ -45,10 +49,11 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\Micro
 C:\Users\Justin\.nuget\packages\microsoft.win32.systemevents\6.0.0\lib\net6.0\Microsoft.Win32.SystemEvents.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\mscorlib.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\netstandard.dll
-c:\ModernPOS\src\Pos.Application\obj\Debug\net10.0\ref\Pos.Application.dll
-c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\ref\Pos.Domain.dll
-c:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\ref\Pos.Local.dll
+C:\ModernPOS\src\Pos.Application\obj\Debug\net10.0\ref\Pos.Application.dll
+C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\ref\Pos.Domain.dll
+C:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\ref\Pos.Local.dll
 C:\Users\Justin\.nuget\packages\reactiveui\18.3.1\lib\net6.0\ReactiveUI.dll
+C:\Users\Justin\.nuget\packages\sixlabors.fonts\1.0.0\lib\netcoreapp3.1\SixLabors.Fonts.dll
 C:\Users\Justin\.nuget\packages\skiasharp\2.88.6\lib\net6.0\SkiaSharp.dll
 C:\Users\Justin\.nuget\packages\splat\14.4.1\lib\net6.0\Splat.dll
 C:\Users\Justin\.nuget\packages\sqlitepclraw.bundle_e_sqlite3\2.1.11\lib\netstandard2.0\SQLitePCLRaw.batteries_v2.dll
@@ -105,6 +110,7 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\Syste
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.FileSystem.Watcher.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.IsolatedStorage.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.MemoryMappedFiles.dll
+C:\Users\Justin\.nuget\packages\system.io.packaging\6.0.0\lib\net6.0\System.IO.Packaging.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.Pipelines.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.Pipes.AccessControl.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.IO.Pipes.dll
@@ -217,3 +223,4 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\Syste
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\System.Xml.XPath.XDocument.dll
 C:\Users\Justin\.nuget\packages\tmds.dbus.protocol\0.15.0\lib\net6.0\Tmds.DBus.Protocol.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\10.0.2\ref\net10.0\WindowsBase.dll
+C:\Users\Justin\.nuget\packages\xlparser\1.5.2\lib\netstandard1.6\XLParser.dll

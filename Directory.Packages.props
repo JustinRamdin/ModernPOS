@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- ASP.NET OpenAPI -->
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="11.0.6" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <!-- EF Core (keep all at SAME version) -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
+    <!-- PostgreSQL EF provider (available on your NuGet feed) -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <!-- Avalonia -->
+    <PackageVersion Include="Avalonia" Version="11.0.6" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.0.6" />
+    <PackageVersion Include="Avalonia.ReactiveUI" Version="11.0.6" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.0.6" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.0.6" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.2.1" />
+    <PackageVersion Include="System.Net.Http.Json" Version="10.0.2" />
+  </ItemGroup>
+</Project>

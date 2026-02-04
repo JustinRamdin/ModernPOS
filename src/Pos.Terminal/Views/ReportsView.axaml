@@ -1,0 +1,433 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pos.Terminal.Views.ReportsView">
+
+  <UserControl.Styles>
+    <!-- Card style consistent with TerminalView -->
+    <Style Selector="Border.card">
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="14" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
+
+    <Style Selector="Button.ghost">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,6" />
+    </Style>
+
+    <!-- Tab spacing -->
+    <Style Selector="TabControl">
+      <Setter Property="Margin" Value="0,0,0,0" />
+    </Style>
+
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="12,8" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*" Margin="16">
+
+    <!-- Header / toolbar -->
+    <Border Classes="card" Padding="14" Margin="0,0,0,12">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Left">
+          <TextBlock Classes="h1" Text="Reports" />
+          <TextBlock Classes="muted" Text="Z report, profit, inventory value, movements, low stock, and customer sales." />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Classes="muted" Text="{Binding Status}" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <Button Classes="primary" Content="Refresh All" Command="{Binding RefreshAllCommand}" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <TabControl Grid.Row="1">
+
+      <!-- Z REPORT / SALES -->
+      <TabItem Header="Z Report">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <!-- Date range -->
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="h2" Text="Date Range" />
+
+                <Grid ColumnDefinitions="Auto,180,Auto,180,*">
+                  <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="From" Margin="0,0,8,0"/>
+                  <DatePicker Grid.Column="1" SelectedDate="{Binding FromDate}"/>
+
+                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="To" Margin="14,0,8,0"/>
+                  <DatePicker Grid.Column="3" SelectedDate="{Binding ToDate}"/>
+
+                  <TextBlock Grid.Column="4" Classes="muted" VerticalAlignment="Center" Text="Tip: change dates then Refresh All" Margin="14,0,0,0"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- Summary cards -->
+            <Grid ColumnDefinitions="*,*,*,*">
+              <Border Classes="card" Margin="0,0,10,0">
+                <StackPanel>
+                  <TextBlock Classes="muted" Text="Receipts"/>
+                  <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding ReceiptCount}"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Classes="card" Margin="0,0,10,0">
+                <StackPanel>
+                  <TextBlock Classes="muted" Text="Net"/>
+                  <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding NetTotal, StringFormat='${0:0.00}'}"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="2" Classes="card" Margin="0,0,10,0">
+                <StackPanel>
+                  <TextBlock Classes="muted" Text="VAT"/>
+                  <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding VatTotal, StringFormat='${0:0.00}'}"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="3" Classes="card">
+                <StackPanel>
+                  <TextBlock Classes="muted" Text="Gross"/>
+                  <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding GrossTotal, StringFormat='${0:0.00}'}"/>
+                  <TextBlock Classes="muted" Text="{Binding AvgGross, StringFormat='Avg: ${0:0.00}'}"/>
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <!-- Tender Breakdown -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Tender Breakdown" />
+
+                <Grid ColumnDefinitions="*,*,*,*">
+                  <TextBlock Text="{Binding CashTotal, StringFormat='Cash: ${0:0.00}'}" Margin="0,0,10,0"/>
+                  <TextBlock Grid.Column="1" Text="{Binding DebitTotal, StringFormat='Debit: ${0:0.00}'}" Margin="0,0,10,0"/>
+                  <TextBlock Grid.Column="2" Text="{Binding CreditTotal, StringFormat='Credit: ${0:0.00}'}" Margin="0,0,10,0"/>
+                  <TextBlock Grid.Column="3" Text="{Binding OnAccountTotal, StringFormat='On Account: ${0:0.00}'}"/>
+                </Grid>
+
+                <TextBlock Classes="muted" Text="{Binding ChangeGiven, StringFormat='Change given: ${0:0.00}'}"/>
+                <TextBlock FontWeight="Bold" Text="{Binding ExpectedCash, StringFormat='Expected cash in drawer: ${0:0.00}'}"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Sales by Day -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Sales by Day" />
+
+                <Grid ColumnDefinitions="160,100,*,*,*">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="Date"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Receipts"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="Net"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="VAT"/>
+                  <TextBlock Grid.Column="4" FontWeight="Bold" Opacity="0.8" Text="Gross"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding SalesByDay}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="160,100,*,*,*" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding Day}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ReceiptCount}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding NetTotal, StringFormat='${0:0.00}'}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding VatTotal, StringFormat='${0:0.00}'}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding GrossTotal, StringFormat='${0:0.00}'}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Top Products -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Top Products (by Gross)" />
+
+                <Grid ColumnDefinitions="120,*,120,140">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="SKU"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Item"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="Qty"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Gross"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding TopProducts}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="120,*,120,140" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding Sku}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding QuantityDisplay}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding GrossTotal, StringFormat='${0:0.00}'}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- PROFIT -->
+      <TabItem Header="Profit">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Profit Summary" />
+                <TextBlock Text="{Binding SalesGross, StringFormat='Sales (Gross): ${0:0.00}'}"/>
+                <TextBlock Text="{Binding Cogs, StringFormat='COGS: ${0:0.00}'}"/>
+                <TextBlock FontWeight="Bold" Text="{Binding GrossProfit, StringFormat='Gross Profit: ${0:0.00}'}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Classes="muted" Text="{Binding GrossMarginPct}"/>
+                  <TextBlock Classes="muted" Text="%" />
+                </StackPanel>
+
+                <TextBlock Classes="muted" Margin="0,6,0,0"
+                           Text="Note: COGS uses current Product.CostPrice. For historical cost accuracy, store cost on SaleLine at sale time."/>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Profit by Product" />
+
+                <Grid ColumnDefinitions="120,*,120,120,120">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="SKU"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Item"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="Qty"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Profit"/>
+                  <TextBlock Grid.Column="4" FontWeight="Bold" Opacity="0.8" Text="Margin"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding ProfitByProduct}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="120,*,120,120,120" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding Sku}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding QuantityDisplay}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding GrossProfit, StringFormat='${0:0.00}'}"/>
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
+                          <TextBlock Text="{Binding GrossMarginPct}"/>
+                          <TextBlock Text="%"/>
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- INVENTORY -->
+      <TabItem Header="Inventory Value">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                  <TextBlock VerticalAlignment="Center" Text="Location" Margin="0,0,8,0"/>
+                  <TextBox Width="160" Text="{Binding LocationCode}" Watermark="DEFAULT"/>
+                </StackPanel>
+                <Button DockPanel.Dock="Right" Classes="primary" Content="Refresh" Command="{Binding RefreshInventoryCommand}"/>
+              </DockPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="120,*,110,140,140,140">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="SKU"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Item"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="On hand"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Sell value"/>
+                  <TextBlock Grid.Column="4" FontWeight="Bold" Opacity="0.8" Text="Cost value"/>
+                  <TextBlock Grid.Column="5" FontWeight="Bold" Opacity="0.8" Text="Margin"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding InventoryValuation}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="120,*,110,140,140,140" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding Sku}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding OnHandDisplay}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding SellingValue, StringFormat='${0:0.00}'}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding CostValue, StringFormat='${0:0.00}'}"/>
+                        <TextBlock Grid.Column="5" Text="{Binding EstimatedGrossMargin, StringFormat='${0:0.00}'}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- MOVEMENTS -->
+      <TabItem Header="Movements">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <TextBlock Classes="muted" Text="Movements include sales (negative) and manual adjustments (from outbox inventory_adjustment)." />
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="180,80,120,*,120">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="Time (UTC)"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Type"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="SKU"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Reason"/>
+                  <TextBlock Grid.Column="4" FontWeight="Bold" Opacity="0.8" Text="Delta"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding InventoryMovements}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="180,80,120,*,120" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding OccurredAtUtc}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Type}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Sku}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Reason}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding DeltaDisplay}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- LOW STOCK -->
+      <TabItem Header="Low Stock">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                  <TextBlock VerticalAlignment="Center" Text="Location" Margin="0,0,8,0"/>
+                  <TextBox Width="140" Text="{Binding LocationCode}" Watermark="DEFAULT" Margin="0,0,14,0"/>
+
+                  <TextBlock VerticalAlignment="Center" Text="Lookback days" Margin="0,0,8,0"/>
+                  <TextBox Width="60" Text="{Binding LookbackDays}" />
+                </StackPanel>
+                <Button DockPanel.Dock="Right" Classes="primary" Content="Refresh" Command="{Binding RefreshLowStockCommand}"/>
+              </DockPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="120,*,110,140,140,140">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="SKU"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Item"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="On hand"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Avg/day (base)"/>
+                  <TextBlock Grid.Column="4" FontWeight="Bold" Opacity="0.8" Text="Days left"/>
+                  <TextBlock Grid.Column="5" FontWeight="Bold" Opacity="0.8" Text="Reorder (base)"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding LowStock}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="120,*,110,140,140,140" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding Sku}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding OnHandDisplay}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding AvgDailyUsageBase}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding DaysRemaining}"/>
+                        <TextBlock Grid.Column="5" Text="{Binding SuggestedReorderBase}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- CUSTOMERS -->
+      <TabItem Header="Customers">
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+
+            <Border Classes="card">
+              <TextBlock Classes="muted" Text="Sales by customer for the selected date range (uses Sale.CustomerId)." />
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,120,140,140">
+                  <TextBlock Grid.Column="0" FontWeight="Bold" Opacity="0.8" Text="Customer"/>
+                  <TextBlock Grid.Column="1" FontWeight="Bold" Opacity="0.8" Text="Receipts"/>
+                  <TextBlock Grid.Column="2" FontWeight="Bold" Opacity="0.8" Text="Gross"/>
+                  <TextBlock Grid.Column="3" FontWeight="Bold" Opacity="0.8" Text="Balance"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding CustomerSales}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="*,120,140,140" Margin="0,0,0,6">
+                        <TextBlock Grid.Column="0" Text="{Binding CustomerName}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ReceiptCount}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding GrossTotal, StringFormat='${0:0.00}'}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding CurrentBalance, StringFormat='${0:0.00}'}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+    </TabControl>
+  </Grid>
+</UserControl>

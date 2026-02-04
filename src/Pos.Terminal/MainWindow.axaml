@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.Terminal.MainWindow"
+        Width="1100" Height="700"
+        Title="ModernPOS Terminal"
+        Background="{StaticResource AppBackgroundBrush}">
+
+  <!-- ✅ Styles MUST live here (not inside Grid children) -->
+  <Window.Styles>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushLight}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="10,6"/>
+    </Style>
+
+    <Style Selector="Button:pointerover">
+      <Setter Property="Background" Value="#EFF6FF"/>
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+    </Style>
+
+    <Style Selector="Button:pressed">
+      <Setter Property="Background" Value="#DBEAFE"/>
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="240,*" RowDefinitions="Auto,*">
+
+    <!-- Left Sidebar -->
+    <Border Grid.RowSpan="2"
+            Background="{StaticResource SidebarBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrushLight}"
+            BorderThickness="0,0,1,0"
+            Padding="14">
+
+      <StackPanel>
+        <TextBlock Text="ModernPOS"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   Foreground="{StaticResource PrimaryTextBrush}"
+                   Margin="0,0,0,18"/>
+
+        <Button Content="Terminal" Click="NavTerminal_Click" Margin="0,0,0,8"/>
+        <Button Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
+        <Button Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
+        <Button Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
+        <Button Content="Settings" IsEnabled="False" Margin="0,0,0,8"/>
+
+        <Border Height="1"
+                Background="{StaticResource BorderBrushLight}"
+                Margin="0,16,0,10"/>
+
+        <TextBlock Text="{Binding Status}"
+                   Foreground="{StaticResource SecondaryTextBrush}"
+                   TextWrapping="Wrap"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Top Bar -->
+    <Border Grid.Column="1"
+            Padding="12"
+            Background="{StaticResource AppBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrushLight}"
+            BorderThickness="0,0,0,1">
+
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Left"
+                   Text="{Binding PageTitle}"
+                   Foreground="{StaticResource PrimaryTextBrush}"
+                   FontSize="16"
+                   FontWeight="Bold" />
+
+      </DockPanel>
+    </Border>
+
+    <!-- Main Content -->
+    <Border Grid.Row="1"
+            Grid.Column="1"
+            Padding="0"
+            Background="{StaticResource AppBackgroundBrush}">
+      <ContentControl Content="{Binding CurrentView}" />
+    </Border>
+
+  </Grid>
+</Window>

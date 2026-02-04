@@ -1,0 +1,211 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pos.Terminal.Views.InventoryView">
+
+  <Grid ColumnDefinitions="340,*"
+        RowDefinitions="Auto,*"
+        Margin="12">
+
+    <!-- Top bar -->
+    <Border Grid.ColumnSpan="2"
+            Padding="10"
+            CornerRadius="8"
+            BorderThickness="1"
+            Margin="0,0,0,12">
+      <DockPanel>
+
+        <TextBlock DockPanel.Dock="Left"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Text="Inventory" />
+
+        <StackPanel DockPanel.Dock="Right"
+                    Orientation="Horizontal">
+          <Button Content="New" Margin="0,0,8,0" Click="New_Click"/>
+          <Button Content="Save" Margin="0,0,8,0" Click="Save_Click"/>
+          <Button Content="Delete" Margin="0,0,8,0" Click="Delete_Click"/>
+          <Button Content="Refresh" Click="Refresh_Click"/>
+        </StackPanel>
+
+      </DockPanel>
+    </Border>
+
+    <!-- LEFT: product list -->
+    <Border Grid.Row="1"
+            Padding="10"
+            CornerRadius="8"
+            BorderThickness="1"
+            Margin="0,0,12,0">
+      <DockPanel>
+
+        <TextBox DockPanel.Dock="Top"
+                 Watermark="Search by name or SKU..."
+                 Text="{Binding Search}"
+                 Margin="0,0,0,10"/>
+
+        <TextBlock DockPanel.Dock="Top"
+                   Text="{Binding ListStatus}"
+                   Opacity="0.7"
+                   Margin="0,0,0,10"/>
+
+        <ListBox ItemsSource="{Binding Products}"
+                 SelectedItem="{Binding Selected}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="8"
+                      CornerRadius="6"
+                      BorderThickness="1"
+                      Margin="0,0,0,6">
+                <StackPanel>
+                  <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                  <TextBlock Opacity="0.7" Text="{Binding SkuLine}" />
+                  <TextBlock Opacity="0.7" Text="{Binding PriceLine}" />
+                  <TextBlock Opacity="0.7" Text="{Binding FlagsLine}" />
+                  <TextBlock Opacity="0.7" Text="{Binding StockLine}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+      </DockPanel>
+    </Border>
+
+    <!-- RIGHT: editor -->
+    <Border Grid.Row="1"
+            Grid.Column="1"
+            Padding="12"
+            CornerRadius="8"
+            BorderThickness="1">
+      <ScrollViewer>
+        <StackPanel>
+
+          <TextBlock FontSize="16"
+                     FontWeight="Bold"
+                     Text="Item Editor"
+                     Margin="0,0,0,8"/>
+
+          <TextBlock Text="{Binding EditorStatus}"
+                     Opacity="0.75"
+                     Margin="0,0,0,12"/>
+
+          <!-- Fields -->
+          <Grid ColumnDefinitions="140,*"
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="SKU" />
+            <TextBox Grid.Row="0" Grid.Column="1"
+                     Text="{Binding EditSku}"
+                     Margin="10,0,0,8"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="Item Name" />
+            <TextBox Grid.Row="1" Grid.Column="1"
+                     Text="{Binding EditName}"
+                     Margin="10,0,0,8"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0"
+                       VerticalAlignment="Top"
+                       Text="Description" />
+            <TextBox Grid.Row="2" Grid.Column="1"
+                     Text="{Binding EditDescription}"
+                     AcceptsReturn="True"
+                     MinHeight="60"
+                     Margin="10,0,0,8"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="Cost Price" />
+            <TextBox Grid.Row="3" Grid.Column="1"
+                     Text="{Binding EditCostPriceText}"
+                     Watermark="0.00"
+                     Margin="10,0,0,8"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="Selling Price (entered)" />
+            <TextBox Grid.Row="4" Grid.Column="1"
+                     Text="{Binding EditSellingPriceText}"
+                     Watermark="0.00"
+                     Margin="10,0,0,0"/>
+          </Grid>
+
+          <!-- Flags -->
+          <Border Padding="10"
+                  CornerRadius="8"
+                  BorderThickness="1"
+                  Margin="0,12,0,0">
+            <StackPanel>
+              <CheckBox Content="VAT Incl (Selling Price includes 12.5% VAT)"
+                        IsChecked="{Binding EditVatInclusive}"
+                        Margin="0,0,0,6"/>
+
+              <CheckBox Content="Length (Stock measured in Feet &amp; Inches; stored as total inches)"
+                        IsChecked="{Binding EditIsLength}"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Stock -->
+          <Border Padding="10"
+                  CornerRadius="8"
+                  BorderThickness="1"
+                  Margin="0,12,0,0">
+            <StackPanel>
+
+              <TextBlock FontWeight="Bold"
+                         Text="Stock On-hand"
+                         Margin="0,0,0,8"/>
+
+              <!-- Unit stock -->
+              <StackPanel IsVisible="{Binding IsUnitStock}"
+                          Margin="0,0,0,8">
+                <TextBlock Text="Quantity" Opacity="0.8"/>
+                <TextBox Text="{Binding EditOnHandQtyText}"
+                         Watermark="0"/>
+              </StackPanel>
+
+              <!-- Length stock -->
+              <StackPanel IsVisible="{Binding IsLengthStock}">
+                <TextBlock Text="Enter stock as Feet + Inches"
+                           Opacity="0.8"
+                           Margin="0,0,0,6"/>
+
+                <Grid ColumnDefinitions="*,*">
+                  <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="Feet" Opacity="0.8"/>
+                    <TextBox Text="{Binding EditFeetText}" Watermark="0"/>
+                  </StackPanel>
+
+                  <StackPanel>
+                    <TextBlock Text="Inches" Opacity="0.8"/>
+                    <TextBox Text="{Binding EditInchesText}" Watermark="0"/>
+                  </StackPanel>
+                </Grid>
+
+                <TextBlock Text="{Binding LengthPreviewLine}"
+                           Opacity="0.8"
+                           Margin="0,6,0,0"/>
+              </StackPanel>
+
+            </StackPanel>
+          </Border>
+
+          <!-- VAT note -->
+          <Border Padding="10"
+                  CornerRadius="8"
+                  BorderThickness="1"
+                  Margin="0,12,0,0">
+            <TextBlock Text="Note: VAT net / VAT / gross is calculated at checkout. Item prices are not altered here."
+                       TextWrapping="Wrap"
+                       Opacity="0.7"/>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+
+  </Grid>
+</UserControl>

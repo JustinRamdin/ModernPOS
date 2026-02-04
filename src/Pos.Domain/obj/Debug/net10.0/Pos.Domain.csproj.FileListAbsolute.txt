@@ -1,0 +1,11 @@
+c:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.deps.json
+c:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.dll
+c:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.pdb
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.GeneratedMSBuildEditorConfig.editorconfig
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.AssemblyInfoInputs.cache
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.AssemblyInfo.cs
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.csproj.CoreCompileInputs.cache
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.dll
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\refint\Pos.Domain.dll
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.pdb
+c:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\ref\Pos.Domain.dll

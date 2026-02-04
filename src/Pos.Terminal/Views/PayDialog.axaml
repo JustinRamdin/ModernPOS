@@ -1,0 +1,109 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="Pos.Terminal.Views.PayDialog"
+    Width="520"
+    SizeToContent="Height"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Title="Payment">
+
+  <Window.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="14" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="26" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <Style Selector="Button.big">
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <Style Selector="Button.ghost">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,6" />
+    </Style>
+
+    <Style Selector="TextBox.money">
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto">
+
+    <!-- Total -->
+    <Border Classes="card" Grid.Row="0">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <StackPanel>
+          <TextBlock Classes="h2" Text="Total Due" />
+          <TextBlock Classes="h1" Text="{Binding TotalDueText}" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+          <TextBlock Classes="h2" Text="Customer" HorizontalAlignment="Right" />
+          <TextBlock Text="{Binding CustomerText}" HorizontalAlignment="Right" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Method buttons -->
+    <Border Classes="card" Grid.Row="1" Margin="0,12,0,0">
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+        <Button Classes="big" Content="Cash" Click="Cash_Click" Margin="0,0,10,10" />
+        <Button Classes="big" Grid.Column="1" Content="Debit" Click="Debit_Click" Margin="0,0,0,10" />
+        <Button Classes="big" Grid.Row="1" Content="Credit" Click="Credit_Click" Margin="0,0,10,0" />
+        <Button Classes="big" Grid.Row="1" Grid.Column="1" Content="On Account" Click="OnAccount_Click" />
+      </Grid>
+    </Border>
+
+    <!-- Cash entry (shown for cash) -->
+    <Border x:Name="CashPanel" Classes="card" Grid.Row="2" Margin="0,12,0,0" IsVisible="False">
+      <StackPanel Spacing="10">
+        <TextBlock Classes="h2" Text="Cash Tendered" />
+
+        <TextBox x:Name="CashBox" Classes="money" Watermark="Enter amount tendered" />
+
+        <Grid ColumnDefinitions="*,*,*,*">
+          <Button Classes="ghost" Content="20" Click="QuickCash_Click" Tag="20" Margin="0,0,10,0" />
+          <Button Classes="ghost" Grid.Column="1" Content="50" Click="QuickCash_Click" Tag="50" Margin="0,0,10,0" />
+          <Button Classes="ghost" Grid.Column="2" Content="100" Click="QuickCash_Click" Tag="100" Margin="0,0,10,0" />
+          <Button Classes="ghost" Grid.Column="3" Content="200" Click="QuickCash_Click" Tag="200" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
+          <TextBlock Text="Change" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="{Binding ChangeText}" VerticalAlignment="Center" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*">
+          <Button Classes="ghost" Content="Cancel" Click="Cancel_Click" Margin="0,0,10,0" />
+          <Button Classes="big" Grid.Column="1" Content="Confirm Cash" Click="ConfirmCash_Click" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- Footer note -->
+    <TextBlock
+        Grid.Row="3"
+        Margin="2,10,2,0"
+        Opacity="0.7"
+        Text="Tip: F9 opens this window. Enter confirms on fields." />
+
+  </Grid>
+</Window>

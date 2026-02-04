@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Pos.Application/Pos.Application.csproj" />
+    <Project Path="src/Pos.Domain/Pos.Domain.csproj" />
+    <Project Path="src/Pos.Infrastructure/Pos.Infrastructure.csproj" />
+    <Project Path="src/Pos.InitializeDb/Pos.InitializeDb.csproj" />
+    <Project Path="src/Pos.Server/Pos.Server.csproj" />
+    <Project Path="src/Pos.SyncAgent/Pos.SyncAgent.csproj" />
+    <Project Path="src/Pos.Terminal/Pos.Terminal.csproj" />
+  </Folder>
+</Solution>

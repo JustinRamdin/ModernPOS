@@ -49,6 +49,27 @@
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Opacity" Value="0.8" />
     </Style>
+  
+    <!-- Make DatePicker segments (Month / Day / Year) tighter -->
+      <Style Selector="DatePicker.compact-date /template/ ComboBox#PART_MonthPicker">
+        <Setter Property="Width" Value="140"/>
+        <Setter Property="Margin" Value="0"/>
+      </Style>
+
+      <Style Selector="DatePicker.compact-date /template/ ComboBox#PART_DayPicker">
+        <Setter Property="Width" Value="70"/>
+        <Setter Property="Margin" Value="0"/>
+      </Style>
+
+      <Style Selector="DatePicker.compact-date /template/ ComboBox#PART_YearPicker">
+        <Setter Property="Width" Value="90"/>
+        <Setter Property="Margin" Value="0"/>
+      </Style>
+
+      <!-- Optional: keep text centered so it reads clean -->
+      <Style Selector="DatePicker.compact-date /template/ ComboBox">
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      </Style>
 
     <!-- Tab spacing -->
     <Style Selector="TabControl">
@@ -89,22 +110,40 @@
               <StackPanel Spacing="10">
                 <TextBlock Classes="h2" Text="Date Range" />
                   
-                   <Border Classes="date-range-bar">
-                  <DockPanel LastChildFill="True">
-                    <Grid DockPanel.Dock="Left" ColumnDefinitions="Auto,200,Auto,200" RowDefinitions="Auto"
-                          VerticalAlignment="Center">
-                      <TextBlock Grid.Column="0" Classes="section-label" VerticalAlignment="Center" Text="From" />
-                      <DatePicker Grid.Column="1" MinWidth="200" Margin="8,0,16,0" SelectedDate="{Binding FromDate}" />
+                  <Border Classes="date-range-bar">
+                    <DockPanel LastChildFill="True">
+                      <Grid DockPanel.Dock="Left"
+                            ColumnDefinitions="Auto,280,Auto,280"
+                            VerticalAlignment="Center">
 
-                      <TextBlock Grid.Column="2" Classes="section-label" VerticalAlignment="Center" Text="To" />
-                      <DatePicker Grid.Column="3" MinWidth="200" Margin="8,0,0,0" SelectedDate="{Binding ToDate}" />
-                    </Grid>
+                        <TextBlock Grid.Column="0" Classes="section-label"
+                                  VerticalAlignment="Center" Text="From" />
 
-                    <TextBlock DockPanel.Dock="Right" Classes="muted" VerticalAlignment="Center"
-                               Text="Tip: change dates then Refresh All" />
-                  </DockPanel>
-                </Border>
+                        <DatePicker Grid.Column="1"
+                                    Classes="compact-date"
+                                    MinWidth="280"
+                                    Margin="8,0,16,0"
+                                    SelectedDate="{Binding FromDate, StringFormat={}{0:MMM dd yyyy}}" />
 
+                        <TextBlock Grid.Column="2" Classes="section-label"
+                                  VerticalAlignment="Center" Text="To" />
+
+                        <DatePicker Grid.Column="3"
+                                    Classes="compact-date"
+                                    MinWidth="280"
+                                    Margin="8,0,0,0"
+                                    SelectedDate="{Binding ToDate, StringFormat={}{0:MMM dd yyyy}}" />
+                      </Grid>
+
+                      <TextBlock DockPanel.Dock="Right"
+                                Classes="muted"
+                                VerticalAlignment="Center"
+                                Text="Tip: change dates then Refresh All" />
+                    </DockPanel>
+                  </Border>
+
+                </StackPanel>
+            </Border>
             <!-- Summary cards -->
             <Grid ColumnDefinitions="*,*,*,*">
               <Border Classes="card" Margin="0,0,10,0">

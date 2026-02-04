@@ -20,10 +20,38 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public string Status { get => _status; set { _status = value; OnPropertyChanged(); } }
 
      private DateTime? _fromDate;
-    public DateTime? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
-
+    public DateTime? FromDate
+    {
+        get => _fromDate;
+        set
+        {
+            _fromDate = value;
+            UpdateDateRangeLabel();
+            OnPropertyChanged();
+        }
+    }
     private DateTime? _toDate;
-    public DateTime? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
+    public DateTime? ToDate
+    {
+        get => _toDate;
+        set
+        {
+            _toDate = value;
+            UpdateDateRangeLabel();
+            OnPropertyChanged();
+        }
+    }
+
+    private string _dateRangeLabel = "Apply Dates";
+    public string DateRangeLabel
+    {
+        get => _dateRangeLabel;
+        private set
+        {
+            _dateRangeLabel = value;
+            OnPropertyChanged();
+        }
+    }
 
     private string _locationCode = "DEFAULT";
     public string LocationCode { get => _locationCode; set { _locationCode = string.IsNullOrWhiteSpace(value) ? "DEFAULT" : value.Trim(); OnPropertyChanged(); } }
@@ -91,6 +119,7 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
 
     // Commands
     public ICommand RefreshAllCommand { get; }
+    public ICommand ApplyDateRangeCommand { get; }
     public ICommand RefreshInventoryCommand { get; }
     public ICommand RefreshLowStockCommand { get; }
 
@@ -101,8 +130,11 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         ToDate = today;
 
         RefreshAllCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
+        ApplyDateRangeCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         RefreshInventoryCommand = new AsyncRelayCommand(async _ => await LoadInventoryAsync());
         RefreshLowStockCommand = new AsyncRelayCommand(async _ => await LoadLowStockAsync());
+
+        UpdateDateRangeLabel();
         
         ExportTemplates.Add(new ExportTemplateDefinition(
             "Sales",
@@ -138,6 +170,18 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     {
         try { return TimeZoneInfo.FindSystemTimeZoneById("America/Port_of_Spain"); }
         catch { return TimeZoneInfo.Local; }
+    }
+
+    private void UpdateDateRangeLabel()
+    {
+        var fromDate = (FromDate ?? DateTime.Today).Date;
+        var toDate = (ToDate ?? DateTime.Today).Date;
+        if (toDate < fromDate)
+        {
+            (fromDate, toDate) = (toDate, fromDate);
+        }
+
+        DateRangeLabel = $"Apply {fromDate:MMM d} – {toDate:MMM d}";
     }
 
     private (DateTime fromUtc, DateTime toUtc) GetUtcRange()

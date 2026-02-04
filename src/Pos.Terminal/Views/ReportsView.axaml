@@ -113,7 +113,7 @@
                   <Border Classes="date-range-bar">
                     <DockPanel LastChildFill="True">
                       <Grid DockPanel.Dock="Left"
-                            ColumnDefinitions="Auto,280,Auto,280"
+                            ColumnDefinitions="Auto,280,Auto,280,Auto"
                             VerticalAlignment="Center">
 
                         <TextBlock Grid.Column="0" Classes="section-label"
@@ -131,14 +131,20 @@
                         <DatePicker Grid.Column="3"
                                     Classes="compact-date"
                                     MinWidth="280"
-                                    Margin="8,0,0,0"
+                                    Margin="8,0,16,0"
                                     SelectedDate="{Binding ToDate}" />
+
+                        <Button Grid.Column="4"
+                                Classes="ghost"
+                                VerticalAlignment="Center"
+                                Content="{Binding DateRangeLabel}"
+                                Command="{Binding ApplyDateRangeCommand}" />
                       </Grid>
 
                       <TextBlock DockPanel.Dock="Right"
                                 Classes="muted"
                                 VerticalAlignment="Center"
-                                Text="Tip: change dates then Refresh All" />
+                                Text="Tip: adjust dates to refresh Z report data" />
                     </DockPanel>
                   </Border>
 

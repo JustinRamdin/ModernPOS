@@ -30,11 +30,12 @@ public partial class ReportsView : UserControl
         if (host == null)
             return;
 
-        var dialogVm = new ExportTemplateDialogViewModel(
-            template,
-            vm.FromDate,
-            vm.ToDate,
-            vm.LocationCode);
+      var dialogVm = new ExportTemplateDialogViewModel(
+        template: template,
+        locationCode: vm.LocationCode,
+        fromDate: vm.FromDate,
+        toDate: vm.ToDate);
+
 
         var dialog = new ExportTemplateDialog
         {

@@ -25,11 +25,11 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     public string TemplateName => _template.Name;
     public string TemplateDescription => _template.Description;
 
-    private DateTimeOffset? _fromDate;
-    public DateTimeOffset? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
+    private DateTime? _fromDate;
+    public DateTime? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
 
-    private DateTimeOffset? _toDate;
-    public DateTimeOffset? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
+    private DateTime? _toDate;
+    public DateTime? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
 
     public string Status { get => _status; set { _status = value; OnPropertyChanged(); } }
 
@@ -40,14 +40,16 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
     public ExportTemplateDialogViewModel(
         ExportTemplateDefinition template,
-        DateTimeOffset? fromDate,
-        DateTimeOffset? toDate,
-        string locationCode)
+        string locationCode,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
         _template = template;
         _locationCode = locationCode;
+
         FromDate = fromDate;
         ToDate = toDate;
+
         RefreshCommand = new AsyncRelayCommand(async _ => await LoadAsync());
     }
 
@@ -61,8 +63,8 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     {
         var tz = GetTz();
 
-        var fromLocal = (FromDate ?? DateTimeOffset.Now).Date;
-        var toLocal = (ToDate ?? DateTimeOffset.Now).Date;
+        var fromLocal = (FromDate ?? DateTime.Today).Date;
+        var toLocal = (ToDate ?? DateTime.Today).Date;
 
         if (toLocal < fromLocal)
         {

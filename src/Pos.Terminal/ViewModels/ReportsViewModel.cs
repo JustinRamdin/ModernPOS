@@ -19,11 +19,11 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     private string _status = "Ready";
     public string Status { get => _status; set { _status = value; OnPropertyChanged(); } }
 
-    private DateTimeOffset? _fromDate;
-    public DateTimeOffset? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
+     private DateTime? _fromDate;
+    public DateTime? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
 
-    private DateTimeOffset? _toDate;
-    public DateTimeOffset? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
+    private DateTime? _toDate;
+    public DateTime? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
 
     private string _locationCode = "DEFAULT";
     public string LocationCode { get => _locationCode; set { _locationCode = string.IsNullOrWhiteSpace(value) ? "DEFAULT" : value.Trim(); OnPropertyChanged(); } }
@@ -96,9 +96,9 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
 
     public ReportsViewModel()
     {
-        var now = DateTimeOffset.Now;
-        FromDate = new DateTimeOffset(now.Date.AddDays(-6), now.Offset);
-        ToDate = new DateTimeOffset(now.Date, now.Offset);
+        var today = DateTime.Today;
+        FromDate = today.AddDays(-6);
+        ToDate = today;
 
         RefreshAllCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         RefreshInventoryCommand = new AsyncRelayCommand(async _ => await LoadInventoryAsync());
@@ -144,8 +144,8 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     {
         var tz = GetTz();
 
-        var fromLocal = (FromDate ?? DateTimeOffset.Now).Date;
-        var toLocal = (ToDate ?? DateTimeOffset.Now).Date;
+        var fromLocal = (FromDate ?? DateTime.Today).Date;
+        var toLocal = (ToDate ?? DateTime.Today).Date;
 
         if (toLocal < fromLocal)
         {

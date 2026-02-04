@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Pos.Application.Checkout;
 using Pos.Application.Inventory;
@@ -285,14 +286,8 @@ public class LocalSaleService
             .OrderByDescending(x => x.CreatedAtUtc)
             .FirstOrDefaultAsync(x => x.EntityType == "sale" && x.EntityId == result.SaleId, ct);
 
-        if (evt != null && !string.IsNullOrWhiteSpace(evt.PayloadJson))
-        {
-            // Best-effort string patch; keeps payload schema unchanged.
-            evt.PayloadJson = evt.PayloadJson
-                .Replace("\"method\":\"CASH\"", $"\"method\":\"{method}\"")
-                .Replace($"\"cash_given\":{decimal.MaxValue}", $"\"cash_given\":{result.Total}")
-                .Replace($"\"change\":{result.Change}", "\"change\":0");
-        }
+       if (evt != null)
+            TryUpdatePaymentPayload(evt, method, result.Total, 0m);
 
         await _db.SaveChangesAsync(ct);
 
@@ -341,13 +336,8 @@ public class LocalSaleService
             .OrderByDescending(x => x.CreatedAtUtc)
             .FirstOrDefaultAsync(x => x.EntityType == "sale" && x.EntityId == sale.Id, ct);
 
-        if (evt != null && !string.IsNullOrWhiteSpace(evt.PayloadJson))
-        {
-            evt.PayloadJson = evt.PayloadJson
-                .Replace("\"method\":\"CASH\"", "\"method\":\"ON_ACCOUNT\"")
-                .Replace($"\"cash_given\":{decimal.MaxValue}", "\"cash_given\":0")
-                .Replace("\"change\":", "\"change\":0");
-        }
+       if (evt != null)
+            TryUpdatePaymentPayload(evt, "ON_ACCOUNT", 0m, 0m);
 
         await _db.SaveChangesAsync(ct);
 
@@ -418,6 +408,31 @@ public class LocalSaleService
 
         await _db.SaveChangesAsync(ct);
         return payment.Id;
+    }
+      private static bool TryUpdatePaymentPayload(OutboxEvent evt, string method, decimal cashGiven, decimal change)
+    {
+        if (string.IsNullOrWhiteSpace(evt.PayloadJson))
+            return false;
+
+        JsonNode? node;
+        try
+        {
+            node = JsonNode.Parse(evt.PayloadJson);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        if (node is not JsonObject root || root["payment"] is not JsonObject payment)
+            return false;
+
+        payment["method"] = method;
+        payment["cash_given"] = cashGiven;
+        payment["change"] = change;
+
+        evt.PayloadJson = root.ToJsonString();
+        return true;
     }
 }
 

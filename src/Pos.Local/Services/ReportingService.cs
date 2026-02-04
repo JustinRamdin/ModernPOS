@@ -10,7 +10,21 @@ using Pos.Local.Entities;
 
 namespace Pos.Local.Services;
 
-public sealed class ReportingService
+public interface IReportingService
+{
+    Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
+        DateTime fromUtcInclusive,
+        DateTime toUtcExclusive,
+        string locationCode = "DEFAULT");
+    Task<IReadOnlyList<CustomerSalesRowDto>> GetCustomerSalesAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<IReadOnlyList<InventoryValuationRowDto>> GetInventoryValuationAsync(string locationCode = "DEFAULT");
+    Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays, decimal suggestedReorderDays = 7m);
+    Task<IReadOnlyList<TopProductRowDto>> GetTopProductsAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 15);
+    Task<IReadOnlyList<ProfitByProductRowDto>> GetProfitByProductAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 50);
+}
+
+public sealed class ReportingService : IReportingService
 {
     private readonly PosLocalDbContext _db;
 
@@ -583,15 +597,6 @@ public sealed class ReportingService
             .ToList();
     }
 
-    public interface IReportingService
-    {
-        Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
-
-        Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
-            DateTime fromUtcInclusive,
-            DateTime toUtcExclusive,
-            string locationCode = "DEFAULT");
-    }
 
     public async Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
         DateTime fromUtcInclusive,

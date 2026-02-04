@@ -20,6 +20,8 @@
     <PackageReference Include="Avalonia.ReactiveUI" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="ClosedXML" />
+    <PackageVersion Include="System.IO.Packaging" Version="8.0.0" />
+
   </ItemGroup>
 
-</Project>
+</Project> 

@@ -36,6 +36,20 @@
       <Setter Property="Padding" Value="12,6" />
     </Style>
 
+        <Style Selector="Border.date-range-bar">
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.section-label">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Opacity" Value="0.8" />
+    </Style>
+
     <!-- Tab spacing -->
     <Style Selector="TabControl">
       <Setter Property="Margin" Value="0,0,0,0" />
@@ -74,22 +88,22 @@
             <Border Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Classes="h2" Text="Date Range" />
+                  
+                   <Border Classes="date-range-bar">
+                  <DockPanel LastChildFill="True">
+                    <Grid DockPanel.Dock="Left" ColumnDefinitions="Auto,200,Auto,200" RowDefinitions="Auto"
+                          VerticalAlignment="Center">
+                      <TextBlock Grid.Column="0" Classes="section-label" VerticalAlignment="Center" Text="From" />
+                      <DatePicker Grid.Column="1" MinWidth="200" Margin="8,0,16,0" SelectedDate="{Binding FromDate}" />
 
-                <DockPanel LastChildFill="True">
-                  <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="12">
-                    <TextBlock VerticalAlignment="Center" Text="From" />
-                    <DatePicker Width="170" SelectedDate="{Binding FromDate}" />
+                      <TextBlock Grid.Column="2" Classes="section-label" VerticalAlignment="Center" Text="To" />
+                      <DatePicker Grid.Column="3" MinWidth="200" Margin="8,0,0,0" SelectedDate="{Binding ToDate}" />
+                    </Grid>
 
-                    <TextBlock VerticalAlignment="Center" Text="To" />
-                    <DatePicker Width="170" SelectedDate="{Binding ToDate}" />
-                  </StackPanel>
-
-                  <TextBlock DockPanel.Dock="Right" Classes="muted" VerticalAlignment="Center"
-                             Text="Tip: change dates then Refresh All" />
-                </DockPanel>
-
-              </StackPanel>
-            </Border>
+                    <TextBlock DockPanel.Dock="Right" Classes="muted" VerticalAlignment="Center"
+                               Text="Tip: change dates then Refresh All" />
+                  </DockPanel>
+                </Border>
 
             <!-- Summary cards -->
             <Grid ColumnDefinitions="*,*,*,*">

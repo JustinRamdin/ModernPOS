@@ -21,25 +21,25 @@
 
     <!-- Filters -->
     <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,10">
-      <WrapPanel ItemSpacing="10">
+      <WrapPanel>
 
-        <StackPanel Width="160">
+        <StackPanel Width="160" Margin="0,0,10,10">
           <TextBlock Text="From" />
           <DatePicker SelectedDate="{Binding FromDate}" />
         </StackPanel>
 
-        <StackPanel Width="160">
+        <StackPanel Width="160" Margin="0,0,10,10">
           <TextBlock Text="To" />
           <DatePicker SelectedDate="{Binding ToDate}" />
         </StackPanel>
 
-        <StackPanel Width="200">
+        <StackPanel Width="200" Margin="0,0,10,10">
           <TextBlock Text="Payment Type" />
           <ComboBox ItemsSource="{Binding PaymentTypes}"
                     SelectedItem="{Binding SelectedPaymentType}" />
         </StackPanel>
 
-        <StackPanel Width="240">
+        <StackPanel Width="240" Margin="0,0,10,10">
           <TextBlock Text="Customer" />
           <ComboBox ItemsSource="{Binding Customers}"
                     SelectedItem="{Binding SelectedCustomer}" />
@@ -51,12 +51,12 @@
                     SelectedItem="{Binding SelectedItem}" />
         </StackPanel>
 
-        <StackPanel Width="220">
+        <StackPanel Width="220" Margin="0,0,10,10">
           <TextBlock Text="Search" />
           <TextBox Text="{Binding SearchText}" Watermark="receipt, customer, sku..." />
         </StackPanel>
 
-        <StackPanel Width="120" VerticalAlignment="Bottom">
+        <StackPanel Width="120" VerticalAlignment="Bottom" Margin="0,0,10,10">
           <Button Content="Refresh"
                   Command="{Binding RefreshCommand}" />
         </StackPanel>

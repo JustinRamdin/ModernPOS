@@ -107,6 +107,7 @@ public sealed record SalesExportRowDto(
     DateTime OccurredAtUtc,
     string ReceiptNo,
     string Status,
+    string? PaymentType,
     string CustomerName,
     decimal NetTotal,
     decimal VatTotal,

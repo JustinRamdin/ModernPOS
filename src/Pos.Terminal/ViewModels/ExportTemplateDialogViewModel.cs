@@ -241,7 +241,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
                     var results = await svc.GetSalesExportAsync(
                         fromUtc, toUtc,
-                        paymentType: PaymentTypeFilter,
+                        TryGetpaymentType: PaymentTypeFilter,
                         customer: CustomerFilter,
                         itemOrSku: ItemFilter,
                         search: SearchFilter,
@@ -263,7 +263,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                             ["Date (UTC)"] = row.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                             ["Receipt"] = row.ReceiptNo,
                             ["Status"] = row.Status,
-                            ["Payment Type"] = row.PaymentType ?? "",
+                            ["Payment Type"] = TryGetPaymentType(row) ?? "",
                             ["Customer"] = row.CustomerName,
                             ["Net"] = row.NetTotal.ToString("0.00", CultureInfo.InvariantCulture),
                             ["VAT"] = row.VatTotal.ToString("0.00", CultureInfo.InvariantCulture),
@@ -471,7 +471,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
                         var (fromUtc, toUtc) = GetUtcRange();
             var paymentTypes = (await svc.GetSalesExportAsync(fromUtc, toUtc))
-                .Select(row => row.PaymentType)
+                .Select(TryGetPaymentType)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)

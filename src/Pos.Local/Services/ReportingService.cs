@@ -39,10 +39,9 @@ public sealed class ReportingService
         return new List<string>();
     }
 
-    public async Task<List<string>> GetItemOrSkuListAsync(string locationCode)
+    public Task<List<string>> GetItemOrSkuListAsync(string locationCode, CancellationToken ct = default)
     {
-        // TODO: Replace with your real inventory/sales lines table/field.
-        return new List<string>();
+        return Task.FromResult(new List<string>());
     }
 
     // ========= SALES EXPORT (FILTERED) =========
@@ -57,19 +56,7 @@ public sealed class ReportingService
         string? search = null,
         CancellationToken ct = default)
     {
-        // TODO: Replace with your real query. This is a placeholder.
-
-        // Example logic (pseudo):
-        // var q = _db.Sales.AsNoTracking()
-        //   .Where(s => s.OccurredAtUtc >= fromUtc && s.OccurredAtUtc < toUtc);
-        //
-        // if (paymentType != null) q = q.Where(s => s.PaymentType == paymentType);
-        // if (customer != null) q = q.Where(s => s.CustomerName == customer);
-        // if (search != null) q = q.Where(s => s.ReceiptNo.Contains(search) || s.CustomerName.Contains(search));
-        // if (itemOrSku != null) q = q.Where(s => s.Lines.Any(l => l.Sku == itemOrSku || l.ItemName == itemOrSku));
-        //
-        // return await q.Select(s => new SalesExportRowDto { ... }).ToListAsync(ct);
-
+        
         await Task.CompletedTask;
         return new List<SalesExportRowDto>();
     }

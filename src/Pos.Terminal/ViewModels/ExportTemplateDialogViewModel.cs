@@ -481,7 +481,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            var items = await svc.GetItemOrSkuListAsync(_locationCode);
+            var items = await svc.GetItemOrSkuListAsync(_locationCode, CancellationToken.None);
 
             PaymentTypes.Clear(); PaymentTypes.Add("All");
             foreach (var p in paymentTypes)

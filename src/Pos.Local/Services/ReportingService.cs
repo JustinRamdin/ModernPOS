@@ -1,3 +1,5 @@
+// File: src/Pos.Local/Services/ReportingService.cs
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,16 +14,30 @@ namespace Pos.Local.Services;
 
 public interface IReportingService
 {
-    Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
-    Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
-        DateTime fromUtcInclusive,
-        DateTime toUtcExclusive,
-        string locationCode = "DEFAULT");
-    Task<IReadOnlyList<CustomerSalesRowDto>> GetCustomerSalesAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    // Sales
+    Task<SalesSummaryDto> GetSalesSummaryAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<IReadOnlyList<SalesByDayRowDto>> GetSalesByDayAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, TimeZoneInfo tz);
+    Task<IReadOnlyList<TopProductRowDto>> GetTopProductsAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 15);
+
+    // VAT & Profit
+    Task<VatSummaryDto> GetVatSummaryAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<ProfitSummaryDto> GetProfitSummaryAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<IReadOnlyList<ProfitByProductRowDto>> GetProfitByProductAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 50);
+
+    // Tender / Payment mix
+    Task<TenderSummaryDto> GetTenderSummaryAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+
+    // Inventory
     Task<IReadOnlyList<InventoryValuationRowDto>> GetInventoryValuationAsync(string locationCode = "DEFAULT");
     Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays, decimal suggestedReorderDays = 7m);
-    Task<IReadOnlyList<TopProductRowDto>> GetTopProductsAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 15);
-    Task<IReadOnlyList<ProfitByProductRowDto>> GetProfitByProductAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, int topN = 50);
+    Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, string locationCode = "DEFAULT");
+
+    // Customers
+    Task<IReadOnlyList<CustomerSalesRowDto>> GetCustomerSalesAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+
+    // Exports
+    Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive);
+    Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive, string locationCode = "DEFAULT");
 }
 
 public sealed class ReportingService : IReportingService
@@ -146,7 +162,6 @@ public sealed class ReportingService : IReportingService
 
     // ----------------------------
     // PROFIT (uses current Product.CostPrice)
-    // NOTE: if you later want historical cost, we’ll store cost on SaleLine at sale time.
     // ----------------------------
     public async Task<ProfitSummaryDto> GetProfitSummaryAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive)
     {
@@ -230,7 +245,6 @@ public sealed class ReportingService : IReportingService
             .Select(s => new { s.Id, s.GrossTotal, s.Status })
             .ToListAsync();
 
-        // read outbox for the sale payloads (payment method & change)
         var outbox = await _db.Outbox.AsNoTracking()
             .Where(o => o.EntityType == "sale" && saleIds.Contains(o.EntityId))
             .Select(o => new { o.EntityId, o.PayloadJson })
@@ -261,7 +275,6 @@ public sealed class ReportingService : IReportingService
 
         foreach (var s in sales)
         {
-            // On-account: either status or method
             if (string.Equals(s.Status, "OnAccount", StringComparison.OrdinalIgnoreCase))
             {
                 onacct += s.GrossTotal;
@@ -275,11 +288,10 @@ public sealed class ReportingService : IReportingService
                 if (pay.method == "CASH") cash += s.GrossTotal;
                 else if (pay.method == "DEBIT") debit += s.GrossTotal;
                 else if (pay.method == "CREDIT") credit += s.GrossTotal;
-                else cash += s.GrossTotal; // fallback
+                else cash += s.GrossTotal;
             }
             else
             {
-                // fallback: treat as cash if missing
                 cash += s.GrossTotal;
             }
         }
@@ -348,7 +360,6 @@ public sealed class ReportingService : IReportingService
 
     // ----------------------------
     // LOW STOCK / REORDER (avg usage)
-    // Base units: Units or Inches (inches for length items)
     // ----------------------------
     public async Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(
         string locationCode,
@@ -401,17 +412,14 @@ public sealed class ReportingService : IReportingService
 
                 usageMap.TryGetValue(p.Id, out var u);
 
-                // avg usage in base units per day
                 decimal totalUsedBase = 0m;
                 if (u != null)
                     totalUsedBase = u.Kind == LineQuantityKind.Inches ? u.QtyInches : u.QtyUnits;
 
-                var avgDaily = lookbackDays == 0 ? 0m : totalUsedBase / lookbackDays;
+                var avgDaily = totalUsedBase <= 0 ? 0m : totalUsedBase / lookbackDays;
                 var onHandBase = OnHandBase(p.IsLength, onHand, onHandInches);
 
                 var daysRemaining = avgDaily <= 0 ? 9999m : onHandBase / avgDaily;
-
-                // suggested reorder = avgDaily * suggestedReorderDays (only if avgDaily > 0)
                 var suggested = avgDaily <= 0 ? 0m : avgDaily * suggestedReorderDays;
 
                 return new LowStockRowDto(
@@ -431,7 +439,6 @@ public sealed class ReportingService : IReportingService
 
     // ----------------------------
     // INVENTORY MOVEMENT (Sales + Manual adjustments)
-    // Manual adjustments come from Outbox: EntityType == "inventory_adjustment"
     // ----------------------------
     public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(
         DateTime fromUtcInclusive, DateTime toUtcExclusive, string locationCode = "DEFAULT")
@@ -443,7 +450,6 @@ public sealed class ReportingService : IReportingService
             .Select(p => new { p.Id, p.Sku, p.Name })
             .ToDictionaryAsync(p => p.Id);
 
-        // 1) Sales movements (negative)
         var salesLines = await _db.SaleLines.AsNoTracking()
             .Join(_db.Sales.AsNoTracking().Where(s => s.CreatedAtUtc >= fromUtcInclusive && s.CreatedAtUtc < toUtcExclusive),
                 l => l.SaleId, s => s.Id,
@@ -471,7 +477,6 @@ public sealed class ReportingService : IReportingService
             ));
         }
 
-        // 2) Manual adjustments (from Outbox)
         var adjustments = await _db.Outbox.AsNoTracking()
             .Where(o => o.EntityType == "inventory_adjustment"
                         && o.CreatedAtUtc >= fromUtcInclusive
@@ -524,7 +529,6 @@ public sealed class ReportingService : IReportingService
             .ToList();
     }
 
-
     // ----------------------------
     // CUSTOMER SALES
     // ----------------------------
@@ -559,9 +563,9 @@ public sealed class ReportingService : IReportingService
             .Take(200)
             .ToList();
     }
-    
+
     // ----------------------------
-    // EXPORT HELPERS
+    // EXPORTS
     // ----------------------------
     public async Task<IReadOnlyList<SalesExportRowDto>> GetSalesExportAsync(DateTime fromUtcInclusive, DateTime toUtcExclusive)
     {
@@ -570,11 +574,32 @@ public sealed class ReportingService : IReportingService
             .Select(s => new { s.Id, s.CreatedAtUtc, s.ReceiptNo, s.Status, s.CustomerId, s.NetTotal, s.VatTotal, s.GrossTotal })
             .ToListAsync();
 
+        var paymentEntries = await _db.CustomerPayments.AsNoTracking()
+            .Where(p => p.CreatedAtUtc >= fromUtcInclusive && p.CreatedAtUtc < toUtcExclusive)
+            .Select(p => new { p.CreatedAtUtc, p.CustomerId, p.Amount })
+            .ToListAsync();
+
         var customerIds = sales
             .Where(s => s.CustomerId.HasValue)
             .Select(s => s.CustomerId!.Value)
+            .Concat(paymentEntries.Select(p => p.CustomerId))
             .Distinct()
             .ToList();
+
+        var saleIds = sales.Select(s => s.Id).ToList();
+
+        var saleOutbox = await _db.Outbox.AsNoTracking()
+            .Where(o => o.EntityType == "sale" && saleIds.Contains(o.EntityId))
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ToListAsync();
+
+        var paymentMethodMap = saleOutbox
+            .GroupBy(o => o.EntityId)
+            .Select(g => g.First())
+            .ToDictionary(
+                x => x.EntityId,
+                x => TryGetPaymentMethod(x.PayloadJson)
+            );
 
         var customers = await _db.Customers.AsNoTracking()
             .Where(c => customerIds.Contains(c.Id))
@@ -583,20 +608,40 @@ public sealed class ReportingService : IReportingService
 
         var customerMap = customers.ToDictionary(c => c.Id, c => c.Name);
 
-        return sales
-            .OrderByDescending(s => s.CreatedAtUtc)
-            .Select(s => new SalesExportRowDto(
-                s.CreatedAtUtc,
-                s.ReceiptNo,
-                s.Status,
-                s.CustomerId.HasValue && customerMap.TryGetValue(s.CustomerId.Value, out var name) ? name : "Walk-in",
-                Money(s.NetTotal),
-                Money(s.VatTotal),
-                Money(s.GrossTotal)
-            ))
+        var rows = new List<SalesExportRowDto>();
+
+        foreach (var sale in sales)
+        {
+            paymentMethodMap.TryGetValue(sale.Id, out var paymentMethod);
+
+            rows.Add(new SalesExportRowDto(
+                sale.CreatedAtUtc,
+                sale.ReceiptNo,
+                FormatSaleStatus(sale.Status, paymentMethod),
+                sale.CustomerId.HasValue && customerMap.TryGetValue(sale.CustomerId.Value, out var name) ? name : "Walk-in",
+                Money(sale.NetTotal),
+                Money(sale.VatTotal),
+                Money(sale.GrossTotal)
+            ));
+        }
+
+        foreach (var payment in paymentEntries)
+        {
+            rows.Add(new SalesExportRowDto(
+                payment.CreatedAtUtc,
+                "Payment",
+                "Payment to Account",
+                customerMap.TryGetValue(payment.CustomerId, out var name) ? name : "Unknown",
+                0m,
+                0m,
+                Money(payment.Amount)
+            ));
+        }
+
+        return rows
+            .OrderByDescending(r => r.OccurredAtUtc)
             .ToList();
     }
-
 
     public async Task<IReadOnlyList<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(
         DateTime fromUtcInclusive,
@@ -655,5 +700,43 @@ public sealed class ReportingService : IReportingService
         return rows
             .OrderByDescending(r => r.OccurredAtUtc)
             .ToList();
+    }
+
+    private static string FormatSaleStatus(string saleStatus, string? paymentMethod)
+    {
+        if (!string.IsNullOrWhiteSpace(paymentMethod))
+        {
+            return paymentMethod.Trim().ToUpperInvariant() switch
+            {
+                "CASH" => "Cash",
+                "DEBIT" => "Debit",
+                "CREDIT" => "Credit",
+                "ON_ACCOUNT" => "On Account",
+                _ => saleStatus
+            };
+        }
+
+        return string.Equals(saleStatus, "OnAccount", StringComparison.OrdinalIgnoreCase)
+            ? "On Account"
+            : saleStatus;
+    }
+
+    private static string? TryGetPaymentMethod(string payloadJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(payloadJson);
+            if (doc.RootElement.TryGetProperty("payment", out var payment) &&
+                payment.TryGetProperty("method", out var method))
+            {
+                return method.GetString();
+            }
+        }
+        catch
+        {
+            // ignore malformed payloads
+        }
+
+        return null;
     }
 }

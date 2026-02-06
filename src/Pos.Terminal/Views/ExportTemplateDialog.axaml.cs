@@ -63,7 +63,10 @@ public partial class ExportTemplateDialog : Window
             grid.Columns.Add(new DataGridTextColumn
             {
                 Header = header,
-                Binding = new Binding($"[{header}]")
+                   Binding = new Binding($"Values[\"{header}\"]")
+                {
+                    Mode = BindingMode.OneWay
+                }
             });
         }
     }

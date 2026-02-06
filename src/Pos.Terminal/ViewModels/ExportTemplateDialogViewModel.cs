@@ -111,9 +111,12 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     var grossTotal = 0m;
                     foreach (var row in await svc.GetSalesExportAsync(fromUtc, toUtc))
                     {
-                        netTotal += row.NetTotal;
-                        vatTotal += row.VatTotal;
-                        grossTotal += row.GrossTotal;
+                          if (!IsPaymentToAccount(row.Status))
+                        {
+                            netTotal += row.NetTotal;
+                            vatTotal += row.VatTotal;
+                            grossTotal += row.GrossTotal;
+                        }
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["Date (UTC)"] = row.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
@@ -306,6 +309,10 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     }
 
     private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
+
+    private static bool IsPaymentToAccount(string status)
+        => string.Equals(status, "Payment to Account", StringComparison.OrdinalIgnoreCase);
+
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)

@@ -240,12 +240,13 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     var grossTotal = 0m;
 
                     var results = await svc.GetSalesExportAsync(
-                        fromUtc, toUtc,
-                        paymentType: PaymentTypeFilter,
-                        customer: CustomerFilter,
-                        itemOrSku: ItemFilter,
-                        search: SearchFilter,
-                        ct: token);
+                        fromUtc,
+                        toUtc,
+                        PaymentTypeFilter,
+                        CustomerFilter,
+                        ItemFilter,
+                        SearchFilter,
+                        token);
 
                     foreach (var row in results)
                     {

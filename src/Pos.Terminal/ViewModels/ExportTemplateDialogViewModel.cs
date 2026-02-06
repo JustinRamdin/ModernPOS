@@ -476,7 +476,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            var items = await svc.GetItemOrSkuListAsync(_locationCode, CancellationToken.None);
+            var items = await LoadItemOrSkuListAsync(db, CancellationToken.None);
 
             PaymentTypes.Clear(); PaymentTypes.Add("All");
             foreach (var p in paymentTypes)
@@ -501,6 +501,16 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             InitFilterListsDefaults();
         }
     }
+
+ private static Task<List<string>> LoadItemOrSkuListAsync(
+        PosLocalDbContext db,
+        CancellationToken ct)
+        => db.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive && p.DeletedAtUtc == null)
+            .OrderBy(p => p.Name)
+            .Select(p => string.IsNullOrWhiteSpace(p.Sku) ? p.Name : $"{p.Sku} - {p.Name}")
+            .ToListAsync(ct);
 
     public Task ExportAsync(string filePath)
     {

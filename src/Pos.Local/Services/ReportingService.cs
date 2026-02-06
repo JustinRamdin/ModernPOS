@@ -48,7 +48,7 @@ public sealed class ReportingService
     // ========= SALES EXPORT (FILTERED) =========
     // This matches what the ViewModel expects.
 
-    public async Task<List<SalesExportRow>> GetSalesExportAsync(
+    public async Task<List<SalesExportRowDto>> GetSalesExportAsync(
         DateTime fromUtc,
         DateTime toUtc,
         string? paymentType = null,
@@ -68,102 +68,46 @@ public sealed class ReportingService
         // if (search != null) q = q.Where(s => s.ReceiptNo.Contains(search) || s.CustomerName.Contains(search));
         // if (itemOrSku != null) q = q.Where(s => s.Lines.Any(l => l.Sku == itemOrSku || l.ItemName == itemOrSku));
         //
-        // return await q.Select(s => new SalesExportRow { ... }).ToListAsync(ct);
+        // return await q.Select(s => new SalesExportRowDto { ... }).ToListAsync(ct);
 
         await Task.CompletedTask;
-        return new List<SalesExportRow>();
+        return new List<SalesExportRowDto>();
     }
 
     // ========= EXISTING METHODS YOU ALREADY HAVE =========
     // Keep your current implementations for these; below are placeholders to show signatures.
 
-    public Task<List<PurchaseAdjustmentRow>> GetPurchaseAdjustmentsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
-        => Task.FromResult(new List<PurchaseAdjustmentRow>());
+    public Task<SalesSummaryDto> GetSalesSummaryAsync(DateTime fromUtc, DateTime toUtc)
+        => Task.FromResult(new SalesSummaryDto(0, 0m, 0m, 0m, 0m));
 
-    public Task<List<CustomerSalesRow>> GetCustomerSalesAsync(DateTime fromUtc, DateTime toUtc)
-        => Task.FromResult(new List<CustomerSalesRow>());
+    public Task<List<SalesByDayRowDto>> GetSalesByDayAsync(DateTime fromUtc, DateTime toUtc, TimeZoneInfo tz)
+        => Task.FromResult(new List<SalesByDayRowDto>());
 
-    public Task<List<InventoryValuationRow>> GetInventoryValuationAsync(string locationCode)
-        => Task.FromResult(new List<InventoryValuationRow>());
+    public Task<ProfitSummaryDto> GetProfitSummaryAsync(DateTime fromUtc, DateTime toUtc)
+        => Task.FromResult(new ProfitSummaryDto(0m, 0m, 0m, 0m));
 
-    public Task<List<LowStockRow>> GetLowStockAsync(string locationCode, int rangeDays, decimal suggestedReorderDays)
-        => Task.FromResult(new List<LowStockRow>());
+    public Task<TenderSummaryDto> GetTenderSummaryAsync(DateTime fromUtc, DateTime toUtc)
+        => Task.FromResult(new TenderSummaryDto(0m, 0m, 0m, 0m, 0m, 0m));
 
-    public Task<List<TopProductRow>> GetTopProductsAsync(DateTime fromUtc, DateTime toUtc, int topN)
-        => Task.FromResult(new List<TopProductRow>());
+    public Task<List<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
+        => Task.FromResult(new List<InventoryMovementRowDto>());
 
-    public Task<List<ProfitByProductRow>> GetProfitByProductAsync(DateTime fromUtc, DateTime toUtc, int maxRows)
-        => Task.FromResult(new List<ProfitByProductRow>());
-}
+    public Task<List<PurchaseExportRowDto>> GetPurchaseAdjustmentsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
+        => Task.FromResult(new List<PurchaseExportRowDto>());
 
+    public Task<List<CustomerSalesRowDto>> GetCustomerSalesAsync(DateTime fromUtc, DateTime toUtc)
+        => Task.FromResult(new List<CustomerSalesRowDto>());
 
-// ========= DTOs expected by ViewModel =========
-// If you already have these in your current ReportingService.cs, remove duplicates and use yours instead.
+    public Task<List<InventoryValuationRowDto>> GetInventoryValuationAsync(string locationCode)
+        => Task.FromResult(new List<InventoryValuationRowDto>());
 
-public sealed class SalesExportRow
-{
-    public DateTime OccurredAtUtc { get; set; }
-    public string ReceiptNo { get; set; } = "";
-    public string Status { get; set; } = "";
-    public string? PaymentType { get; set; }
-    public string CustomerName { get; set; } = "";
-    public decimal NetTotal { get; set; }
-    public decimal VatTotal { get; set; }
-    public decimal GrossTotal { get; set; }
-}
+     public Task<List<LowStockRowDto>> GetLowStockAsync(string locationCode, int rangeDays, decimal suggestedReorderDays)
+        => Task.FromResult(new List<LowStockRowDto>());
 
-public sealed class PurchaseAdjustmentRow
-{
-    public DateTime OccurredAtUtc { get; set; }
-    public string Sku { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string QuantityDisplay { get; set; } = "";
-    public string Reason { get; set; } = "";
-}
+        public Task<List<TopProductRowDto>> GetTopProductsAsync(DateTime fromUtc, DateTime toUtc, int topN)
+                => Task.FromResult(new List<TopProductRowDto>());
 
-public sealed class CustomerSalesRow
-{
-    public string CustomerName { get; set; } = "";
-    public int ReceiptCount { get; set; }
-    public decimal GrossTotal { get; set; }
-    public decimal CurrentBalance { get; set; }
-}
+        public Task<List<ProfitByProductRowDto>> GetProfitByProductAsync(DateTime fromUtc, DateTime toUtc, int maxRows)
+                => Task.FromResult(new List<ProfitByProductRowDto>());
 
-public sealed class InventoryValuationRow
-{
-    public string Sku { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string OnHandDisplay { get; set; } = "";
-    public decimal SellingValue { get; set; }
-    public decimal CostValue { get; set; }
-    public decimal EstimatedGrossMargin { get; set; }
-}
-
-public sealed class LowStockRow
-{
-    public string Sku { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string OnHandDisplay { get; set; } = "";
-    public decimal AvgDailyUsageBase { get; set; }
-    public decimal DaysRemaining { get; set; }
-    public decimal SuggestedReorderBase { get; set; }
-}
-
-public sealed class TopProductRow
-{
-    public string Sku { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string QuantityDisplay { get; set; } = "";
-    public decimal GrossTotal { get; set; }
-}
-
-public sealed class ProfitByProductRow
-{
-    public string Sku { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string QuantityDisplay { get; set; } = "";
-    public decimal SalesGross { get; set; }
-    public decimal Cogs { get; set; }
-    public decimal GrossProfit { get; set; }
-    public decimal GrossMarginPct { get; set; }
 }

@@ -21,6 +21,15 @@
       <Setter Property="MinHeight" Value="36" />
       <Setter Property="Padding" Value="12,6" />
     </Style>
+       <Style Selector="DatePicker.template-date">
+      <Setter Property="MinWidth" Value="190" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="DatePicker.template-date /template/ TextBox">
+      <Setter Property="Padding" Value="8,2" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
   </Window.Styles>
 
   <Grid RowDefinitions="Auto,Auto,*" Margin="16">
@@ -33,9 +42,11 @@
       <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
           <TextBlock VerticalAlignment="Center" Text="From" />
-          <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" Width="160" />
+          <DatePicker Classes="template-date"
+                       SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
           <TextBlock VerticalAlignment="Center" Text="To" />
-          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" Width="160" />
+          <DatePicker Classes="template-date"
+            SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
           <Button Classes="primary" Content="Refresh" Command="{Binding RefreshCommand}" />
         </StackPanel>
 

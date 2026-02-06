@@ -106,8 +106,14 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Net");
                     ColumnHeaders.Add("VAT");
                     ColumnHeaders.Add("Gross");
+                    var netTotal = 0m;
+                    var vatTotal = 0m;
+                    var grossTotal = 0m;
                     foreach (var row in await svc.GetSalesExportAsync(fromUtc, toUtc))
                     {
+                        netTotal += row.NetTotal;
+                        vatTotal += row.VatTotal;
+                        grossTotal += row.GrossTotal;
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["Date (UTC)"] = row.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
@@ -119,6 +125,16 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                             ["Gross"] = row.GrossTotal.ToString("0.00", CultureInfo.InvariantCulture)
                         }));
                     }
+                     Rows.Add(new ExportRow(new Dictionary<string, string>
+                    {
+                        ["Date (UTC)"] = "Total",
+                        ["Receipt"] = string.Empty,
+                        ["Status"] = string.Empty,
+                        ["Customer"] = string.Empty,
+                        ["Net"] = netTotal.ToString("0.00", CultureInfo.InvariantCulture),
+                        ["VAT"] = vatTotal.ToString("0.00", CultureInfo.InvariantCulture),
+                        ["Gross"] = grossTotal.ToString("0.00", CultureInfo.InvariantCulture)
+                    }));
                     break;
                 case ExportTemplateKind.Purchases:
                     ColumnHeaders.Add("Date (UTC)");

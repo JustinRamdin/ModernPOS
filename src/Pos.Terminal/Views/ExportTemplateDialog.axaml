@@ -40,7 +40,7 @@
     </Style>
   </Window.Styles>
 
-  <Grid RowDefinitions="Auto,Auto,*" Margin="16">
+  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
 
     <StackPanel Margin="0,0,0,12">
       <TextBlock Classes="h2" Text="{Binding TemplateName}" />
@@ -76,7 +76,12 @@
       </DockPanel>
     </Border>
 
-    <DataGrid Grid.Row="2"
+     <TextBlock Grid.Row="2"
+               Classes="h2"
+               Margin="0,0,0,8"
+               Text="Preview" />
+
+    <DataGrid Grid.Row="3"
               Name="TemplateGrid"
               ItemsSource="{Binding Rows}"
               IsReadOnly="True"

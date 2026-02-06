@@ -103,16 +103,37 @@ public sealed record CustomerSalesRowDto(
 );
 
 // --- EXPORTS ---
-public sealed record SalesExportRowDto(
-    DateTime OccurredAtUtc,
-    string ReceiptNo,
-    string Status,
-    string? PaymentType,
-    string CustomerName,
-    decimal NetTotal,
-    decimal VatTotal,
-    decimal GrossTotal
-);
+public sealed record SalesExportRowDto
+{
+    public SalesExportRowDto(
+        DateTime occurredAtUtc,
+        string receiptNo,
+        string status,
+        string? paymentType,
+        string customerName,
+        decimal netTotal,
+        decimal vatTotal,
+        decimal grossTotal)
+    {
+        OccurredAtUtc = occurredAtUtc;
+        ReceiptNo = receiptNo;
+        Status = status;
+        PaymentType = paymentType;
+        CustomerName = customerName;
+        NetTotal = netTotal;
+        VatTotal = vatTotal;
+        GrossTotal = grossTotal;
+    }
+
+    public DateTime OccurredAtUtc { get; init; }
+    public string ReceiptNo { get; init; }
+    public string Status { get; init; }
+    public string? PaymentType { get; init; }
+    public string CustomerName { get; init; }
+    public decimal NetTotal { get; init; }
+    public decimal VatTotal { get; init; }
+    public decimal GrossTotal { get; init; }
+}
 
 public sealed record PurchaseExportRowDto(
     DateTime OccurredAtUtc,

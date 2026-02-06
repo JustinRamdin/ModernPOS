@@ -469,9 +469,14 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             var svc = new ReportingService(db);
 
             // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
-            var (fromUtc, toUtc) = GetUtcRange();
-            var paymentTypes = await svc.GetPaymentTypesAsync();
-           var customers = (await svc.GetCustomerSalesAsync(fromUtc, toUtc))
+                        var (fromUtc, toUtc) = GetUtcRange();
+            var paymentTypes = (await svc.GetSalesExportAsync(fromUtc, toUtc))
+                .Select(row => row.PaymentType)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var customers = (await svc.GetCustomerSalesAsync(fromUtc, toUtc))
                 .Select(row => row.CustomerName)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)

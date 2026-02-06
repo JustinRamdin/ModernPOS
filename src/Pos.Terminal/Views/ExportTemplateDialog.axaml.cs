@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 
 using Pos.Terminal.ViewModels;
 
@@ -50,6 +51,12 @@ public partial class ExportTemplateDialog : Window
 
     private void BuildColumns()
     {
+          if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(BuildColumns);
+            return;
+        }
+
         if (VM == null)
             return;
 
@@ -63,7 +70,7 @@ public partial class ExportTemplateDialog : Window
             grid.Columns.Add(new DataGridTextColumn
             {
                 Header = header,
-                   Binding = new Binding($"Values[\"{header}\"]")
+                   Binding = new Binding($"[{header}]")
                 {
                     Mode = BindingMode.OneWay
                 }

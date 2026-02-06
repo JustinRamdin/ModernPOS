@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 using ClosedXML.Excel;
 using Microsoft.Data.Sqlite;
@@ -468,8 +469,13 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             var svc = new ReportingService(db);
 
             // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
+            var (fromUtc, toUtc) = GetUtcRange();
             var paymentTypes = await svc.GetPaymentTypesAsync();
-            var customers = await svc.GetCustomerNamesAsync();
+           var customers = (await svc.GetCustomerSalesAsync(fromUtc, toUtc))
+                .Select(row => row.CustomerName)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
             var items = await svc.GetItemOrSkuListAsync(_locationCode);
 
             PaymentTypes.Clear(); PaymentTypes.Add("All");

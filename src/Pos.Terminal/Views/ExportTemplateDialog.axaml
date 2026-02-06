@@ -21,7 +21,7 @@
 
     <!-- Filters -->
     <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,10">
-      <WrapPanel Spacing="10">
+      <WrapPanel ItemSpacing="10">
 
         <StackPanel Width="160">
           <TextBlock Text="From" />

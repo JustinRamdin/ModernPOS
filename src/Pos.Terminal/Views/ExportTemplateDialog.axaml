@@ -33,9 +33,9 @@
       <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
           <TextBlock VerticalAlignment="Center" Text="From" />
-          <DatePicker SelectedDate="{Binding FromDate}" Width="160" />
+          <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" Width="160" />
           <TextBlock VerticalAlignment="Center" Text="To" />
-          <DatePicker SelectedDate="{Binding ToDate}" Width="160" />
+          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" Width="160" />
           <Button Classes="primary" Content="Refresh" Command="{Binding RefreshCommand}" />
         </StackPanel>
 

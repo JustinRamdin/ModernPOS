@@ -1,6 +1,7 @@
 <Application
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Pos.Terminal.Converters"
     x:Class="Pos.Terminal.App"
     RequestedThemeVariant="Light">
 
@@ -9,6 +10,8 @@
   </Application.Styles>
 
   <Application.Resources>
+  <converters:NullableDateTimeOffsetConverter x:Key="NullableDateTimeOffsetConverter" />
+
     <!-- Accent -->
     <Color x:Key="AccentColor">#2563EB</Color>
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>

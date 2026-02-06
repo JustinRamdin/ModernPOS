@@ -1,93 +1,84 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        x:Class="Pos.Terminal.Views.ExportTemplateDialog"
-        Width="920"
-        Height="640"
-        WindowStartupLocation="CenterOwner"
-        mc:Ignorable="d"
-        Title="Export Template">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pos.Terminal.Views.ExportTemplateDialog">
 
-  <Window.Styles>
-    <Style Selector="TextBlock.h2">
-      <Setter Property="FontSize" Value="16" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-    </Style>
+  <Grid RowDefinitions="Auto,Auto,*" Margin="12" RowSpacing="10">
 
-    <Style Selector="TextBlock.muted">
-      <Setter Property="Opacity" Value="0.7" />
-    </Style>
-
-    <Style Selector="Button.primary">
-      <Setter Property="MinHeight" Value="36" />
-      <Setter Property="Padding" Value="12,6" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-
-    <!-- DatePickers -->
-    <Style Selector="DatePicker.template-date">
-      <Setter Property="MinWidth" Value="190" />
-      <Setter Property="MinHeight" Value="36" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-
-    <!-- Style the inner TextBox (this is where padding/vertical feel comes from) -->
-    <Style Selector="DatePicker.template-date /template/ TextBox">
-      <Setter Property="MinHeight" Value="36" />
-      <Setter Property="Padding" Value="10,6" />
-      <Setter Property="VerticalContentAlignment" Value="Center" />
-    </Style>
-  </Window.Styles>
-
-  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
-
-    <StackPanel Margin="0,0,0,12">
-      <TextBlock Classes="h2" Text="{Binding TemplateName}" />
-      <TextBlock Classes="muted" Text="{Binding TemplateDescription}" />
-    </StackPanel>
-
-    <Border Grid.Row="1"
-            Margin="0,0,0,12"
-            Padding="10"
-            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-            BorderThickness="1"
-            CornerRadius="8">
-
-      <DockPanel LastChildFill="True">
-
-        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
-          <TextBlock VerticalAlignment="Center" Text="From" />
-          <DatePicker Classes="template-date"
-                      SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
-
-          <TextBlock VerticalAlignment="Center" Text="To" />
-          <DatePicker Classes="template-date"
-                      SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
-
-          <Button Classes="primary" Content="Refresh" Command="{Binding RefreshCommand}" />
+    <!-- Header -->
+    <Border Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,4">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Left">
+          <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding TemplateName}" />
+          <TextBlock Opacity="0.75" Text="{Binding TemplateDescription}" />
         </StackPanel>
 
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-          <TextBlock Classes="muted" Text="{Binding Status}" VerticalAlignment="Center" />
-          <Button Classes="primary" Content="Export to Excel" Click="ExportToExcel_Click" />
-        </StackPanel>
-
+        <Button DockPanel.Dock="Right"
+                Content="Export Excel"
+                Command="{Binding ExportCommand}"
+                Margin="8,0,0,0"/>
       </DockPanel>
     </Border>
 
-     <TextBlock Grid.Row="2"
-               Classes="h2"
-               Margin="0,0,0,8"
-               Text="Preview" />
+    <!-- Filters -->
+    <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1">
+      <WrapPanel Spacing="10">
 
-    <DataGrid Grid.Row="3"
-              Name="TemplateGrid"
-              ItemsSource="{Binding Rows}"
-              IsReadOnly="True"
-              AutoGenerateColumns="False"
-              GridLinesVisibility="Horizontal"
-              HeadersVisibility="Column" />
+        <StackPanel Width="160">
+          <TextBlock Text="From" />
+          <DatePicker SelectedDate="{Binding FromDate}" />
+        </StackPanel>
+
+        <StackPanel Width="160">
+          <TextBlock Text="To" />
+          <DatePicker SelectedDate="{Binding ToDate}" />
+        </StackPanel>
+
+        <StackPanel Width="200">
+          <TextBlock Text="Payment Type" />
+          <ComboBox ItemsSource="{Binding PaymentTypes}"
+                    SelectedItem="{Binding SelectedPaymentType}" />
+        </StackPanel>
+
+        <StackPanel Width="240">
+          <TextBlock Text="Customer" />
+          <ComboBox ItemsSource="{Binding Customers}"
+                    SelectedItem="{Binding SelectedCustomer}" />
+        </StackPanel>
+
+        <StackPanel Width="240">
+          <TextBlock Text="Item / SKU" />
+          <ComboBox ItemsSource="{Binding Items}"
+                    SelectedItem="{Binding SelectedItem}" />
+        </StackPanel>
+
+        <StackPanel Width="220">
+          <TextBlock Text="Search" />
+          <TextBox Text="{Binding SearchText}" Watermark="receipt, customer, sku..." />
+        </StackPanel>
+
+        <StackPanel Width="120" VerticalAlignment="Bottom">
+          <Button Content="Refresh"
+                  Command="{Binding RefreshCommand}" />
+        </StackPanel>
+
+      </WrapPanel>
+    </Border>
+
+    <!-- Status + Grid -->
+    <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="8">
+      <TextBlock Grid.Row="0" Text="{Binding Status}" Opacity="0.8"/>
+
+      <DataGrid Grid.Row="1"
+                Name="Grid"
+                ItemsSource="{Binding Rows}"
+                IsReadOnly="True"
+                GridLinesVisibility="All"
+                HeadersVisibility="All"
+                AutoGenerateColumns="False"
+                CanUserSortColumns="True"
+                CanUserResizeColumns="True"
+                CanUserReorderColumns="True" />
+    </Grid>
 
   </Grid>
-</Window>
+</UserControl>

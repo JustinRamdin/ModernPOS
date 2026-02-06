@@ -1,106 +1,41 @@
-using System;
-using System.Collections.Specialized;
-using System.Threading.Tasks;
-
 using Avalonia.Controls;
 using Avalonia.Data;
-using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage;
-using Avalonia.Threading;
-
-using Pos.Terminal.ViewModels;
+using Avalonia.VisualTree;
 
 namespace Pos.Terminal.Views;
 
 public partial class ExportTemplateDialog : Window
 {
-    private ExportTemplateDialogViewModel? VM => DataContext as ExportTemplateDialogViewModel;
-
     public ExportTemplateDialog()
     {
         InitializeComponent();
-        DataContextChanged += OnDataContextChanged;
-        Opened += OnOpened;
-    }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
-    private void OnDataContextChanged(object? sender, EventArgs e)
-    {
-        if (VM == null)
-            return;
-
-        Title = $"{VM.TemplateName} Export";
-        VM.ColumnHeaders.CollectionChanged += OnHeadersChanged;
-    }
-
-    private async void OnOpened(object? sender, EventArgs e)
-    {
-        if (VM == null)
-            return;
-
-        await VM.LoadAsync();
-        BuildColumns();
-    }
-
-    private void OnHeadersChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        => BuildColumns();
-
-    private void BuildColumns()
-    {
-          if (!Dispatcher.UIThread.CheckAccess())
+        // When DataContext is set, bind dynamic columns to ColumnHeaders
+        this.AttachedToVisualTree += (_, __) =>
         {
-            Dispatcher.UIThread.Post(BuildColumns);
-            return;
-        }
+            if (DataContext is not Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
+                return;
 
-        if (VM == null)
-            return;
+            vm.ColumnHeaders.CollectionChanged += (_, __) => BuildColumns(vm);
+            BuildColumns(vm);
+        };
+    }
 
-        var grid = this.FindControl<DataGrid>("TemplateGrid");
+    private void BuildColumns(Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
+    {
+        var grid = this.FindControl<DataGrid>("Grid");
         if (grid == null)
             return;
 
         grid.Columns.Clear();
-        foreach (var header in VM.ColumnHeaders)
+
+        foreach (var header in vm.ColumnHeaders)
         {
             grid.Columns.Add(new DataGridTextColumn
             {
                 Header = header,
-                   Binding = new Binding($"[{header}]")
-                {
-                    Mode = BindingMode.OneWay
-                }
+                Binding = new Binding($"[{header}]") // ExportRow indexer
             });
         }
-    }
-
-    public async void ExportToExcel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        if (VM == null)
-            return;
-
-        var storageProvider = StorageProvider;
-        if (storageProvider == null)
-            return;
-
-        var options = new FilePickerSaveOptions
-        {
-            DefaultExtension = "xlsx",
-            SuggestedFileName = $"{VM.TemplateName}-{DateTime.Now:yyyyMMdd}.xlsx",
-            FileTypeChoices =
-            [
-                new FilePickerFileType("Excel Workbook") { Patterns = ["*.xlsx"] }
-            ]
-        };
-
-        var file = await storageProvider.SaveFilePickerAsync(options);
-        if (file == null)
-            return;
-
-        await VM.ExportAsync(file.Path.LocalPath);
     }
 }

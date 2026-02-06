@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ClosedXML.Excel;
@@ -20,23 +21,111 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 {
     private readonly ExportTemplateDefinition _template;
     private readonly string _locationCode;
+
     private string _status = "Ready";
+
+    // Debounce refresh
+    private CancellationTokenSource? _refreshCts;
+
+    // Cancel in-flight loads (prevents older loads overwriting new filters)
+    private CancellationTokenSource? _loadCts;
 
     public string TemplateName => _template.Name;
     public string TemplateDescription => _template.Description;
 
     private DateTime? _fromDate;
-    public DateTime? FromDate { get => _fromDate; set { _fromDate = value; OnPropertyChanged(); } }
+    public DateTime? FromDate
+    {
+        get => _fromDate;
+        set
+        {
+            if (_fromDate == value) return;
+            _fromDate = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
 
     private DateTime? _toDate;
-    public DateTime? ToDate { get => _toDate; set { _toDate = value; OnPropertyChanged(); } }
+    public DateTime? ToDate
+    {
+        get => _toDate;
+        set
+        {
+            if (_toDate == value) return;
+            _toDate = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
 
-    public string Status { get => _status; set { _status = value; OnPropertyChanged(); } }
+    // Filters
+    public ObservableCollection<string> PaymentTypes { get; } = new();
+    private string _selectedPaymentType = "All";
+    public string SelectedPaymentType
+    {
+        get => _selectedPaymentType;
+        set
+        {
+            if (_selectedPaymentType == value) return;
+            _selectedPaymentType = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
+
+    public ObservableCollection<string> Customers { get; } = new();
+    private string _selectedCustomer = "All";
+    public string SelectedCustomer
+    {
+        get => _selectedCustomer;
+        set
+        {
+            if (_selectedCustomer == value) return;
+            _selectedCustomer = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
+
+    public ObservableCollection<string> Items { get; } = new();
+    private string _selectedItem = "All";
+    public string SelectedItem
+    {
+        get => _selectedItem;
+        set
+        {
+            if (_selectedItem == value) return;
+            _selectedItem = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
+
+    private string? _searchText;
+    public string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText == value) return;
+            _searchText = value;
+            OnPropertyChanged();
+            _ = ScheduleRefreshAsync();
+        }
+    }
+
+    public string Status
+    {
+        get => _status;
+        set { _status = value; OnPropertyChanged(); }
+    }
 
     public ObservableCollection<string> ColumnHeaders { get; } = new();
     public ObservableCollection<ExportRow> Rows { get; } = new();
 
     public System.Windows.Input.ICommand RefreshCommand { get; }
+    public System.Windows.Input.ICommand ExportCommand { get; }
 
     public ExportTemplateDialogViewModel(
         ExportTemplateDefinition template,
@@ -51,6 +140,30 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         ToDate = toDate;
 
         RefreshCommand = new AsyncRelayCommand(async _ => await LoadAsync());
+
+        // ExportCommand expects the view to pass a file path. If you already have a SaveFile dialog in the View,
+        // call vm.ExportAsync(path). Here we keep a placeholder that does nothing without a path.
+        ExportCommand = new AsyncRelayCommand(async _ =>
+        {
+            Status = "Choose a file path to export...";
+            await Task.CompletedTask;
+        });
+
+        InitFilterListsDefaults();
+
+        _ = LoadFilterOptionsAsync();
+        _ = LoadAsync();
+    }
+
+    private void InitFilterListsDefaults()
+    {
+        PaymentTypes.Clear(); PaymentTypes.Add("All");
+        Customers.Clear(); Customers.Add("All");
+        Items.Clear(); Items.Add("All");
+
+        _selectedPaymentType = "All";
+        _selectedCustomer = "All";
+        _selectedItem = "All";
     }
 
     private static TimeZoneInfo GetTz()
@@ -82,8 +195,19 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         return (fromUtc, toUtc);
     }
 
+    private string? PaymentTypeFilter => SelectedPaymentType == "All" ? null : SelectedPaymentType;
+    private string? CustomerFilter => SelectedCustomer == "All" ? null : SelectedCustomer;
+    private string? ItemFilter => SelectedItem == "All" ? null : SelectedItem;
+    private string? SearchFilter => string.IsNullOrWhiteSpace(SearchText) ? null : SearchText!.Trim();
+
     public async Task LoadAsync()
     {
+        // cancel any in-flight load
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+        var token = _loadCts.Token;
+
         try
         {
             Status = "Loading template data...";
@@ -91,6 +215,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
             await using var db = CreateLocalDb();
             await db.Database.EnsureCreatedAsync();
+
             var svc = new ReportingService(db);
 
             ColumnHeaders.Clear();
@@ -99,54 +224,78 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             switch (_template.Kind)
             {
                 case ExportTemplateKind.Sales:
+                {
                     ColumnHeaders.Add("Date (UTC)");
                     ColumnHeaders.Add("Receipt");
                     ColumnHeaders.Add("Status");
+                    ColumnHeaders.Add("Payment Type");
                     ColumnHeaders.Add("Customer");
                     ColumnHeaders.Add("Net");
                     ColumnHeaders.Add("VAT");
                     ColumnHeaders.Add("Gross");
+
                     var netTotal = 0m;
                     var vatTotal = 0m;
                     var grossTotal = 0m;
-                    foreach (var row in await svc.GetSalesExportAsync(fromUtc, toUtc))
+
+                    var results = await svc.GetSalesExportAsync(
+                        fromUtc, toUtc,
+                        paymentType: PaymentTypeFilter,
+                        customer: CustomerFilter,
+                        itemOrSku: ItemFilter,
+                        search: SearchFilter,
+                        ct: token);
+
+                    foreach (var row in results)
                     {
-                          if (!IsPaymentToAccount(row.Status))
+                        token.ThrowIfCancellationRequested();
+
+                        if (!IsPaymentToAccount(row.Status))
                         {
                             netTotal += row.NetTotal;
                             vatTotal += row.VatTotal;
                             grossTotal += row.GrossTotal;
                         }
+
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["Date (UTC)"] = row.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                             ["Receipt"] = row.ReceiptNo,
                             ["Status"] = row.Status,
+                            ["Payment Type"] = row.PaymentType ?? "",
                             ["Customer"] = row.CustomerName,
                             ["Net"] = row.NetTotal.ToString("0.00", CultureInfo.InvariantCulture),
                             ["VAT"] = row.VatTotal.ToString("0.00", CultureInfo.InvariantCulture),
                             ["Gross"] = row.GrossTotal.ToString("0.00", CultureInfo.InvariantCulture)
                         }));
                     }
-                     Rows.Add(new ExportRow(new Dictionary<string, string>
+
+                    Rows.Add(new ExportRow(new Dictionary<string, string>
                     {
                         ["Date (UTC)"] = "Total",
-                        ["Receipt"] = string.Empty,
-                        ["Status"] = string.Empty,
-                        ["Customer"] = string.Empty,
+                        ["Receipt"] = "",
+                        ["Status"] = "",
+                        ["Payment Type"] = "",
+                        ["Customer"] = "",
                         ["Net"] = netTotal.ToString("0.00", CultureInfo.InvariantCulture),
                         ["VAT"] = vatTotal.ToString("0.00", CultureInfo.InvariantCulture),
                         ["Gross"] = grossTotal.ToString("0.00", CultureInfo.InvariantCulture)
                     }));
+
                     break;
+                }
+
                 case ExportTemplateKind.Purchases:
+                {
                     ColumnHeaders.Add("Date (UTC)");
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
                     ColumnHeaders.Add("Qty");
                     ColumnHeaders.Add("Reason");
+
                     foreach (var row in await svc.GetPurchaseAdjustmentsAsync(fromUtc, toUtc, _locationCode))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["Date (UTC)"] = row.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
@@ -157,13 +306,18 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
+                }
+
                 case ExportTemplateKind.Customers:
+                {
                     ColumnHeaders.Add("Customer");
                     ColumnHeaders.Add("Receipts");
                     ColumnHeaders.Add("Gross");
                     ColumnHeaders.Add("Balance");
+
                     foreach (var row in await svc.GetCustomerSalesAsync(fromUtc, toUtc))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["Customer"] = row.CustomerName,
@@ -173,15 +327,20 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
+                }
+
                 case ExportTemplateKind.Inventory:
+                {
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
                     ColumnHeaders.Add("On hand");
                     ColumnHeaders.Add("Sell value");
                     ColumnHeaders.Add("Cost value");
                     ColumnHeaders.Add("Margin");
+
                     foreach (var row in await svc.GetInventoryValuationAsync(_locationCode))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["SKU"] = row.Sku,
@@ -193,16 +352,21 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
+                }
+
                 case ExportTemplateKind.LowStock:
+                {
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
                     ColumnHeaders.Add("On hand");
                     ColumnHeaders.Add("Avg/day");
                     ColumnHeaders.Add("Days left");
                     ColumnHeaders.Add("Reorder");
+
                     var rangeDays = Math.Clamp((int)Math.Ceiling((toUtc - fromUtc).TotalDays), 1, 90);
                     foreach (var row in await svc.GetLowStockAsync(_locationCode, rangeDays, suggestedReorderDays: 7m))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["SKU"] = row.Sku,
@@ -214,13 +378,18 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
+                }
+
                 case ExportTemplateKind.TopProducts:
+                {
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
                     ColumnHeaders.Add("Qty");
                     ColumnHeaders.Add("Gross");
+
                     foreach (var row in await svc.GetTopProductsAsync(fromUtc, toUtc, 50))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["SKU"] = row.Sku,
@@ -230,7 +399,10 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
+                }
+
                 case ExportTemplateKind.Profit:
+                {
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
                     ColumnHeaders.Add("Qty");
@@ -238,8 +410,10 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("COGS");
                     ColumnHeaders.Add("Profit");
                     ColumnHeaders.Add("Margin %");
+
                     foreach (var row in await svc.GetProfitByProductAsync(fromUtc, toUtc, 200))
                     {
+                        token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
                         {
                             ["SKU"] = row.Sku,
@@ -252,15 +426,73 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         }));
                     }
                     break;
-                default:
-                    break;
+                }
             }
 
             Status = $"Loaded {Rows.Count} rows.";
         }
+        catch (OperationCanceledException)
+        {
+            // ignore (user changed filters quickly)
+        }
         catch (Exception ex)
         {
             Status = $"Failed to load: {ex.Message}";
+        }
+    }
+
+    private async Task ScheduleRefreshAsync()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshCts = new CancellationTokenSource();
+        var token = _refreshCts.Token;
+
+        try
+        {
+            await Task.Delay(300, token);
+            if (!token.IsCancellationRequested)
+                await LoadAsync();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private async Task LoadFilterOptionsAsync()
+    {
+        try
+        {
+            await using var db = CreateLocalDb();
+            await db.Database.EnsureCreatedAsync();
+            var svc = new ReportingService(db);
+
+            // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
+            var paymentTypes = await svc.GetPaymentTypesAsync();
+            var customers = await svc.GetCustomerNamesAsync();
+            var items = await svc.GetItemOrSkuListAsync(_locationCode);
+
+            PaymentTypes.Clear(); PaymentTypes.Add("All");
+            foreach (var p in paymentTypes)
+                PaymentTypes.Add(p);
+
+            Customers.Clear(); Customers.Add("All");
+            foreach (var c in customers)
+                Customers.Add(c);
+
+            Items.Clear(); Items.Add("All");
+            foreach (var i in items)
+                Items.Add(i);
+
+            // Ensure Selected values remain valid
+            if (!PaymentTypes.Contains(SelectedPaymentType)) SelectedPaymentType = "All";
+            if (!Customers.Contains(SelectedCustomer)) SelectedCustomer = "All";
+            if (!Items.Contains(SelectedItem)) SelectedItem = "All";
+        }
+        catch
+        {
+            // Keep usable even if something fails
+            InitFilterListsDefaults();
         }
     }
 
@@ -313,37 +545,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     private static bool IsPaymentToAccount(string status)
         => string.Equals(status, "Payment to Account", StringComparison.OrdinalIgnoreCase);
 
-
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-}
-
-public sealed record ExportTemplateDefinition(
-    string Name,
-    string Description,
-    ExportTemplateKind Kind
-);
-
-public enum ExportTemplateKind
-{
-    Sales,
-    Purchases,
-    Customers,
-    Inventory,
-    LowStock,
-    TopProducts,
-    Profit
-}
-
-public sealed class ExportRow
-{
-    public ExportRow(Dictionary<string, string> values)
-    {
-        Values = values;
-    }
-
-    public Dictionary<string, string> Values { get; }
-
-    public string this[string key] => Values.TryGetValue(key, out var value) ? value : "";
 }

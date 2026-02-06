@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pos.Terminal.Views.ExportTemplateDialog">
 
-  <Grid RowDefinitions="Auto,Auto,*" Margin="12" RowSpacing="10">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="12">
 
     <!-- Header -->
     <Border Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,4">
@@ -20,7 +20,7 @@
     </Border>
 
     <!-- Filters -->
-    <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1">
+    <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,10">
       <WrapPanel Spacing="10">
 
         <StackPanel Width="160">
@@ -65,8 +65,8 @@
     </Border>
 
     <!-- Status + Grid -->
-    <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="8">
-      <TextBlock Grid.Row="0" Text="{Binding Status}" Opacity="0.8"/>
+    <Grid Grid.Row="2" RowDefinitions="Auto,*">
+      <TextBlock Grid.Row="0" Text="{Binding Status}" Opacity="0.8" Margin="0,0,0,8"/>
 
       <DataGrid Grid.Row="1"
                 Name="Grid"

@@ -241,7 +241,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
                     var results = await svc.GetSalesExportAsync(
                         fromUtc, toUtc,
-                        TryGetpaymentType: PaymentTypeFilter,
+                        paymentType: PaymentTypeFilter,
                         customer: CustomerFilter,
                         itemOrSku: ItemFilter,
                         search: SearchFilter,
@@ -469,7 +469,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             var svc = new ReportingService(db);
 
             // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
-                        var (fromUtc, toUtc) = GetUtcRange();
+            var (fromUtc, toUtc) = GetUtcRange();
             var paymentTypes = (await svc.GetSalesExportAsync(fromUtc, toUtc))
                 .Select(TryGetPaymentType)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -555,6 +555,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
     private static bool IsPaymentToAccount(string status)
         => string.Equals(status, "Payment to Account", StringComparison.OrdinalIgnoreCase);
+
+     private static string? TryGetPaymentType(SalesExportRowDto row)
+        => string.IsNullOrWhiteSpace(row.PaymentType) ? null : row.PaymentType;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)

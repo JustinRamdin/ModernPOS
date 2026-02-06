@@ -239,16 +239,10 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     var vatTotal = 0m;
                     var grossTotal = 0m;
 
-                    var results = await svc.GetSalesExportAsync(
-                        fromUtc,
-                        toUtc,
-                        PaymentTypeFilter,
-                        CustomerFilter,
-                        ItemFilter,
-                        SearchFilter,
-                        token);
+                     var results = await svc.GetSalesExportAsync(fromUtc, toUtc);
+                    var filtered = ApplySalesFilters(results);
 
-                    foreach (var row in results)
+                    foreach (var row in filtered)
                     {
                         token.ThrowIfCancellationRequested();
 
@@ -553,6 +547,35 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     }
 
     private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
+
+    private IEnumerable<SalesExportRowDto> ApplySalesFilters(IEnumerable<SalesExportRowDto> rows)
+    {
+        var filtered = rows;
+
+        if (!string.IsNullOrWhiteSpace(PaymentTypeFilter))
+        {
+            filtered = filtered.Where(row =>
+                string.Equals(TryGetPaymentType(row), PaymentTypeFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(CustomerFilter))
+        {
+            filtered = filtered.Where(row =>
+                string.Equals(row.CustomerName, CustomerFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            var term = SearchFilter;
+            filtered = filtered.Where(row =>
+                row.ReceiptNo.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || row.Status.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || row.CustomerName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (TryGetPaymentType(row)?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        return filtered;
+    }
 
     private static bool IsPaymentToAccount(string status)
         => string.Equals(status, "Payment to Account", StringComparison.OrdinalIgnoreCase);

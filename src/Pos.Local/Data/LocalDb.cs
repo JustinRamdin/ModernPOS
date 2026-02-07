@@ -1,6 +1,7 @@
 using System.IO;
 using System;
 using Microsoft.EntityFrameworkCore;
+using DataLocalDb = Pos.Local.Data.LocalDb;
 
 namespace Pos.Local.Data;
 

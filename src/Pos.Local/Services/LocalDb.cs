@@ -5,16 +5,10 @@ namespace Pos.Local.Services;
 
 public static class LocalDb
 {
-    public static string DefaultDbPath => "pos.local.db";
+    public static string DefaultDbPath => DataLocalDb.DefaultDbPath;
 
     public static DbContextOptions<PosLocalDbContext> BuildOptions(string? dbPath = null)
-    {
-        dbPath ??= DefaultDbPath;
-
-        var builder = new DbContextOptionsBuilder<PosLocalDbContext>();
-        builder.UseSqlite($"Data Source={dbPath};Foreign Keys=True;");
-        return builder.Options;
-    }
+  => DataLocalDb.BuildOptions(dbPath);
 
     /// <summary>
     /// Create schema directly from model (no migrations). Best for rapid iteration.

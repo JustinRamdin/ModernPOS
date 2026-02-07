@@ -8,8 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 
+using DataLocalDb = Pos.Local.Data.LocalDb;
+
+
 using ClosedXML.Excel;
-using Microsoft.Data.Sqlite;
+
 using Microsoft.EntityFrameworkCore;
 
 using Pos.Local.Data;
@@ -544,17 +547,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     }
 
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var cs = new SqliteConnectionStringBuilder
-        {
-            DataSource = "pos.local.db",
-            ForeignKeys = true
-        }.ToString();
-
-        return new DbContextOptionsBuilder<PosLocalDbContext>()
-            .UseSqlite(cs)
-            .Options;
-    }
+   => DataLocalDb.BuildOptions();
 
     private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
 

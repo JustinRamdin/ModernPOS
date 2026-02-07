@@ -1,12 +1,21 @@
 using System.IO;
+using System;
 using Microsoft.EntityFrameworkCore;
 
 namespace Pos.Local.Data;
 
 public static class LocalDb
 {
-    public static string DefaultDbPath =>
-        Path.Combine(@"C:\ModernPOS\Data", "poslocal.db");
+public static string DefaultDbPath
+    {
+        get
+        {
+            var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var folder = Path.Combine(root, "ModernPOS");
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "pos.local.db");
+        }
+    }   
 
     public static DbContextOptions<PosLocalDbContext> BuildOptions(string? dbPath = null)
     {

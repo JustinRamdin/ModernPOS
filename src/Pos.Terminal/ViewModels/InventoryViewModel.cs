@@ -11,13 +11,14 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Microsoft.Data.Sqlite;
+using DataLocalDb = Pos.Local.Data.LocalDb;
+
 using Microsoft.EntityFrameworkCore;
 
 using Pos.Application.Measurements;
 using Pos.Local.Data;
 using Pos.Local.Entities;
-
+using Pos.Local.Services;
 namespace Pos.Terminal.ViewModels;
 
 public sealed class InventoryViewModel : INotifyPropertyChanged
@@ -409,17 +410,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
 
     // ✅ SAME DB OPTIONS as Terminal + Customers
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var cs = new SqliteConnectionStringBuilder
-        {
-            DataSource = "pos.local.db",
-            ForeignKeys = true
-        }.ToString();
-
-        var builder = new DbContextOptionsBuilder<PosLocalDbContext>();
-        builder.UseSqlite(cs);
-        return builder.Options;
-    }
+    => DataLocalDb.BuildOptions();
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)

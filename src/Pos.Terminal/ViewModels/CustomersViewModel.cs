@@ -16,9 +16,11 @@ using System.Windows.Input;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
+using DataLocalDb = Pos.Local.Data.LocalDb;
+
 using Pos.Local.Data;
 using Pos.Local.Entities;
-
+using Pos.Local.Services;
 namespace Pos.Terminal.ViewModels;
 
 public sealed class CustomersViewModel : INotifyPropertyChanged
@@ -382,17 +384,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
     // ✅ SAME DB OPTIONS as Terminal + Inventory
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var cs = new SqliteConnectionStringBuilder
-        {
-            DataSource = "pos.local.db",
-            ForeignKeys = true
-        }.ToString();
-
-        var builder = new DbContextOptionsBuilder<PosLocalDbContext>();
-        builder.UseSqlite(cs);
-        return builder.Options;
-    }
+    => DataLocalDb.BuildOptions();
 
     // -------------------------
     // INotifyPropertyChanged

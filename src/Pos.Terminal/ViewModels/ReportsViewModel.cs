@@ -5,7 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-using Microsoft.Data.Sqlite;
+using DataLocalDb = Pos.Local.Data.LocalDb;
+
 using Microsoft.EntityFrameworkCore;
 
 using Pos.Local.Data;
@@ -319,17 +320,7 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
 
     // --- DB (same file as Terminal) ---
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var cs = new SqliteConnectionStringBuilder
-        {
-            DataSource = "pos.local.db",
-            ForeignKeys = true
-        }.ToString();
-
-        return new DbContextOptionsBuilder<PosLocalDbContext>()
-            .UseSqlite(cs)
-            .Options;
-    }
+    => DataLocalDb.BuildOptions();
 
     private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
 

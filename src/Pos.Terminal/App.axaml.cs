@@ -2,7 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Pos.Local.Services;
+using ServicesLocalDb = Pos.Local.Services.LocalDb;
 
 namespace Pos.Terminal;
 
@@ -18,7 +18,7 @@ public partial class App : Avalonia.Application
         try
         {
             // Ensure local SQLite database exists and is migrated
-            await LocalDb.MigrateAsync();
+            await Pos.Local.Services.LocalDb.MigrateAsync();
         }
         catch (Exception ex)
         {

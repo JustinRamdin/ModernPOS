@@ -16,8 +16,9 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using DataLocalDb = Pos.Local.Data.LocalDb;
+
 using Avalonia.Threading;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using Pos.Application.Checkout;
@@ -381,7 +382,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             BuildCategories();
             ApplyFilters();
 
-            Status = $"Loaded {_allProducts.Count} products (pos.local.db)";
+            Status = $"Loaded {_allProducts.Count} products ({DataLocalDb.DefaultDbPath})";
         }
         catch (Exception ex)
         {
@@ -742,17 +743,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var cs = new SqliteConnectionStringBuilder
-        {
-            DataSource = "pos.local.db",
-            ForeignKeys = true
-        }.ToString();
-
-        var builder = new DbContextOptionsBuilder<PosLocalDbContext>();
-        builder.UseSqlite(cs);
-        return builder.Options;
-    }
+    => DataLocalDb.BuildOptions();
 
     private static PosLocalDbContext CreateLocalDb()
     {

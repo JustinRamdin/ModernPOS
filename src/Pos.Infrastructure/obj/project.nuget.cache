@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "k7tSPqOquyQ=",
+  "dgSpecHash": "2M5EDTATmIE=",
   "success": true,
-  "projectFilePath": "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
+  "projectFilePath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Justin\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\microsoft.build\\17.7.2\\microsoft.build.17.7.2.nupkg.sha512",

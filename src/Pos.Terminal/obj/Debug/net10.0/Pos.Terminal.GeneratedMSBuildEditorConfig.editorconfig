@@ -15,32 +15,32 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Pos.Terminal
-build_property.ProjectDir = C:\ModernPOS\src\Pos.Terminal\
+build_property.ProjectDir = C:\Users\Justin\ModernPOS\src\Pos.Terminal\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/ModernPOS/src/Pos.Terminal/App.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/MainWindow.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/CustomersView.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/CustomersView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/ExportTemplateDialog.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/ExportTemplateDialog.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/InventoryView.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/InventoryView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/PayDialog.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/PayDialog.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/ReportsView.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/ReportsView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/ModernPOS/src/Pos.Terminal/Views/TerminalView.axaml]
+[C:/Users/Justin/ModernPOS/src/Pos.Terminal/Views/TerminalView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

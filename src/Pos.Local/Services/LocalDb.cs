@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-DataLocalDb = Pos.Local.Data.LocalDb;
+using Pos.Local.Data;
+using DataLocalDb = Pos.Local.Data.LocalDb;
 namespace Pos.Local.Services;
 
 public static class LocalDb
@@ -7,7 +8,7 @@ public static class LocalDb
     public static string DefaultDbPath => DataLocalDb.DefaultDbPath;
 
     public static DbContextOptions<PosLocalDbContext> BuildOptions(string? dbPath = null)
-  => DataLocalDb.BuildOptions(dbPath);
+        => DataLocalDb.BuildOptions(dbPath);
 
     /// <summary>
     /// Create schema directly from model (no migrations). Best for rapid iteration.

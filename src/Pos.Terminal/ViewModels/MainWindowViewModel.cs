@@ -275,10 +275,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     // -----------------------------
     // Navigation
     // -----------------------------
-    public void ShowTerminal()
+    public async void ShowTerminal()
     {
         PageTitle = "Terminal";
         CurrentView = new TerminalView { DataContext = this };
+        await LoadAsync();
     }
 
     public async void ShowInventory()
@@ -349,7 +350,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await db.Database.EnsureCreatedAsync();
 
             var products = await db.Products.AsNoTracking()
-                .Where(p => p.IsActive)
+                .Where(p => p.IsActive && p.DeletedAtUtc == null)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
 

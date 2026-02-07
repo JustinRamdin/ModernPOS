@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.VisualTree;
+using System;
+using System.Collections.Generic;
 
 namespace Pos.Terminal.Views;
 
@@ -37,5 +39,27 @@ public partial class ExportTemplateDialog : Window
                 Binding = new Binding($"[{header}]") // ExportRow indexer
             });
         }
+    }
+    public async void Export_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
+            return;
+
+        var dialog = new SaveFileDialog
+        {
+            DefaultExtension = "xlsx",
+            InitialFileName = $"{vm.TemplateName}-{DateTime.Now:yyyyMMdd}.xlsx",
+            Filters = new List<FileDialogFilter>
+            {
+                new() { Name = "Excel Workbook", Extensions = { "xlsx" } },
+                new() { Name = "All Files", Extensions = { "*" } }
+            }
+        };
+
+        var path = await dialog.ShowAsync(this);
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        await vm.ExportAsync(path);
     }
 }

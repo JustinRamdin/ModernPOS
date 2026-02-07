@@ -14,7 +14,7 @@
 
         <Button DockPanel.Dock="Right"
                 Content="Export Excel"
-                Command="{Binding ExportCommand}"
+                Click="Export_Click"
                 Margin="8,0,0,0"/>
       </DockPanel>
     </Border>

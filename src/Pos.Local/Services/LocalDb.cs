@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Pos.Local.Data;
-
+DataLocalDb = Pos.Local.Data.LocalDb;
 namespace Pos.Local.Services;
 
 public static class LocalDb

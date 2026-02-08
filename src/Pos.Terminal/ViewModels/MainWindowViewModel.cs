@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -839,7 +840,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        var receiptText = BuildReceiptText(settings, receiptNo, paymentMethod, total, cashGiven, change);
+         var customerDetails = await LoadCustomerReceiptDetailsAsync(SelectedCustomerId);
+         var receiptText = BuildReceiptText(settings, receiptNo, paymentMethod, total, cashGiven, change, customerDetails);
 
         try
         {
@@ -855,11 +857,44 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             }
 
             using var doc = new PrintDocument { PrinterSettings = printerSettings };
+            doc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
+            doc.DefaultPageSettings.Margins = new Margins(50, 50, 50, 50);
             doc.PrintPage += (_, e) =>
             {
-                using var font = new Font("Consolas", 9);
-                var rect = new RectangleF(0, 0, e.PageBounds.Width, e.PageBounds.Height);
-                e.Graphics.DrawString(receiptText, font, Brushes.Black, rect);
+                using var headerFont = new Font("Segoe UI", 12, FontStyle.Bold);
+                using var bodyFont = new Font("Consolas", 9);
+                var bounds = e.MarginBounds;
+                float y = bounds.Top;
+
+                if (!string.IsNullOrWhiteSpace(settings.HeaderImagePath) && File.Exists(settings.HeaderImagePath))
+                {
+                    using var headerImage = Image.FromFile(settings.HeaderImagePath);
+                    var maxWidth = bounds.Width;
+                    var scale = Math.Min(maxWidth / headerImage.Width, 1f);
+                    var height = headerImage.Height * scale;
+                    e.Graphics.DrawImage(headerImage, bounds.Left, y, maxWidth, height);
+                    y += height + 10;
+                }
+
+                if (!string.IsNullOrWhiteSpace(settings.CompanyName))
+                {
+                    y = DrawWrappedLine(e.Graphics, settings.CompanyName.Trim(), headerFont, bounds, y);
+                }
+
+                foreach (var line in GetCompanyInfoLines(settings))
+                {
+                    y = DrawWrappedLine(e.Graphics, line, bodyFont, bounds, y);
+                }
+
+                if (!string.IsNullOrWhiteSpace(settings.CompanyName)
+                    || !string.IsNullOrWhiteSpace(settings.CompanyAddress)
+                    || !string.IsNullOrWhiteSpace(settings.CompanyContact))
+                {
+                    y += 6;
+                }
+
+                var bodyRect = new RectangleF(bounds.Left, y, bounds.Width, bounds.Bottom - y);
+                e.Graphics.DrawString(receiptText, bodyFont, Brushes.Black, bodyRect);
             };
 
             doc.Print();
@@ -877,15 +912,21 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         string paymentMethod,
         decimal total,
         decimal cashGiven,
-        decimal change)
+        decimal change,
+        CustomerReceiptDetails? customerDetails)
     {
         var sb = new StringBuilder();
 
-        AppendIfNotEmpty(sb, settings.CompanyName);
-        AppendIfNotEmpty(sb, settings.CompanyAddress);
-        AppendIfNotEmpty(sb, settings.CompanyContact);
+        if (customerDetails != null)
+        {
+            sb.AppendLine($"Customer: {customerDetails.Name}");
+            if (!string.IsNullOrWhiteSpace(customerDetails.Phone))
+                sb.AppendLine($"Phone: {customerDetails.Phone}");
+            if (!string.IsNullOrWhiteSpace(customerDetails.Email))
+                sb.AppendLine($"Email: {customerDetails.Email}");
+            sb.AppendLine(new string('-', 32));
+        }
 
-        sb.AppendLine(new string('-', 32));
         sb.AppendLine($"Receipt: {receiptNo}");
         sb.AppendLine($"Date: {DateTime.Now:g}");
         sb.AppendLine($"Payment: {paymentMethod}");
@@ -913,12 +954,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return sb.ToString();
     }
 
-    private static void AppendIfNotEmpty(StringBuilder sb, string value)
+    private static float DrawWrappedLine(Graphics graphics, string text, Font font, RectangleF bounds, float y)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return;
+       if (string.IsNullOrWhiteSpace(text))
+            return y;
 
-        foreach (var line in value.Split(Environment.NewLine))
+        var size = graphics.MeasureString(text, font, (int)bounds.Width);
+        var rect = new RectangleF(bounds.Left, y, bounds.Width, size.Height);
+        graphics.DrawString(text, font, Brushes.Black, rect);
+        return y + size.Height;
+    }
+
+        private static IEnumerable<string> GetCompanyInfoLines(AppSettings settings)
+    {
+        foreach (var line in settings.CompanyAddress.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
         {
             if (!string.IsNullOrWhiteSpace(line))
                 sb.AppendLine(line.Trim());
@@ -927,10 +976,33 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private static string TrimText(string text, int max)
     {
-        if (string.IsNullOrWhiteSpace(text)) return "";
-        return text.Length <= max ? text : text[..max];
+        yield return line.Trim();
+        }
+
+        foreach (var line in settings.CompanyContact.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+        {
+            yield return line.Trim();
     }
-    
+
+     private async Task<CustomerReceiptDetails?> LoadCustomerReceiptDetailsAsync(Guid? customerId)
+    {
+        if (customerId == null)
+            return null;
+
+        await using var db = CreateLocalDb();
+        var customer = await db.Customers.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == customerId.Value);
+
+        if (customer == null)
+        {
+            var fallbackName = string.IsNullOrWhiteSpace(_selectedCustomerName) ? "Unknown" : _selectedCustomerName;
+            return new CustomerReceiptDetails(fallbackName, "", "");
+        }
+
+        return new CustomerReceiptDetails(customer.Name, customer.Phone, customer.Email);
+    }
+
+    private sealed record CustomerReceiptDetails(string Name, string Phone, string Email);
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
     => DataLocalDb.BuildOptions();

@@ -64,12 +64,6 @@ C:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\refint\Pos.Local.dll
 C:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.pdb
 C:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.genruntimeconfig.cache
 C:\ModernPOS\src\Pos.Local\obj\Debug\net10.0\ref\Pos.Local.dll
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.csproj.AssemblyReference.cache
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.AssemblyInfoInputs.cache
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.AssemblyInfo.cs
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.csproj.CoreCompileInputs.cache
-C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.sourcelink.json
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\BuildHost-net472\Microsoft.Build.Locator.dll
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\BuildHost-net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\BuildHost-net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config
@@ -124,6 +118,12 @@ C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\Pos.Application.dll
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\Pos.Domain.dll
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\Pos.Application.pdb
 C:\Users\Justin\ModernPOS\src\Pos.Local\bin\Debug\net10.0\Pos.Domain.pdb
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.csproj.AssemblyReference.cache
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.AssemblyInfoInputs.cache
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.AssemblyInfo.cs
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.csproj.CoreCompileInputs.cache
+C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.sourcelink.json
 C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.csproj.Up2Date
 C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\Pos.Local.dll
 C:\Users\Justin\ModernPOS\src\Pos.Local\obj\Debug\net10.0\refint\Pos.Local.dll

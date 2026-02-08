@@ -31,6 +31,10 @@ public partial class MainWindow : Window
     {
         VM.ShowReports();
     }
+    private void NavSettings_Click(object? sender, RoutedEventArgs e)
+    {
+        VM.ShowSettings();
+    }
 
     // Keep your existing "commands" used by TerminalView.axaml
     public void AddCommand(object? param)

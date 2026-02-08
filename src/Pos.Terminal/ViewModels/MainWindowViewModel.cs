@@ -13,12 +13,14 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 using DataLocalDb = Pos.Local.Data.LocalDb;
 
 using Avalonia.Threading;
+using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
 using Microsoft.EntityFrameworkCore;
 
 using Pos.Application.Checkout;
@@ -30,7 +32,10 @@ using Pos.Local.Services;
 
 using Pos.Terminal.Commands;
 using Pos.Terminal.Models;
+using Pos.Terminal.Services;
 using Pos.Terminal.Views;
+using System.Drawing;
+using System.Drawing.Printing;
 
 // enum aliases for mapping
 using AppLineKind = Pos.Application.Checkout.LineQuantityKind;
@@ -41,6 +46,7 @@ namespace Pos.Terminal.ViewModels;
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
     private readonly CheckoutCalculator _checkout = new(new VatCalculator());
+    private readonly SettingsStore _settingsStore = new();
 
     // -----------------------------
     // Shell / navigation
@@ -65,6 +71,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         get => _status;
         set { _status = value; OnPropertyChanged(); }
     }
+
+     private string _headerTitle = "ModernPOS";
+    public string HeaderTitle
+    {
+        get => _headerTitle;
+        set { _headerTitle = value; OnPropertyChanged(); }
+    }
+
+    private AvaloniaBitmap? _headerImage;
+    public AvaloniaBitmap? HeaderImage
+    {
+        get => _headerImage;
+        set { _headerImage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasHeaderImage)); }
+    }
+
+    public bool HasHeaderImage => HeaderImage != null;
 
     // -----------------------------
     // Toast (short, non-blocking notifications)
@@ -270,6 +292,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         });
 
         ShowTerminal();
+
+        _ = LoadHeaderAsync();
     }
 
     // -----------------------------
@@ -304,6 +328,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         var vm = new ReportsViewModel();
         CurrentView = new ReportsView { DataContext = vm };
         await vm.LoadAllAsync();
+    }
+
+     public async void ShowSettings()
+    {
+        PageTitle = "Settings";
+        var vm = new SettingsViewModel(_settingsStore, ApplyHeaderSettings);
+        CurrentView = new SettingsView { DataContext = vm };
+        await vm.LoadAsync();
     }
 
     // TerminalView expects this
@@ -579,7 +611,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total {result.Total:0.00} Change {result.Change:0.00}";
             Toast($"Saved: {result.ReceiptNo}");
 
-            ClearCart();
+            await PrintReceiptAsync(
+                receiptNo: result.ReceiptNo,
+                paymentMethod: "CASH",
+                total: result.Total,
+                cashGiven: cashGiven,
+                change: result.Change);
+
+             ClearCart();
             ClearCustomer();
         }
         catch (Exception ex)
@@ -626,6 +665,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} ({method})";
             Toast($"Saved: {result.ReceiptNo}");
 
+            await PrintReceiptAsync(
+                receiptNo: result.ReceiptNo,
+                paymentMethod: method,
+                total: result.Total,
+                cashGiven: result.Total,
+                change: 0m);
+
             ClearCart();
             ClearCustomer();
         }
@@ -671,6 +717,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} (ON ACCOUNT)";
             Toast($"Saved: {result.ReceiptNo}");
+
+            await PrintReceiptAsync(
+                receiptNo: result.ReceiptNo,
+                paymentMethod: "ON ACCOUNT",
+                total: result.Total,
+                cashGiven: 0m,
+                change: 0m);
 
             ClearCart();
             ClearCustomer();
@@ -742,6 +795,142 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return (totals.Net, totals.Vat, totals.Gross);
     }
 
+     private async Task LoadHeaderAsync()
+    {
+        var settings = await _settingsStore.LoadAsync();
+        ApplyHeaderSettings(settings);
+    }
+
+    private void ApplyHeaderSettings(AppSettings settings)
+    {
+        HeaderTitle = string.IsNullOrWhiteSpace(settings.HeaderTitle) ? "ModernPOS" : settings.HeaderTitle;
+        HeaderImage = LoadBitmap(settings.HeaderImagePath);
+    }
+
+    private static AvaloniaBitmap? LoadBitmap(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path))
+            return null;
+
+        try
+        {
+            return new AvaloniaBitmap(path);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task PrintReceiptAsync(
+        string receiptNo,
+        string paymentMethod,
+        decimal total,
+        decimal cashGiven,
+        decimal change)
+    {
+        var settings = await _settingsStore.LoadAsync();
+        if (string.IsNullOrWhiteSpace(settings.ReceiptPrinterName))
+            return;
+
+        if (!OperatingSystem.IsWindows())
+        {
+            Status = "Receipt printing is only supported on Windows.";
+            return;
+        }
+
+        var receiptText = BuildReceiptText(settings, receiptNo, paymentMethod, total, cashGiven, change);
+
+        try
+        {
+            var printerSettings = new PrinterSettings
+            {
+                PrinterName = settings.ReceiptPrinterName
+            };
+
+            if (!printerSettings.IsValid)
+            {
+                Status = $"Printer not found: {settings.ReceiptPrinterName}";
+                return;
+            }
+
+            using var doc = new PrintDocument { PrinterSettings = printerSettings };
+            doc.PrintPage += (_, e) =>
+            {
+                using var font = new Font("Consolas", 9);
+                var rect = new RectangleF(0, 0, e.PageBounds.Width, e.PageBounds.Height);
+                e.Graphics.DrawString(receiptText, font, Brushes.Black, rect);
+            };
+
+            doc.Print();
+            Status = $"Receipt sent to {settings.ReceiptPrinterName}";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Print failed: {ex.Message}";
+        }
+    }
+
+    private string BuildReceiptText(
+        AppSettings settings,
+        string receiptNo,
+        string paymentMethod,
+        decimal total,
+        decimal cashGiven,
+        decimal change)
+    {
+        var sb = new StringBuilder();
+
+        AppendIfNotEmpty(sb, settings.CompanyName);
+        AppendIfNotEmpty(sb, settings.CompanyAddress);
+        AppendIfNotEmpty(sb, settings.CompanyContact);
+
+        sb.AppendLine(new string('-', 32));
+        sb.AppendLine($"Receipt: {receiptNo}");
+        sb.AppendLine($"Date: {DateTime.Now:g}");
+        sb.AppendLine($"Payment: {paymentMethod}");
+        sb.AppendLine(new string('-', 32));
+
+        foreach (var line in CartLines)
+        {
+            var qtyLabel = line.IsLength ? $"{line.QtyInches} in" : $"{line.Qty:0.##}";
+            sb.AppendLine($"{TrimText(line.Name, 18),-18} {qtyLabel,6} {line.LineTotal,7:0.00}");
+        }
+
+        sb.AppendLine(new string('-', 32));
+        sb.AppendLine($"Subtotal: {Subtotal,16:0.00}");
+        sb.AppendLine($"VAT: {VatTotal,21:0.00}");
+        sb.AppendLine($"Total: {total,19:0.00}");
+
+        if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.AppendLine($"Cash: {cashGiven,20:0.00}");
+            sb.AppendLine($"Change: {change,18:0.00}");
+        }
+
+        sb.AppendLine(new string('-', 32));
+        sb.AppendLine("Thank you!");
+        return sb.ToString();
+    }
+
+    private static void AppendIfNotEmpty(StringBuilder sb, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        foreach (var line in value.Split(Environment.NewLine))
+        {
+            if (!string.IsNullOrWhiteSpace(line))
+                sb.AppendLine(line.Trim());
+        }
+    }
+
+    private static string TrimText(string text, int max)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        return text.Length <= max ? text : text[..max];
+    }
+    
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
     => DataLocalDb.BuildOptions();

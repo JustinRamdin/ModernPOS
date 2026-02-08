@@ -47,7 +47,7 @@
         <Button Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
         <Button Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
         <Button Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
-        <Button Content="Settings" IsEnabled="False" Margin="0,0,0,8"/>
+        <Button Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
 
         <Border Height="1"
                 Background="{StaticResource BorderBrushLight}"
@@ -66,14 +66,22 @@
             BorderBrush="{StaticResource BorderBrushLight}"
             BorderThickness="0,0,0,1">
 
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Left"
-                   Text="{Binding PageTitle}"
-                   Foreground="{StaticResource PrimaryTextBrush}"
-                   FontSize="16"
-                   FontWeight="Bold" />
+        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+        <Image Grid.Column="0"
+               Source="{Binding HeaderImage}"
+               Width="48"
+               Height="48"
+               Stretch="Uniform"
+               Margin="0,0,12,0"
+               IsVisible="{Binding HasHeaderImage}"/>
 
-      </DockPanel>
+      <TextBlock Grid.Column="1"
+                   Text="{Binding HeaderTitle}"
+                   Foreground="{StaticResource PrimaryTextBrush}"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"/>
+      </Grid>
     </Border>
 
     <!-- Main Content -->

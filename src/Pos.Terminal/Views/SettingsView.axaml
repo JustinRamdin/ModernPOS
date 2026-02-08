@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pos.Terminal.Views.SettingsView">
+  <ScrollViewer>
+    <StackPanel Spacing="16" Margin="24">
+      <TextBlock Text="Settings" FontSize="20" FontWeight="Bold"/>
+
+      <StackPanel Spacing="8">
+        <TextBlock Text="Company Name"/>
+        <TextBox Text="{Binding CompanyName}" Watermark="ModernPOS Ltd."/>
+
+        <TextBlock Text="Company Address"/>
+        <TextBox Text="{Binding CompanyAddress}" Watermark="123 Main St, City" AcceptsReturn="True" Height="80"/>
+
+        <TextBlock Text="Contact Information"/>
+        <TextBox Text="{Binding CompanyContact}" Watermark="Phone, email, website"/>
+      </StackPanel>
+
+      <Border Height="1" Background="{DynamicResource BorderBrushLight}"/>
+
+      <StackPanel Spacing="8">
+        <TextBlock Text="Receipt Printer"/>
+        <ComboBox Items="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
+        <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
+      </StackPanel>
+
+      <Border Height="1" Background="{DynamicResource BorderBrushLight}"/>
+
+      <StackPanel Spacing="8">
+        <TextBlock Text="Header Title"/>
+        <TextBox Text="{Binding HeaderTitle}" Watermark="Receipt Header Title"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Button Content="Upload Header Image" Click="UploadHeaderImage_Click"/>
+          <TextBlock Text="{Binding HeaderImagePath}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Image Source="{Binding HeaderImage}" Width="180" Height="80" Stretch="Uniform" IsVisible="{Binding HasHeaderImage}"/>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Content="Save Settings" Click="Save_Click"/>
+        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

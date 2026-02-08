@@ -20,7 +20,7 @@
 
       <StackPanel Spacing="8">
         <TextBlock Text="Receipt Printer"/>
-        <ComboBox Items="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
+        <ComboBox ItemsSource="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
         <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
       </StackPanel>

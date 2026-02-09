@@ -916,6 +916,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         var sb = new StringBuilder();
 
+        var invoiceDate = DateTimeOffset.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         const int receiptWidth = 80;
         const int labelWidth = 14;
         var sectionBorder = BuildFullBorder(receiptWidth);

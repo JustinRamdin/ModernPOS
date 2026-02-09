@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "sdpJbHznnHg=",
+  "dgSpecHash": "qjA8waa14i8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
+  "projectFilePath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

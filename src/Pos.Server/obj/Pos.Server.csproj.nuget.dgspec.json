@@ -1,40 +1,34 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj": {}
+    "C:\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
+    "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
         "projectName": "Pos.Application",
-        "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.Application\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
-                "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
+              "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
+                "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
               }
             }
           }
@@ -89,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -367,29 +361,23 @@
         }
       }
     },
-    "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
+    "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj",
         "projectName": "Pos.Domain",
-        "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -448,7 +436,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -726,37 +714,31 @@
         }
       }
     },
-    "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj": {
+    "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
         "projectName": "Pos.Infrastructure",
-        "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
-                "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
+              "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
+                "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
               }
             }
           }
@@ -828,7 +810,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -1106,43 +1088,37 @@
         }
       }
     },
-    "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj": {
+    "C:\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj",
         "projectName": "Pos.Server",
-        "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.Server\\Pos.Server.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Server\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.Server\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Justin\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
-                "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj"
+              "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
+                "projectPath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj"
               },
-              "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
-                "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
+              "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
+                "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
               },
-              "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\Justin\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj"
+              "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj": {
+                "projectPath": "C:\\ModernPOS\\src\\Pos.Infrastructure\\Pos.Infrastructure.csproj"
               }
             }
           }
@@ -1217,7 +1193,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

@@ -840,7 +840,30 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        var receiptText = BuildReceiptText(settings, receiptNo, paymentMethod, total, cashGiven, change);
+       ReceiptCustomerInfo? customerInfo = null;
+        if (SelectedCustomerId is not null)
+        {
+            await using var db = CreateLocalDb();
+            var customer = await db.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == SelectedCustomerId.Value);
+            if (customer is not null)
+            {
+                customerInfo = new ReceiptCustomerInfo(
+                    customer.Name,
+                    customer.Phone,
+                    customer.Email);
+            }
+        }
+
+        var receiptText = BuildReceiptText(
+            settings,
+            receiptNo,
+            paymentMethod,
+            total,
+            cashGiven,
+            change,
+            customerInfo);
 
         try
         {
@@ -878,35 +901,77 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         string paymentMethod,
         decimal total,
         decimal cashGiven,
-        decimal change)
+         decimal change,
+        ReceiptCustomerInfo? customerInfo)
     {
         var sb = new StringBuilder();
 
-        AppendIfNotEmpty(sb, settings.CompanyName);
-        AppendIfNotEmpty(sb, settings.CompanyAddress);
-        AppendIfNotEmpty(sb, settings.CompanyContact);
+        const int receiptWidth = 80;
+        const int labelWidth = 12;
+        var sectionBorder = BuildFullBorder(receiptWidth);
 
-        sb.AppendLine(new string('-', 32));
-        sb.AppendLine($"Receipt: {receiptNo}");
-        sb.AppendLine($"Date: {DateTime.Now:g}");
-        sb.AppendLine($"Payment: {paymentMethod}");
-        sb.AppendLine(new string('-', 32));
+        sb.AppendLine(sectionBorder);
+        AppendFullRow(sb, receiptWidth, "COMPANY INFORMATION");
+        sb.AppendLine(sectionBorder);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Name", settings.CompanyName);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Address", settings.CompanyAddress);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Contact", settings.CompanyContact);
+        sb.AppendLine(sectionBorder);
+
+        sb.AppendLine(sectionBorder);
+        AppendFullRow(sb, receiptWidth, "CUSTOMER INFORMATION");
+        sb.AppendLine(sectionBorder);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Name", customerInfo?.Name ?? _selectedCustomerName);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Phone", customerInfo?.Phone ?? "N/A");
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Email", customerInfo?.Email ?? "N/A");
+        sb.AppendLine(sectionBorder);
+
+        sb.AppendLine(sectionBorder);
+        AppendFullRow(sb, receiptWidth, "RECEIPT DETAILS");
+        sb.AppendLine(sectionBorder);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Receipt", receiptNo);
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Date", DateTime.Now.ToString("f", CultureInfo.CurrentCulture));
+        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Payment", paymentMethod);
+        sb.AppendLine(sectionBorder);
+
+        var itemWidths = new[] { 35, 8, 12, 12 };
+        AppendTableBorder(sb, itemWidths);
+        AppendTableRow(
+            sb,
+            itemWidths,
+            new[] { "Item", "Qty", "Unit Price", "Line Total" },
+            new[] { false, false, false, false });
+        AppendTableBorder(sb, itemWidths);
 
         foreach (var line in CartLines)
         {
             var qtyLabel = line.IsLength ? $"{line.QtyInches} in" : $"{line.Qty:0.##}";
-            sb.AppendLine($"{TrimText(line.Name, 18),-18} {qtyLabel,6} {line.LineTotal,7:0.00}");
+            AppendTableRow(
+                sb,
+                itemWidths,
+                new[]
+                {
+                    TrimText(line.Name, itemWidths[0]),
+                    qtyLabel,
+                    line.UnitPrice.ToString("0.00", CultureInfo.CurrentCulture),
+                    line.LineTotal.ToString("0.00", CultureInfo.CurrentCulture)
+                },
+                new[] { false, true, true, true });
         }
 
-        sb.AppendLine(new string('-', 32));
-        sb.AppendLine($"Subtotal: {Subtotal,16:0.00}");
-        sb.AppendLine($"VAT: {VatTotal,21:0.00}");
-        sb.AppendLine($"Total: {total,19:0.00}");
+       AppendTableBorder(sb, itemWidths);
+
+        sb.AppendLine(sectionBorder);
+        AppendFullRow(sb, receiptWidth, "SUMMARY");
+        sb.AppendLine(sectionBorder);
+        AppendAmountRow(sb, receiptWidth, "Subtotal", Subtotal);
+        AppendAmountRow(sb, receiptWidth, "VAT", VatTotal);
+        AppendAmountRow(sb, receiptWidth, "Total", total);
 
         if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
         {
-            sb.AppendLine($"Cash: {cashGiven,20:0.00}");
-            sb.AppendLine($"Change: {change,18:0.00}");
+            AppendAmountRow(sb, receiptWidth, "Cash", cashGiven);
+            AppendAmountRow(sb, receiptWidth, "Change", change);
         }
 
         sb.AppendLine(new string('-', 32));
@@ -914,18 +979,113 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return sb.ToString();
     }
 
-    private static void AppendIfNotEmpty(StringBuilder sb, string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return;
+    private static string BuildFullBorder(int width) => $"+{new string('-', width - 2)}+";
 
-        foreach (var line in value.Split(Environment.NewLine))
+    private static void AppendFullRow(StringBuilder sb, int width, string content)
+    {
+        var insideWidth = width - 2;
+        var trimmed = TrimText(content, insideWidth);
+        sb.Append('|')
+            .Append(trimmed.PadRight(insideWidth))
+            .Append('|')
+            .AppendLine();
+    }
+
+    private static void AppendKeyValueRows(
+        StringBuilder sb,
+        int width,
+        int labelWidth,
+        string label,
+        string value)
+    {
+        var insideWidth = width - 2;
+        var prefix = $"{label,-labelWidth}: ";
+        var wrapped = WrapText(value, insideWidth - prefix.Length).ToList();
+        if (wrapped.Count == 0)
         {
-            if (!string.IsNullOrWhiteSpace(line))
-                sb.AppendLine(line.Trim());
+            AppendFullRow(sb, width, prefix.TrimEnd());
+            return;
+        }
+        AppendFullRow(sb, width, prefix + wrapped[0]);
+        for (var i = 1; i < wrapped.Count; i++)
+        {
+            AppendFullRow(sb, width, new string(' ', prefix.Length) + wrapped[i]);
         }
     }
 
+    private static void AppendTableBorder(StringBuilder sb, IReadOnlyList<int> widths)
+    {
+        sb.Append('+');
+        foreach (var width in widths)
+        {
+            sb.Append(new string('-', width + 2));
+            sb.Append('+');
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendTableRow(
+        StringBuilder sb,
+        IReadOnlyList<int> widths,
+        IReadOnlyList<string> values,
+        IReadOnlyList<bool> rightAlign)
+    {
+        sb.Append('|');
+        for (var i = 0; i < widths.Count; i++)
+        {
+            var width = widths[i];
+            var value = i < values.Count ? values[i] ?? string.Empty : string.Empty;
+            var aligned = rightAlign.Count > i && rightAlign[i]
+                ? value.PadLeft(width)
+                : value.PadRight(width);
+            sb.Append(' ')
+                .Append(TrimText(aligned, width))
+                .Append(' ')
+                .Append('|');
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendAmountRow(StringBuilder sb, int width, string label, decimal amount)
+    {
+        var insideWidth = width - 2;
+        var value = amount.ToString("0.00", CultureInfo.CurrentCulture);
+        var line = $"{label,-20}{value,insideWidth - 20}";
+        AppendFullRow(sb, width, line);
+    }
+
+    private static IEnumerable<string> WrapText(string value, int width)
+    {
+        if (string.IsNullOrWhiteSpace(value) || width <= 0)
+            yield break;
+
+        var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var line = new StringBuilder();
+
+        foreach (var word in words)
+        {
+            if (line.Length == 0)
+            {
+                line.Append(word);
+                continue;
+            }
+
+            if (line.Length + word.Length + 1 > width)
+            {
+                yield return line.ToString();
+                line.Clear();
+                line.Append(word);
+                continue;
+            }
+
+            line.Append(' ').Append(word);
+        }
+
+        if (line.Length > 0)
+            yield return line.ToString();
+    }
+
+    private sealed record ReceiptCustomerInfo(string Name, string Phone, string Email);
     private static string TrimText(string text, int max)
     {
         if (string.IsNullOrWhiteSpace(text)) return "";

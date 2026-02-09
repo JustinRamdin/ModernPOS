@@ -946,6 +946,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         Margins margins,
         AppSettings settings,
         string receiptNo,
+        DateTime invoiceDate,
+        ReceiptCustomerInfo customer,
         string paymentMethod,
         decimal total,
         decimal cashGiven,
@@ -973,8 +975,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             height: pageH - top - bottom
         );
 
-
-    using var fontCompany = new Font("Segoe UI", 10f, FontStyle.Regular);
+        using var fontCompany = new Font("Segoe UI", 10f, FontStyle.Regular);
         using var fontSmall = new Font("Segoe UI", 9f, FontStyle.Regular);
         using var fontSmallBold = new Font("Segoe UI", 9f, FontStyle.Bold);
         using var fontTitle = new Font("Segoe UI", 22f, FontStyle.Bold);
@@ -987,6 +988,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         using var brushHeaderFill = new SolidBrush(Color.FromArgb(220, 230, 245));
 
         static string Safe(string? s) => string.IsNullOrWhiteSpace(s) ? string.Empty : s.Trim();
+
+        var sfNearTop = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
+        var sfFarTop = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Near };
 
         float y = content.Top;
 
@@ -1052,18 +1056,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             $"{Safe(customer.Name)}\n" +
             $"{Safe(customer.Phone)}\n" +
             $"{Safe(customer.Email)}";
-        g.DrawString(billText, fontSmall, Brushes.Black, billTextRect);
+          g.DrawString(billText, fontSmall, Brushes.Black, billTextRect);
 
         y += billToH + 12f;
 
-     float tableX = content.Left;
+        float tableX = content.Left;
         float tableW = content.Width;
         float tableTop = y;
 
         float rowHeight = 20f;
         float headerHeight = 22f;
 
-   float descW = tableW * 0.78f;
+        float descW = tableW * 0.78f;
         float amtW = tableW - descW;
 
         var hdrRect = new RectangleF(tableX, tableTop, tableW, headerHeight);
@@ -1071,26 +1075,26 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         g.FillRectangle(brushHeaderFill, hdrRect.X, hdrRect.Y, hdrRect.Width, hdrRect.Height);
         g.DrawLine(penDark, tableX + descW, tableTop, tableX + descW, tableTop + headerHeight);
 
-    g.DrawString(
+         g.DrawString(
             "DESCRIPTION",
             fontTableHeader,
             Brushes.Black,
             new RectangleF(tableX + 6, tableTop, descW - 12, headerHeight),
             new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
 
-    g.DrawString(
+         g.DrawString(
             "AMOUNT",
             fontTableHeader,
             Brushes.Black,
             new RectangleF(tableX + descW + 6, tableTop, amtW - 12, headerHeight),
             new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center });
 
-    float bodyTop = tableTop + headerHeight;
+        float bodyTop = tableTop + headerHeight;
         float bodyH = content.Bottom - bodyTop - 90f;
         var bodyRect = new RectangleF(tableX, bodyTop, tableW, bodyH);
         g.DrawRectangle(penDark, bodyRect.X, bodyRect.Y, bodyRect.Width, bodyRect.Height);
 
-    float curY = bodyTop;
+        float curY = bodyTop;
         int startIndex = state.ItemIndex;
 
         var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);

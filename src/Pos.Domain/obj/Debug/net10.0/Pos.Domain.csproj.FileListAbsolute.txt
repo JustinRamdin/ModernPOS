@@ -1,15 +1,3 @@
-C:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.deps.json
-C:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.dll
-C:\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.pdb
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.GeneratedMSBuildEditorConfig.editorconfig
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.AssemblyInfoInputs.cache
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.AssemblyInfo.cs
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.csproj.CoreCompileInputs.cache
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.sourcelink.json
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.dll
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\refint\Pos.Domain.dll
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\Pos.Domain.pdb
-C:\ModernPOS\src\Pos.Domain\obj\Debug\net10.0\ref\Pos.Domain.dll
 C:\Users\Justin\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.deps.json
 C:\Users\Justin\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.dll
 C:\Users\Justin\ModernPOS\src\Pos.Domain\bin\Debug\net10.0\Pos.Domain.pdb

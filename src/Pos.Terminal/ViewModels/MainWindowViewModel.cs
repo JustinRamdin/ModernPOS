@@ -14,7 +14,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -1097,8 +1096,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         float curY = bodyTop;
         int startIndex = state.ItemIndex;
 
-        var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var line = new StringBuilder();
+
 
         while (state.ItemIndex < state.Items.Count)
         {

@@ -833,6 +833,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private sealed class InvoicePrintState
+    {
+        public int ItemIndex;
+        public List<(string desc, decimal amount)> Items = new();
+    }
+
     private async Task PrintReceiptAsync(
         string receiptNo,
         string paymentMethod,
@@ -850,30 +856,40 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-       ReceiptCustomerInfo? customerInfo = null;
-        if (SelectedCustomerId is not null)
+        ReceiptCustomerInfo customerInfo;
         {
-            await using var db = CreateLocalDb();
-            var customer = await db.Customers
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == SelectedCustomerId.Value);
-            if (customer is not null)
+            var name = _selectedCustomerName;
+            var phone = "N/A";
+            var email = "N/A";
+
+            if (SelectedCustomerId is not null)
             {
-                customerInfo = new ReceiptCustomerInfo(
-                    customer.Name,
-                    customer.Phone,
-                    customer.Email);
+                await using var db = CreateLocalDb();
+                var customer = await db.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == SelectedCustomerId.Value);
+
+                if (customer is not null)
+                {
+                    name = string.IsNullOrWhiteSpace(customer.Name) ? name : customer.Name;
+                    phone = string.IsNullOrWhiteSpace(customer.Phone) ? phone : customer.Phone;
+                    email = string.IsNullOrWhiteSpace(customer.Email) ? email : customer.Email;
+                }
             }
+
+            customerInfo = new ReceiptCustomerInfo(name, phone, email);
         }
 
-        var receiptText = BuildReceiptText(
-            settings,
-            receiptNo,
-            paymentMethod,
-            total,
-            cashGiven,
-            change,
-            customerInfo);
+       var state = new InvoicePrintState
+        {
+            ItemIndex = 0,
+            Items = CartLines.Select(line =>
+            {
+                var qtyLabel = line.IsLength ? $"{line.QtyInches:0.##} in" : $"{line.Qty:0.##}";
+                var desc = $"{line.Name}\nQty: {qtyLabel}  @  {line.UnitPrice:0.00}";
+                return (desc, line.LineTotal);
+            }).ToList()
+        };
 
         try
         {
@@ -888,16 +904,35 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
-            using var doc = new PrintDocument { PrinterSettings = printerSettings };
+            using var doc = new PrintDocument
+            {
+                PrinterSettings = printerSettings,
+                DocumentName = $"Invoice {receiptNo}"
+            };
+
+            doc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
+            doc.DefaultPageSettings.Margins = new Margins(50, 50, 50, 50);
+
             doc.PrintPage += (_, e) =>
             {
-                using var font = new Font("Consolas", 9);
-                var rect = new RectangleF(0, 0, e.PageBounds.Width, e.PageBounds.Height);
-                e.Graphics.DrawString(receiptText, font, Brushes.Black, rect);
+                e.HasMorePages = DrawInvoiceLetterPage(
+                    g: e.Graphics,
+                    pageBounds: e.PageBounds,
+                    margins: doc.DefaultPageSettings.Margins,
+                    settings: settings,
+                    receiptNo: receiptNo,
+                    invoiceDate: DateTime.Now,
+                    customer: customerInfo,
+                    paymentMethod: paymentMethod,
+                    total: total,
+                    cashGiven: cashGiven,
+                    change: change,
+                    state: state
+                );
             };
 
             doc.Print();
-            Status = $"Receipt sent to {settings.ReceiptPrinterName}";
+            Status = $"Invoice sent to {settings.ReceiptPrinterName}";
         }
         catch (Exception ex)
         {
@@ -905,245 +940,243 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private string BuildReceiptText(
+    private static bool DrawInvoiceLetterPage(
+        Graphics g,
+        Rectangle pageBounds,
+        Margins margins,
         AppSettings settings,
         string receiptNo,
         string paymentMethod,
         decimal total,
         decimal cashGiven,
-         decimal change,
-        ReceiptCustomerInfo? customerInfo)
+        decimal change,
+        InvoicePrintState state)
     {
-        var sb = new StringBuilder();
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-        var invoiceDate = DateTimeOffset.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        const int receiptWidth = 80;
-        const int labelWidth = 14;
-        var sectionBorder = BuildFullBorder(receiptWidth);
+        float dpiX = g.DpiX;
+        float dpiY = g.DpiY;
 
-         AppendTwoColumnRow(
-            sb,
-            receiptWidth,
-            settings.CompanyName,
-            "INVOICE",
-            leftWeight: 2,
-            rightAlign: true);
-        AppendTwoColumnRow(
-            sb,
-            receiptWidth,
-            settings.CompanyAddress,
-            "+----------------------+",
-            leftWeight: 2,
-            rightAlign: true);
-        AppendTwoColumnRow(
-            sb,
-            receiptWidth,
-            settings.CompanyContact,
-            $"| INVOICE # {receiptNo} |",
-            leftWeight: 2,
-            rightAlign: true);
-        AppendTwoColumnRow(
-            sb,
-            receiptWidth,
-            string.Empty,
-            $"| DATE      {invoiceDate} |",
-            leftWeight: 2,
-            rightAlign: true);
-        AppendTwoColumnRow(
-            sb,
-            receiptWidth,
-            string.Empty,
-            "+----------------------+",
-            leftWeight: 2,
-            rightAlign: true);
-        sb.AppendLine();
+        float left = (margins.Left / 100f) * dpiX;
+        float right = (margins.Right / 100f) * dpiX;
+        float top = (margins.Top / 100f) * dpiY;
+        float bottom = (margins.Bottom / 100f) * dpiY;
 
-        sb.AppendLine(sectionBorder);
-        AppendFullRow(sb, receiptWidth, "BILL TO");
-        sb.AppendLine(sectionBorder);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Name", customerInfo?.Name ?? _selectedCustomerName);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Phone", customerInfo?.Phone ?? "N/A");
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Email", customerInfo?.Email ?? "N/A");
-        sb.AppendLine(sectionBorder);
+        float pageW = pageBounds.Width;
+        float pageH = pageBounds.Height;
 
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Receipt", receiptNo);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Payment", paymentMethod);
-        sb.AppendLine(sectionBorder);
+        var content = new RectangleF(
+            x: left,
+            y: top,
+            width: pageW - left - right,
+            height: pageH - top - bottom
+        );
 
-        var itemWidths = new[] { 35, 8, 12, 12 };
-        AppendTableBorder(sb, itemWidths);
-        AppendTableRow(
-            sb,
-            itemWidths,
-            new[] { "Description", "Amount" },
-            new[] { false, true });
-        AppendTableBorder(sb, itemWidths);
 
-        foreach (var line in CartLines)
-        {
-            var qtyLabel = line.IsLength ? $"{line.QtyInches} in" : $"{line.Qty:0.##}";
-            var description = $"{line.Name} (Qty {qtyLabel} @ {line.UnitPrice:0.00})";
-            AppendTableRow(
-                sb,
-                itemWidths,
-                new[]
-                {
-                    TrimText(description, itemWidths[0]),
-                    line.LineTotal.ToString("0.00", CultureInfo.CurrentCulture)
-                },
-                 new[] { false, true });
-        }
+    using var fontCompany = new Font("Segoe UI", 10f, FontStyle.Regular);
+        using var fontSmall = new Font("Segoe UI", 9f, FontStyle.Regular);
+        using var fontSmallBold = new Font("Segoe UI", 9f, FontStyle.Bold);
+        using var fontTitle = new Font("Segoe UI", 22f, FontStyle.Bold);
+        using var fontSection = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+        using var fontTableHeader = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+        using var fontTable = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
-       AppendTableBorder(sb, itemWidths);
+        using var pen = new Pen(Color.Gray, 1f);
+        using var penDark = new Pen(Color.DimGray, 1f);
+        using var brushHeaderFill = new SolidBrush(Color.FromArgb(220, 230, 245));
 
-        sb.AppendLine(sectionBorder);
-        AppendFullRow(sb, receiptWidth, "SUMMARY");
-        sb.AppendLine(sectionBorder);
-        AppendAmountRow(sb, receiptWidth, "Subtotal", Subtotal);
-         AppendAmountRow(sb, receiptWidth, "Discount", DiscountAmount);
-        AppendAmountRow(sb, receiptWidth, "VAT", VatTotal);
-        AppendAmountRow(sb, receiptWidth, "Total Due", total);
+        static string Safe(string? s) => string.IsNullOrWhiteSpace(s) ? string.Empty : s.Trim();
 
-        if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
-        {
-            AppendAmountRow(sb, receiptWidth, "Cash", cashGiven);
-            AppendAmountRow(sb, receiptWidth, "Change", change);
-        }
+        float y = content.Top;
 
-        sb.AppendLine(new string('-', 32));
-        sb.AppendLine("Thank you for your business!");
-        return sb.ToString();
-    }
+        float headerH = 110f;
+        var headerRect = new RectangleF(content.Left, y, content.Width, headerH);
 
-    private static string BuildFullBorder(int width) => $"+{new string('-', width - 2)}+";
+        var companyRect = new RectangleF(headerRect.Left, headerRect.Top, headerRect.Width * 0.55f, headerRect.Height);
+        var companyText =
+            $"{Safe(settings.CompanyName)}\n" +
+            $"{Safe(settings.CompanyAddress)}\n" +
+            $"{Safe(settings.CompanyContact)}";
+        g.DrawString(companyText, fontCompany, Brushes.Black, companyRect);
 
-    private static void AppendFullRow(StringBuilder sb, int width, string content)
-    {
-        var insideWidth = width - 2;
-        var trimmed = TrimText(content, insideWidth);
-        sb.Append('|')
-            .Append(trimmed.PadRight(insideWidth))
-            .Append('|')
-            .AppendLine();
-    }
+        var titleRect = new RectangleF(headerRect.Left + headerRect.Width * 0.55f, headerRect.Top, headerRect.Width * 0.45f, 40f);
+        var sfRight = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Near };
+        g.DrawString("INVOICE", fontTitle, new SolidBrush(Color.FromArgb(95, 135, 200)), titleRect, sfRight);
 
-    private static void AppendKeyValueRows(
-        StringBuilder sb,
-        int width,
-        int labelWidth,
-        string label,
-        string value)
-    {
-        var insideWidth = width - 2;
-        var prefix = string.Concat(label.PadRight(Math.Max(0, labelWidth)), ": ");
-        var wrapped = WrapText(value, insideWidth - prefix.Length).ToList();
-        if (wrapped.Count == 0)
-        {
-            AppendFullRow(sb, width, prefix.TrimEnd());
-            return;
-        }
-        AppendFullRow(sb, width, prefix + wrapped[0]);
-        for (var i = 1; i < wrapped.Count; i++)
-        {
-            AppendFullRow(sb, width, new string(' ', prefix.Length) + wrapped[i]);
-        }
-    }
+        float boxW = headerRect.Width * 0.45f;
+        float boxX = headerRect.Right - boxW;
+        float boxY = headerRect.Top + 50f;
+        float boxH = 48f;
 
-    private static void AppendTwoColumnRow(
-        StringBuilder sb,
-        int totalWidth,
-        string leftText,
-        string rightText,
-        int leftWeight,
-        bool rightAlign)
-    {
-        var spacing = 1;
-        var leftWidth = (totalWidth - spacing) * leftWeight / (leftWeight + 1);
-        var rightWidth = totalWidth - leftWidth - spacing;
-        var left = TrimText(leftText ?? string.Empty, leftWidth).PadRight(leftWidth);
-        var right = TrimText(rightText ?? string.Empty, rightWidth);
-        right = rightAlign ? right.PadLeft(rightWidth) : right.PadRight(rightWidth);
-        sb.Append(left).Append(' ').Append(right).AppendLine();
-    }
-    private static void AppendTableBorder(StringBuilder sb, IReadOnlyList<int> widths)
-    {
-        sb.Append('+');
-        foreach (var width in widths)
-        {
-            sb.Append(new string('-', width + 2));
-            sb.Append('+');
-        }
-        sb.AppendLine();
-    }
+        var infoBox = new RectangleF(boxX + (boxW * 0.35f), boxY, boxW * 0.65f, boxH);
+        g.DrawRectangle(penDark, infoBox.X, infoBox.Y, infoBox.Width, infoBox.Height);
 
-    private static void AppendTableRow(
-        StringBuilder sb,
-        IReadOnlyList<int> widths,
-        IReadOnlyList<string> values,
-        IReadOnlyList<bool> rightAlign)
-    {
-        sb.Append('|');
-        for (var i = 0; i < widths.Count; i++)
-        {
-            var width = widths[i];
-            var value = i < values.Count ? values[i] ?? string.Empty : string.Empty;
-            var aligned = rightAlign.Count > i && rightAlign[i]
-                ? value.PadLeft(width)
-                : value.PadRight(width);
-            sb.Append(' ')
-                .Append(TrimText(aligned, width))
-                .Append(' ')
-                .Append('|');
-        }
-        sb.AppendLine();
-    }
+        float colW = infoBox.Width / 2f;
+        float rowH = infoBox.Height / 2f;
 
-    private static void AppendAmountRow(StringBuilder sb, int width, string label, decimal amount)
-    {
-        var insideWidth = width - 2;
-        var value = amount.ToString("0.00", CultureInfo.CurrentCulture);
-        var valueWidth = Math.Max(0, insideWidth - 20);
-        var line = string.Concat(label.PadRight(20), value.PadLeft(valueWidth));
-        AppendFullRow(sb, width, line);
-    }
+        g.FillRectangle(brushHeaderFill, infoBox.X, infoBox.Y, colW, rowH);
+        g.FillRectangle(brushHeaderFill, infoBox.X + colW, infoBox.Y, colW, rowH);
 
-    private static IEnumerable<string> WrapText(string value, int width)
-    {
-        if (string.IsNullOrWhiteSpace(value) || width <= 0)
-            yield break;
+        g.DrawLine(penDark, infoBox.X + colW, infoBox.Y, infoBox.X + colW, infoBox.Bottom);
+        g.DrawLine(penDark, infoBox.X, infoBox.Y + rowH, infoBox.Right, infoBox.Y + rowH);
+
+        var sfCenter = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
+        g.DrawString("INVOICE #", fontSmallBold, Brushes.Black, new RectangleF(infoBox.X, infoBox.Y, colW, rowH), sfCenter);
+        g.DrawString("DATE", fontSmallBold, Brushes.Black, new RectangleF(infoBox.X + colW, infoBox.Y, colW, rowH), sfCenter);
+
+        g.DrawString(receiptNo, fontSmall, Brushes.Black, new RectangleF(infoBox.X, infoBox.Y + rowH, colW, rowH), sfCenter);
+        g.DrawString(invoiceDate.ToString("yyyy-MM-dd"), fontSmall, Brushes.Black, new RectangleF(infoBox.X + colW, infoBox.Y + rowH, colW, rowH), sfCenter);
+
+        y += headerH + 10f;
+
+        float billToW = content.Width * 0.45f;
+        float billToH = 95f;
+
+        var billToRect = new RectangleF(content.Left, y, billToW, billToH);
+        g.DrawRectangle(penDark, billToRect.X, billToRect.Y, billToRect.Width, billToRect.Height);
+
+        var billToHeader = new RectangleF(billToRect.X, billToRect.Y, billToRect.Width, 18f);
+        g.FillRectangle(brushHeaderFill, billToHeader);
+        g.DrawRectangle(penDark, billToHeader.X, billToHeader.Y, billToHeader.Width, billToHeader.Height);
+        g.DrawString(
+            "BILL TO",
+            fontSection,
+            Brushes.Black,
+            new RectangleF(billToHeader.X + 6, billToHeader.Y, billToHeader.Width - 12, billToHeader.Height),
+            new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
+
+        var billTextRect = new RectangleF(billToRect.X + 8, billToRect.Y + 24, billToRect.Width - 16, billToRect.Height - 28);
+        var billText =
+            $"{Safe(customer.Name)}\n" +
+            $"{Safe(customer.Phone)}\n" +
+            $"{Safe(customer.Email)}";
+        g.DrawString(billText, fontSmall, Brushes.Black, billTextRect);
+
+        y += billToH + 12f;
+
+     float tableX = content.Left;
+        float tableW = content.Width;
+        float tableTop = y;
+
+        float rowHeight = 20f;
+        float headerHeight = 22f;
+
+   float descW = tableW * 0.78f;
+        float amtW = tableW - descW;
+
+        var hdrRect = new RectangleF(tableX, tableTop, tableW, headerHeight);
+        g.DrawRectangle(penDark, hdrRect.X, hdrRect.Y, hdrRect.Width, hdrRect.Height);
+        g.FillRectangle(brushHeaderFill, hdrRect.X, hdrRect.Y, hdrRect.Width, hdrRect.Height);
+        g.DrawLine(penDark, tableX + descW, tableTop, tableX + descW, tableTop + headerHeight);
+
+    g.DrawString(
+            "DESCRIPTION",
+            fontTableHeader,
+            Brushes.Black,
+            new RectangleF(tableX + 6, tableTop, descW - 12, headerHeight),
+            new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
+
+    g.DrawString(
+            "AMOUNT",
+            fontTableHeader,
+            Brushes.Black,
+            new RectangleF(tableX + descW + 6, tableTop, amtW - 12, headerHeight),
+            new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center });
+
+    float bodyTop = tableTop + headerHeight;
+        float bodyH = content.Bottom - bodyTop - 90f;
+        var bodyRect = new RectangleF(tableX, bodyTop, tableW, bodyH);
+        g.DrawRectangle(penDark, bodyRect.X, bodyRect.Y, bodyRect.Width, bodyRect.Height);
+
+    float curY = bodyTop;
+        int startIndex = state.ItemIndex;
 
         var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var line = new StringBuilder();
 
-        foreach (var word in words)
+        while (state.ItemIndex < state.Items.Count)
         {
-            if (line.Length == 0)
-            {
-                line.Append(word);
-                continue;
-            }
+            var (desc, amount) = state.Items[state.ItemIndex];
+            int lines = 1 + desc.Count(c => c == '\n');
+            float thisRowH = Math.Max(rowHeight, lines * 16f);
 
-            if (line.Length + word.Length + 1 > width)
-            {
-                yield return line.ToString();
-                line.Clear();
-                line.Append(word);
-                continue;
-            }
+            if (curY + thisRowH > bodyRect.Bottom - 4)
+                break;
 
-            line.Append(' ').Append(word);
+            g.DrawLine(pen, tableX, curY + thisRowH, tableX + tableW, curY + thisRowH);
+            g.DrawLine(pen, tableX + descW, curY, tableX + descW, curY + thisRowH);
+
+            var descRect = new RectangleF(tableX + 6, curY + 3, descW - 12, thisRowH - 6);
+            var amtRect = new RectangleF(tableX + descW + 6, curY + 3, amtW - 12, thisRowH - 6);
+
+            g.DrawString(desc, fontTable, Brushes.Black, descRect, sfNearTop);
+            g.DrawString(amount.ToString("0.00", CultureInfo.CurrentCulture), fontTable, Brushes.Black, amtRect, sfFarTop);
+
+            curY += thisRowH;
+            state.ItemIndex++;
         }
 
-        if (line.Length > 0)
-            yield return line.ToString();
+        float footerTop = content.Bottom - 78f;
+
+        g.DrawString(
+            "Thank you for your business!",
+            fontSmall,
+            Brushes.Black,
+            new RectangleF(content.Left, footerTop, content.Width * 0.65f, 22f),
+            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+
+        float totalBoxW = content.Width * 0.35f;
+        float totalBoxH = 34f;
+        var totalRect = new RectangleF(content.Right - totalBoxW, footerTop, totalBoxW, totalBoxH);
+        g.DrawRectangle(penDark, totalRect.X, totalRect.Y, totalRect.Width, totalRect.Height);
+
+        float totalLabelW = totalBoxW * 0.45f;
+        g.DrawLine(penDark, totalRect.X + totalLabelW, totalRect.Y, totalRect.X + totalLabelW, totalRect.Bottom);
+
+        g.DrawString(
+            "TOTAL",
+            fontSmallBold,
+            Brushes.Black,
+            new RectangleF(totalRect.X + 6, totalRect.Y, totalLabelW - 12, totalBoxH),
+            new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
+
+        g.DrawString(
+            total.ToString("C", CultureInfo.CurrentCulture),
+            fontSmallBold,
+            Brushes.Black,
+            new RectangleF(totalRect.X + totalLabelW + 6, totalRect.Y, totalBoxW - totalLabelW - 12, totalBoxH),
+            new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center });
+
+        var contactLine = $"If you have any questions about this invoice, please contact {Safe(settings.CompanyContact)}";
+        g.DrawString(
+            contactLine,
+            fontSmall,
+            Brushes.DimGray,
+            new RectangleF(content.Left, content.Bottom - 26f, content.Width, 18f),
+            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+
+        var payLine = paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase)
+            ? $"Payment: CASH   Cash: {cashGiven:0.00}   Change: {change:0.00}"
+            : $"Payment: {paymentMethod}";
+        g.DrawString(
+            payLine,
+            fontSmall,
+            Brushes.DimGray,
+            new RectangleF(content.Left, content.Bottom - 46f, content.Width, 18f),
+            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+
+        bool hasMore = state.ItemIndex < state.Items.Count;
+
+        if (hasMore && state.ItemIndex == startIndex)
+            state.ItemIndex = Math.Min(state.Items.Count, startIndex + 1);
+
+        return hasMore;
     }
 
     private sealed record ReceiptCustomerInfo(string Name, string Phone, string Email);
-    private static string TrimText(string text, int max)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return "";
-        return text.Length <= max ? text : text[..max];
-    }
+
 
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()

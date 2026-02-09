@@ -612,12 +612,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total {result.Total:0.00} Change {result.Change:0.00}";
             Toast($"Saved: {result.ReceiptNo}");
 
+            var totalDue = TotalDue;
+            var changeDue = Math.Round(
+                cashGiven - totalDue,
+                2,
+                MidpointRounding.AwayFromZero);
+
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: "CASH",
-                total: result.Total,
+                total: totalDue,
                 cashGiven: cashGiven,
-                change: result.Change);
+                change: changeDue);
 
              ClearCart();
             ClearCustomer();
@@ -666,11 +672,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} ({method})";
             Toast($"Saved: {result.ReceiptNo}");
 
+            var totalDue = TotalDue;
+
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: method,
-                total: result.Total,
-                cashGiven: result.Total,
+                total: totalDue,
+                cashGiven: totalDue,
                 change: 0m);
 
             ClearCart();
@@ -719,10 +727,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} (ON ACCOUNT)";
             Toast($"Saved: {result.ReceiptNo}");
 
+            var totalDue = TotalDue;
+
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: "ON ACCOUNT",
-                total: result.Total,
+                total: totalDue,
                 cashGiven: 0m,
                 change: 0m);
 
@@ -907,30 +917,55 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         var sb = new StringBuilder();
 
         const int receiptWidth = 80;
-        const int labelWidth = 12;
+        const int labelWidth = 14;
         var sectionBorder = BuildFullBorder(receiptWidth);
 
-        sb.AppendLine(sectionBorder);
-        AppendFullRow(sb, receiptWidth, "COMPANY INFORMATION");
-        sb.AppendLine(sectionBorder);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Name", settings.CompanyName);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Address", settings.CompanyAddress);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Contact", settings.CompanyContact);
-        sb.AppendLine(sectionBorder);
+         AppendTwoColumnRow(
+            sb,
+            receiptWidth,
+            settings.CompanyName,
+            "INVOICE",
+            leftWeight: 2,
+            rightAlign: true);
+        AppendTwoColumnRow(
+            sb,
+            receiptWidth,
+            settings.CompanyAddress,
+            "+----------------------+",
+            leftWeight: 2,
+            rightAlign: true);
+        AppendTwoColumnRow(
+            sb,
+            receiptWidth,
+            settings.CompanyContact,
+            $"| INVOICE # {receiptNo} |",
+            leftWeight: 2,
+            rightAlign: true);
+        AppendTwoColumnRow(
+            sb,
+            receiptWidth,
+            string.Empty,
+            $"| DATE      {invoiceDate} |",
+            leftWeight: 2,
+            rightAlign: true);
+        AppendTwoColumnRow(
+            sb,
+            receiptWidth,
+            string.Empty,
+            "+----------------------+",
+            leftWeight: 2,
+            rightAlign: true);
+        sb.AppendLine();
 
         sb.AppendLine(sectionBorder);
-        AppendFullRow(sb, receiptWidth, "CUSTOMER INFORMATION");
+        AppendFullRow(sb, receiptWidth, "BILL TO");
         sb.AppendLine(sectionBorder);
         AppendKeyValueRows(sb, receiptWidth, labelWidth, "Name", customerInfo?.Name ?? _selectedCustomerName);
         AppendKeyValueRows(sb, receiptWidth, labelWidth, "Phone", customerInfo?.Phone ?? "N/A");
         AppendKeyValueRows(sb, receiptWidth, labelWidth, "Email", customerInfo?.Email ?? "N/A");
         sb.AppendLine(sectionBorder);
 
-        sb.AppendLine(sectionBorder);
-        AppendFullRow(sb, receiptWidth, "RECEIPT DETAILS");
-        sb.AppendLine(sectionBorder);
         AppendKeyValueRows(sb, receiptWidth, labelWidth, "Receipt", receiptNo);
-        AppendKeyValueRows(sb, receiptWidth, labelWidth, "Date", DateTime.Now.ToString("f", CultureInfo.CurrentCulture));
         AppendKeyValueRows(sb, receiptWidth, labelWidth, "Payment", paymentMethod);
         sb.AppendLine(sectionBorder);
 
@@ -939,24 +974,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AppendTableRow(
             sb,
             itemWidths,
-            new[] { "Item", "Qty", "Unit Price", "Line Total" },
-            new[] { false, false, false, false });
+            new[] { "Description", "Amount" },
+            new[] { false, true });
         AppendTableBorder(sb, itemWidths);
 
         foreach (var line in CartLines)
         {
             var qtyLabel = line.IsLength ? $"{line.QtyInches} in" : $"{line.Qty:0.##}";
+            var description = $"{line.Name} (Qty {qtyLabel} @ {line.UnitPrice:0.00})";
             AppendTableRow(
                 sb,
                 itemWidths,
                 new[]
                 {
-                    TrimText(line.Name, itemWidths[0]),
-                    qtyLabel,
-                    line.UnitPrice.ToString("0.00", CultureInfo.CurrentCulture),
+                    TrimText(description, itemWidths[0]),
                     line.LineTotal.ToString("0.00", CultureInfo.CurrentCulture)
                 },
-                new[] { false, true, true, true });
+                 new[] { false, true });
         }
 
        AppendTableBorder(sb, itemWidths);
@@ -965,8 +999,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AppendFullRow(sb, receiptWidth, "SUMMARY");
         sb.AppendLine(sectionBorder);
         AppendAmountRow(sb, receiptWidth, "Subtotal", Subtotal);
+         AppendAmountRow(sb, receiptWidth, "Discount", DiscountAmount);
         AppendAmountRow(sb, receiptWidth, "VAT", VatTotal);
-        AppendAmountRow(sb, receiptWidth, "Total", total);
+        AppendAmountRow(sb, receiptWidth, "Total Due", total);
 
         if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
         {
@@ -975,7 +1010,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
 
         sb.AppendLine(new string('-', 32));
-        sb.AppendLine("Thank you!");
+        sb.AppendLine("Thank you for your business!");
         return sb.ToString();
     }
 
@@ -1013,6 +1048,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private static void AppendTwoColumnRow(
+        StringBuilder sb,
+        int totalWidth,
+        string leftText,
+        string rightText,
+        int leftWeight,
+        bool rightAlign)
+    {
+        var spacing = 1;
+        var leftWidth = (totalWidth - spacing) * leftWeight / (leftWeight + 1);
+        var rightWidth = totalWidth - leftWidth - spacing;
+        var left = TrimText(leftText ?? string.Empty, leftWidth).PadRight(leftWidth);
+        var right = TrimText(rightText ?? string.Empty, rightWidth);
+        right = rightAlign ? right.PadLeft(rightWidth) : right.PadRight(rightWidth);
+        sb.Append(left).Append(' ').Append(right).AppendLine();
+    }
     private static void AppendTableBorder(StringBuilder sb, IReadOnlyList<int> widths)
     {
         sb.Append('+');

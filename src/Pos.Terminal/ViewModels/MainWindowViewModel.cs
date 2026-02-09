@@ -910,7 +910,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             };
 
             doc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
-            doc.DefaultPageSettings.Margins = new Margins(50, 50, 50, 50);
+            doc.DefaultPageSettings.Margins = new Margins(5, 10, 10, 20);
 
             doc.PrintPage += (_, e) =>
             {

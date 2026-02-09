@@ -999,7 +999,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         string value)
     {
         var insideWidth = width - 2;
-        var prefix = $"{label,-labelWidth}: ";
+        var prefix = string.Concat(label.PadRight(Math.Max(0, labelWidth)), ": ");
         var wrapped = WrapText(value, insideWidth - prefix.Length).ToList();
         if (wrapped.Count == 0)
         {
@@ -1050,7 +1050,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         var insideWidth = width - 2;
         var value = amount.ToString("0.00", CultureInfo.CurrentCulture);
-        var line = $"{label,-20}{value,insideWidth - 20}";
+        var valueWidth = Math.Max(0, insideWidth - 20);
+        var line = string.Concat(label.PadRight(20), value.PadLeft(valueWidth));
         AppendFullRow(sb, width, line);
     }
 

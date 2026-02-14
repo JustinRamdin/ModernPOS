@@ -471,11 +471,14 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             var paymentTypes = (await svc.GetSalesExportAsync(fromUtc, toUtc))
                 .Select(TryGetPaymentType)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             var customers = (await svc.GetCustomerSalesAsync(fromUtc, toUtc))
                 .Select(row => row.CustomerName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();

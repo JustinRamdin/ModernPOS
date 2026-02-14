@@ -549,7 +549,7 @@ public partial class TerminalView : UserControl
 
         slider.PropertyChanged += (_, args) =>
         {
-            if (args.Property != RangeBase.ValueProperty) return;
+           if (args.Property != Slider.ValueProperty) return;
 
             var pct = Math.Clamp(Math.Round((decimal)slider.Value, 0, MidpointRounding.AwayFromZero), 0m, 99m);
             percentageText.Text = $"{pct:0}%";

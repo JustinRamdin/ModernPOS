@@ -901,7 +901,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             };
 
             doc.DefaultPageSettings.PaperSize = new PaperSize("A4", 827, 1169);
-            doc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+            doc.DefaultPageSettings.Margins = new Margins(10, 10, 10, 10);
 
             doc.PrintPage += (_, e) =>
             {

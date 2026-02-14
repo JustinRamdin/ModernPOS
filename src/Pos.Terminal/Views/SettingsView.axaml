@@ -5,39 +5,52 @@
     <StackPanel Spacing="16" Margin="24">
       <TextBlock Text="Settings" FontSize="20" FontWeight="Bold"/>
 
-      <StackPanel Spacing="8">
-        <TextBlock Text="Company Name"/>
-        <TextBox Text="{Binding CompanyName}" Watermark="ModernPOS Ltd."/>
+      <TabControl>
+        <TabItem Header="General">
+          <StackPanel Spacing="12" Margin="0,12,0,0">
+            <TextBlock Text="Receipt Printer"/>
+            <ComboBox ItemsSource="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
+            <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
+          </StackPanel>
+        </TabItem>
 
-        <TextBlock Text="Company Address"/>
-        <TextBox Text="{Binding CompanyAddress}" Watermark="123 Main St, City" AcceptsReturn="True" Height="80"/>
+        <TabItem Header="Receipt">
+          <StackPanel Spacing="8" Margin="0,12,0,0">
+            <TextBlock Text="Company Name"/>
+            <TextBox Text="{Binding CompanyName}" Watermark="ModernPOS Ltd."/>
 
-        <TextBlock Text="Contact Information"/>
-        <TextBox Text="{Binding CompanyContact}" Watermark="Phone, email, website"/>
-      </StackPanel>
+            <TextBlock Text="Company Address"/>
+            <TextBox Text="{Binding CompanyAddress}" Watermark="123 Main St, City" AcceptsReturn="True" Height="80"/>
 
-      <Border Height="1" Background="{DynamicResource BorderBrushLight}"/>
+            <TextBlock Text="Contact Information"/>
+            <TextBox Text="{Binding CompanyContact}" Watermark="Phone, email, website"/>
 
-      <StackPanel Spacing="8">
-        <TextBlock Text="Receipt Printer"/>
-        <ComboBox ItemsSource="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
-        <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
-      </StackPanel>
+            <TextBlock Text="Header Title" Margin="0,8,0,0"/>
+            <TextBox Text="{Binding HeaderTitle}" Watermark="Receipt Header Title"/>
 
-      <Border Height="1" Background="{DynamicResource BorderBrushLight}"/>
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+              <Button Content="Upload Header Image" Click="UploadHeaderImage_Click"/>
+              <TextBlock Text="{Binding HeaderImagePath}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
 
-      <StackPanel Spacing="8">
-        <TextBlock Text="Header Title"/>
-        <TextBox Text="{Binding HeaderTitle}" Watermark="Receipt Header Title"/>
+            <Image Source="{Binding HeaderImage}" Width="180" Height="80" Stretch="Uniform" IsVisible="{Binding HasHeaderImage}"/>
+          </StackPanel>
+        </TabItem>
 
-        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <Button Content="Upload Header Image" Click="UploadHeaderImage_Click"/>
-          <TextBlock Text="{Binding HeaderImagePath}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-        </StackPanel>
+        <TabItem Header="Finance">
+          <StackPanel Spacing="10" Margin="0,12,0,0">
+            <TextBlock Text="Finance options for the terminal." Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-        <Image Source="{Binding HeaderImage}" Width="180" Height="80" Stretch="Uniform" IsVisible="{Binding HasHeaderImage}"/>
-      </StackPanel>
+            <CheckBox Content="Enable VAT in terminal"
+                      IsChecked="{Binding IsVatEnabled}"/>
+
+            <TextBlock Text="VAT Rate (%)"/>
+            <TextBox Text="{Binding VatRatePercent}" Watermark="12.5" Width="120" HorizontalAlignment="Left"/>
+          </StackPanel>
+        </TabItem>
+      </TabControl>
+
 
       <StackPanel Orientation="Horizontal" Spacing="12">
         <Button Content="Save Settings" Click="Save_Click"/>

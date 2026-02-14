@@ -13,6 +13,8 @@ public sealed class SettingsStore
     private const string ReceiptPrinterKey = "printer.receipt.name";
     private const string HeaderTitleKey = "header.title";
     private const string HeaderImagePathKey = "header.image.path";
+    private const string FinanceVatEnabledKey = "finance.vat.enabled";
+    private const string FinanceVatRatePercentKey = "finance.vat.rate.percent";
 
     public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
     {
@@ -29,7 +31,9 @@ public sealed class SettingsStore
             CompanyContact = GetValue(lookup, CompanyContactKey),
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
             HeaderTitle = GetValue(lookup, HeaderTitleKey),
-            HeaderImagePath = GetValue(lookup, HeaderImagePathKey)
+           HeaderImagePath = GetValue(lookup, HeaderImagePathKey),
+            IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
+            VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m)
         };
     }
 
@@ -44,12 +48,32 @@ public sealed class SettingsStore
         await UpsertAsync(db, ReceiptPrinterKey, settings.ReceiptPrinterName, ct);
         await UpsertAsync(db, HeaderTitleKey, settings.HeaderTitle, ct);
         await UpsertAsync(db, HeaderImagePathKey, settings.HeaderImagePath, ct);
+        await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
+        await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
 
         await db.SaveChangesAsync(ct);
     }
 
     private static string GetValue(Dictionary<string, string> lookup, string key)
         => lookup.TryGetValue(key, out var value) ? value : "";
+
+        private static bool GetBoolValue(Dictionary<string, string> lookup, string key, bool defaultValue)
+    {
+        if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return defaultValue;
+
+        return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
+    }
+
+    private static decimal GetDecimalValue(Dictionary<string, string> lookup, string key, decimal defaultValue)
+    {
+        if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return defaultValue;
+
+        return decimal.TryParse(value, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : defaultValue;
+    }
 
     private static async Task UpsertAsync(PosLocalDbContext db, string key, string value, CancellationToken ct)
     {

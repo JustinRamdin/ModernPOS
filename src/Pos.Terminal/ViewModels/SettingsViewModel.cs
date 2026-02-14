@@ -69,6 +69,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     public bool HasHeaderImage => HeaderImage != null;
 
+     private bool _isVatEnabled = true;
+    public bool IsVatEnabled
+    {
+        get => _isVatEnabled;
+        set { _isVatEnabled = value; OnPropertyChanged(); }
+    }
+
+    private string _vatRatePercent = "12.5";
+    public string VatRatePercent
+    {
+        get => _vatRatePercent;
+        set { _vatRatePercent = value ?? ""; OnPropertyChanged(); }
+    }
     private string _statusMessage = "";
     public string StatusMessage
     {
@@ -99,6 +112,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         HeaderTitle = settings.HeaderTitle;
         HeaderImagePath = settings.HeaderImagePath;
         HeaderImage = LoadBitmap(settings.HeaderImagePath);
+        IsVatEnabled = settings.IsVatEnabled;
+        VatRatePercent = settings.VatRatePercent.ToString("0.##");
 
         LoadPrinters();
         StatusMessage = "Settings loaded.";
@@ -141,12 +156,24 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             CompanyContact = CompanyContact.Trim(),
             ReceiptPrinterName = SelectedPrinter.Trim(),
             HeaderTitle = HeaderTitle.Trim(),
-            HeaderImagePath = HeaderImagePath.Trim()
+            HeaderImagePath = HeaderImagePath.Trim(),
+            IsVatEnabled = IsVatEnabled,
+            VatRatePercent = ParseVatRatePercent()
         };
 
         await _store.SaveAsync(settings);
         _onSaved?.Invoke(settings);
         StatusMessage = "Settings saved.";
+    }
+
+     private decimal ParseVatRatePercent()
+    {
+        if (decimal.TryParse(VatRatePercent, out var parsed))
+        {
+            return Math.Round(Math.Clamp(parsed, 0m, 100m), 2);
+        }
+
+        return 12.5m;
     }
 
     public async Task SetHeaderImageAsync(string sourcePath)

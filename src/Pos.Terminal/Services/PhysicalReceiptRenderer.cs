@@ -42,8 +42,11 @@ public static class PhysicalReceiptRenderer
         DateTime invoiceDate,
         ReceiptCustomerInfo customer,
         string paymentMethod,
-        decimal total,
-        decimal cashGiven,
+         decimal subtotal,
+        decimal discount,
+        decimal vat,
+        decimal totalDue,
+        decimal totalTendered,
         decimal change,
         InvoicePrintState state)
     {
@@ -246,13 +249,11 @@ public static class PhysicalReceiptRenderer
         float summaryRowH = 15f;
 
         var summaryRows = new (string Label, decimal Value)[]
-        {
-            ("SUBTOTAL", total),
-            ("DISCOUNT", 0m),
-            ("SUBTOTAL LESS DISCOUNT", total),
+        {("SUBTOTAL", subtotal),
+            ("DISCOUNT", discount),
+            ("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount)),
             ("TAX RATE", 0m),
-            ("TOTAL TAX", 0m),
-            ("SHIPPING/HANDLING", 0m)
+            ("TOTAL TAX (VAT)", vat)
         };
        for (int i = 0; i < summaryRows.Length; i++)
         {
@@ -266,7 +267,7 @@ public static class PhysicalReceiptRenderer
         }
 
          var remarks = paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase)
-            ? $"Remarks: Payment CASH | Cash {cashGiven:0.00} | Change {change:0.00}"
+            ? $"Remarks: Payment CASH | Cash {totalTendered:0.00} | Change {change:0.00}"
             : $"Remarks: Payment {paymentMethod}";
         g.DrawString(remarks, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 40f));
 

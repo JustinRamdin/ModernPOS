@@ -620,7 +620,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: "CASH",
-                total: totalDue,
+                subtotal: Subtotal,
+                discount: DiscountAmount,
+                vat: VatTotal,
+                totalDue: totalDue,
                 cashGiven: cashGiven,
                 change: changeDue);
 
@@ -676,7 +679,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: method,
-                total: totalDue,
+                subtotal: Subtotal,
+                discount: DiscountAmount,
+                vat: VatTotal,
+                totalDue: totalDue,
                 cashGiven: totalDue,
                 change: 0m);
 
@@ -731,7 +737,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await PrintReceiptAsync(
                 receiptNo: result.ReceiptNo,
                 paymentMethod: "ON ACCOUNT",
-                total: totalDue,
+                subtotal: Subtotal,
+                discount: DiscountAmount,
+                vat: VatTotal,
+                totalDue: totalDue,
                 cashGiven: 0m,
                 change: 0m);
 
@@ -839,7 +848,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         private async Task PrintReceiptAsync(
         string receiptNo,
         string paymentMethod,
-        decimal total,
+        decimal subtotal,
+        decimal discount,
+        decimal vat,
+        decimal totalDue,
         decimal cashGiven,
         decimal change)
     {
@@ -918,8 +930,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     invoiceDate: DateTime.Now,
                     customer: customerInfo,
                     paymentMethod: paymentMethod,
-                    total: total,
-                    cashGiven: cashGiven,
+                     subtotal: subtotal,
+                    discount: discount,
+                    vat: vat,
+                    totalDue: totalDue,
+                    totalTendered: cashGiven,
                     change: change,
                     state: state
                 );

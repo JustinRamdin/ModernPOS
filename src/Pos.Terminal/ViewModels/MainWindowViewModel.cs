@@ -44,8 +44,9 @@ namespace Pos.Terminal.ViewModels;
 
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
-    private readonly CheckoutCalculator _checkout = new(new VatCalculator());
+     private CheckoutCalculator _checkout = new(new VatCalculator());
     private readonly SettingsStore _settingsStore = new();
+    private AppSettings _settings = new();
 
     // -----------------------------
     // Shell / navigation
@@ -767,6 +768,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private (decimal Net, decimal Vat, decimal Gross) ComputeTotals()
     {
+        _checkout = new CheckoutCalculator(new VatCalculator(_settings.VatRatePercent / 100m, _settings.IsVatEnabled));
+
         if (CartLines.Count == 0) return (0m, 0m, 0m);
 
         var lineTotals = new List<CheckoutLineTotals>();
@@ -812,8 +815,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private void ApplyHeaderSettings(AppSettings settings)
     {
-        HeaderTitle = string.IsNullOrWhiteSpace(settings.HeaderTitle) ? "ModernPOS" : settings.HeaderTitle;
-        HeaderImage = LoadBitmap(settings.HeaderImagePath);
+        _settings = settings ?? new AppSettings();
+        HeaderTitle = string.IsNullOrWhiteSpace(_settings.HeaderTitle) ? "ModernPOS" : _settings.HeaderTitle;
+        HeaderImage = LoadBitmap(_settings.HeaderImagePath);
+        RaiseTotalsChanged();
     }
 
     private static AvaloniaBitmap? LoadBitmap(string path)

@@ -192,14 +192,25 @@ public partial class TerminalView : UserControl
         var vm = VM;
         if (vm == null) return;
 
-        var discount = await ShowDecimalInputAsync(
+         if (vm.Subtotal <= 0m)
+        {
+            vm.Toast("Add items to cart before applying a discount.");
+            return;
+        }
+
+        var currentPct = vm.Subtotal <= 0m
+            ? 0m
+            : Math.Round((vm.DiscountAmount / vm.Subtotal) * 100m, 0, MidpointRounding.AwayFromZero);
+
+        var discountPct = await ShowDiscountPercentageInputAsync(
             title: "Discount",
-            prompt: "Enter discount amount:",
-            defaultValue: vm.DiscountAmount);
+            prompt: "Select discount percentage:",
+            defaultValue: currentPct,
+            subtotal: vm.Subtotal);
 
-        if (discount == null) return;
+        if (discountPct == null) return;
 
-        vm.DiscountAmount = Math.Max(0m, discount.Value);
+        vm.DiscountAmount = Math.Round(vm.Subtotal * (discountPct.Value / 100m), 2, MidpointRounding.AwayFromZero);
         RefreshTotalsSafe();
     }
 
@@ -494,6 +505,93 @@ public partial class TerminalView : UserControl
                 return;
 
             result = Math.Max(0, val);
+            win.Close();
+        };
+
+        cancel.Click += (_, __) => win.Close();
+
+        await win.ShowDialog(host);
+        return result;
+    }
+     private async Task<decimal?> ShowDiscountPercentageInputAsync(
+        string title,
+        string prompt,
+        decimal defaultValue,
+        decimal subtotal)
+    {
+        var host = GetHostWindow();
+        if (host == null) return null;
+
+        var initialPct = Math.Clamp(Math.Round(defaultValue, 0, MidpointRounding.AwayFromZero), 0m, 99m);
+
+        var slider = new Slider
+        {
+            Minimum = 0,
+            Maximum = 99,
+            Value = (double)initialPct,
+            TickFrequency = 1,
+            IsSnapToTickEnabled = true,
+            MinWidth = 260
+        };
+
+        var percentageText = new TextBlock
+        {
+            Text = $"{initialPct:0}%",
+            FontSize = 22,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+        };
+
+        var amountText = new TextBlock
+        {
+            Text = $"Discount amount: ${Math.Round(subtotal * (initialPct / 100m), 2, MidpointRounding.AwayFromZero):0.00}",
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+        };
+
+        slider.PropertyChanged += (_, args) =>
+        {
+            if (args.Property != RangeBase.ValueProperty) return;
+
+            var pct = Math.Clamp(Math.Round((decimal)slider.Value, 0, MidpointRounding.AwayFromZero), 0m, 99m);
+            percentageText.Text = $"{pct:0}%";
+            amountText.Text = $"Discount amount: ${Math.Round(subtotal * (pct / 100m), 2, MidpointRounding.AwayFromZero):0.00}";
+        };
+
+        var ok = new Button { Content = "OK", IsDefault = true };
+        var cancel = new Button { Content = "Cancel", IsCancel = true };
+
+        decimal? result = null;
+
+        var win = new Window
+        {
+            Title = title,
+            Width = 440,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 12,
+                Children =
+                {
+                    new TextBlock { Text = prompt, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                    percentageText,
+                    slider,
+                    amountText,
+                    new StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { cancel, ok }
+                    }
+                }
+            }
+        };
+
+        ok.Click += (_, __) =>
+        {
+            result = Math.Clamp(Math.Round((decimal)slider.Value, 0, MidpointRounding.AwayFromZero), 0m, 99m);
             win.Close();
         };
 

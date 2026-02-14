@@ -272,9 +272,7 @@ public class LocalSaleService
         string terminalId,
         IReadOnlyList<LocalCartLine> lines,
         string method, // "DEBIT" or "CREDIT"
-        decimal discountAmount = 0m,
         Guid? customerId = null,
-        decimal discountAmount = 0m,
         string locationCode = "DEFAULT",
         bool allowNegativeStock = false,
         CancellationToken ct = default)
@@ -314,6 +312,7 @@ public class LocalSaleService
         string terminalId,
         IReadOnlyList<LocalCartLine> lines,
         Guid customerId,
+        decimal discountAmount = 0m,
         string locationCode = "DEFAULT",
         bool allowNegativeStock = false,
         CancellationToken ct = default)
@@ -323,6 +322,7 @@ public class LocalSaleService
             terminalId: terminalId,
             lines: lines,
             cashGiven: decimal.MaxValue,
+            discountAmount: discountAmount,
             customerId: customerId,
             locationCode: locationCode,
             allowNegativeStock: allowNegativeStock,

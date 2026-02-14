@@ -272,6 +272,7 @@ public class LocalSaleService
         string terminalId,
         IReadOnlyList<LocalCartLine> lines,
         string method, // "DEBIT" or "CREDIT"
+        decimal discountAmount = 0m,
         Guid? customerId = null,
         string locationCode = "DEFAULT",
         bool allowNegativeStock = false,

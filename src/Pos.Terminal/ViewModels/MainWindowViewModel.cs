@@ -604,6 +604,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     QtyInches = x.QtyInches
                 }).ToList(),
                 cashGiven: cashGiven,
+                discountAmount: DiscountAmount,
                 customerId: SelectedCustomerId,          // required now
                 allowNegativeStock: false
             );
@@ -667,6 +668,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     QtyInches = x.QtyInches
                 }).ToList(),
                 method: method,
+                discountAmount: DiscountAmount,
                 customerId: SelectedCustomerId,          // required now
                 allowNegativeStock: false
             );
@@ -726,6 +728,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     QtyInches = x.QtyInches
                 }).ToList(),
                 customerId: SelectedCustomerId!.Value,
+                discountAmount: DiscountAmount,
                 allowNegativeStock: false
             );
 

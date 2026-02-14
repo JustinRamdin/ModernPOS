@@ -31,6 +31,7 @@ public class LocalSaleService
         string terminalId,
         IReadOnlyList<LocalCartLine> lines,
         decimal cashGiven,
+        decimal discountAmount = 0m,
         Guid? customerId = null,
         string locationCode = "DEFAULT",
         bool allowNegativeStock = false,
@@ -127,10 +128,14 @@ public class LocalSaleService
             ))
         );
 
-        if (cashGiven < totals.Gross)
-            throw new InvalidOperationException($"Insufficient cash. Total is {totals.Gross:0.00}");
+        var discount = Money(Math.Max(0m, discountAmount));
+        var totalDue = Money(Math.Max(0m, totals.Gross - discount));
 
-        var change = Money(cashGiven - totals.Gross);
+         if (cashGiven < totalDue)
+            throw new InvalidOperationException($"Insufficient cash. Total is {totalDue:0.00}");
+
+        var change = Money(cashGiven - totalDue);
+
 
         var receiptNo =
             $"{terminalId}-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}"[..32];
@@ -141,7 +146,7 @@ public class LocalSaleService
             CustomerId = customerId,
             NetTotal = totals.Net,
             VatTotal = totals.Vat,
-            GrossTotal = totals.Gross,
+            GrossTotal = totalDue,
             Status = "Paid",
             CreatedAtUtc = DateTime.UtcNow,
             Lines = saleLines
@@ -216,6 +221,7 @@ public class LocalSaleService
                 net_total = sale.NetTotal,
                 vat_total = sale.VatTotal,
                 gross_total = sale.GrossTotal,
+                discount_amount = discount,
                 created_at_utc = sale.CreatedAtUtc,
                 customer_id = sale.CustomerId
             },
@@ -266,7 +272,9 @@ public class LocalSaleService
         string terminalId,
         IReadOnlyList<LocalCartLine> lines,
         string method, // "DEBIT" or "CREDIT"
+        decimal discountAmount = 0m,
         Guid? customerId = null,
+        decimal discountAmount = 0m,
         string locationCode = "DEFAULT",
         bool allowNegativeStock = false,
         CancellationToken ct = default)
@@ -276,6 +284,7 @@ public class LocalSaleService
             terminalId: terminalId,
             lines: lines,
             cashGiven: decimal.MaxValue,
+            discountAmount: discountAmount,
             customerId: customerId,
             locationCode: locationCode,
             allowNegativeStock: allowNegativeStock,

@@ -900,15 +900,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 DocumentName = $"Invoice {receiptNo}"
             };
 
-            doc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
-            doc.DefaultPageSettings.Margins = new Margins(5, 10, 10, 20);
+            doc.DefaultPageSettings.PaperSize = new PaperSize("A4", 827, 1169);
+            doc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
 
             doc.PrintPage += (_, e) =>
             {
                e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
                     g: e.Graphics,
-                    pageBounds: e.PageBounds,
-                    margins: doc.DefaultPageSettings.Margins,
+                    marginBounds: e.MarginBounds,
                     settings: settings,
                     receiptNo: receiptNo,
                     invoiceDate: DateTime.Now,

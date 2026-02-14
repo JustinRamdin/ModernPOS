@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.Globalization;
 using System.Linq;
 
@@ -37,8 +36,7 @@ public static class PhysicalReceiptRenderer
 
     public static bool DrawInvoiceLetterPage(
         Graphics g,
-        Rectangle pageBounds,
-        Margins margins,
+        Rectangle marginBounds,
         AppSettings settings,
         string receiptNo,
         DateTime invoiceDate,
@@ -52,22 +50,12 @@ public static class PhysicalReceiptRenderer
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-        float dpiX = g.DpiX;
-        float dpiY = g.DpiY;
-
-        float left = (margins.Left / 100f) * dpiX;
-        float right = (margins.Right / 100f) * dpiX;
-        float top = (margins.Top / 100f) * dpiY;
-        float bottom = (margins.Bottom / 100f) * dpiY;
-
-        float pageW = pageBounds.Width;
-        float pageH = pageBounds.Height;
 
         var content = new RectangleF(
-            x: left,
-            y: top,
-            width: pageW - left - right,
-            height: pageH - top - bottom
+            x: marginBounds.Left,
+            y: marginBounds.Top,
+            width: marginBounds.Width,
+            height: marginBounds.Height
         );
 
         using var fontBody = new Font("Segoe UI", 9f, FontStyle.Regular);

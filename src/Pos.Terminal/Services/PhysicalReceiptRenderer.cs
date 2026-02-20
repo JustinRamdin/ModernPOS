@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 using Pos.Terminal.Models;
@@ -94,11 +95,24 @@ public static class PhysicalReceiptRenderer
 
         g.DrawString("RECEIPT", fontTitle, Brushes.DimGray, new RectangleF(content.Left + 2f, y, content.Width * 0.45f, 40f));
 
-        float logoSize = 76f;
+        var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
+        float logoSize = 76f * logoMultiplier;
         float logoX = content.Right - logoSize - 8f;
         float logoY = y - 6f;
-        g.FillEllipse(brushLogo, logoX, logoY, logoSize, logoSize);
-        g.DrawString("LOGO", fontLogo, Brushes.White, new RectangleF(logoX, logoY, logoSize, logoSize), sfCenter);
+       var logoRect = new RectangleF(logoX, logoY, logoSize, logoSize);
+
+        if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage))
+        {
+            using (logoImage)
+            {
+                g.DrawImage(logoImage, logoRect);
+            }
+        }
+        else
+        {
+            g.FillEllipse(brushLogo, logoRect);
+            g.DrawString("LOGO", fontLogo, Brushes.White, logoRect, sfCenter);
+        }
 
         float metaX = content.Right - 100f;
         float metaY = logoY + logoSize + 12f;
@@ -275,4 +289,23 @@ public static class PhysicalReceiptRenderer
 
         return hasMore;
     }
+    
+    private static bool TryLoadLogoImage(string logoPath, out Image? logoImage)
+    {
+        logoImage = null;
+
+        if (string.IsNullOrWhiteSpace(logoPath) || !File.Exists(logoPath))
+            return false;
+
+        try
+        {
+            logoImage = Image.FromFile(logoPath);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
 }

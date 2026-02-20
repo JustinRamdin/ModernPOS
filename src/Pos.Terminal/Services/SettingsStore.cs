@@ -13,6 +13,8 @@ public sealed class SettingsStore
     private const string ReceiptPrinterKey = "printer.receipt.name";
     private const string HeaderTitleKey = "header.title";
     private const string HeaderImagePathKey = "header.image.path";
+     private const string LogoImagePathKey = "logo.image.path";
+    private const string LogoScaleMultiplierKey = "logo.scale.multiplier";
     private const string FinanceVatEnabledKey = "finance.vat.enabled";
     private const string FinanceVatRatePercentKey = "finance.vat.rate.percent";
      private const string ReceiptRemarksKey = "receipt.remarks";
@@ -33,6 +35,8 @@ public sealed class SettingsStore
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
             HeaderTitle = GetValue(lookup, HeaderTitleKey),
             HeaderImagePath = GetValue(lookup, HeaderImagePathKey),
+            LogoImagePath = GetValue(lookup, LogoImagePathKey),
+            LogoScaleMultiplier = GetIntValue(lookup, LogoScaleMultiplierKey, 1, 1, 4),
             ReceiptRemarks = GetValue(lookup, ReceiptRemarksKey),
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
             VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m)
@@ -68,6 +72,17 @@ public sealed class SettingsStore
         return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 
+     private static int GetIntValue(Dictionary<string, string> lookup, string key, int defaultValue, int minValue, int maxValue)
+    {
+        if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return defaultValue;
+
+        if (!int.TryParse(value, out var parsed))
+            return defaultValue;
+
+        return Math.Clamp(parsed, minValue, maxValue);
+    }
+    
     private static decimal GetDecimalValue(Dictionary<string, string> lookup, string key, decimal defaultValue)
     {
         if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))

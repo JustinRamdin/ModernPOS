@@ -76,6 +76,47 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     public bool HasHeaderImage => HeaderImage != null;
 
+    private string _logoImagePath = "";
+    public string LogoImagePath
+    {
+        get => _logoImagePath;
+        private set { _logoImagePath = value ?? ""; OnPropertyChanged(); }
+    }
+
+    private Bitmap? _logoImage;
+    public Bitmap? LogoImage
+    {
+        get => _logoImage;
+        private set { _logoImage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasLogoImage)); }
+    }
+
+    public bool HasLogoImage => LogoImage != null;
+
+    private int _logoScaleMultiplier = 1;
+    public int LogoScaleMultiplier
+    {
+        get => _logoScaleMultiplier;
+        private set
+        {
+            var clamped = Math.Clamp(value, 1, 4);
+            if (_logoScaleMultiplier == clamped)
+                return;
+
+            _logoScaleMultiplier = clamped;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsLogoScale1xSelected));
+            OnPropertyChanged(nameof(IsLogoScale2xSelected));
+            OnPropertyChanged(nameof(IsLogoScale3xSelected));
+            OnPropertyChanged(nameof(IsLogoScale4xSelected));
+        }
+    }
+
+    public bool IsLogoScale1xSelected => LogoScaleMultiplier == 1;
+    public bool IsLogoScale2xSelected => LogoScaleMultiplier == 2;
+    public bool IsLogoScale3xSelected => LogoScaleMultiplier == 3;
+    public bool IsLogoScale4xSelected => LogoScaleMultiplier == 4;
+
+
      private bool _isVatEnabled = true;
     public bool IsVatEnabled
     {
@@ -119,6 +160,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         HeaderTitle = settings.HeaderTitle;
         ReceiptRemarks = settings.ReceiptRemarks;
         HeaderImagePath = settings.HeaderImagePath;
+        LogoImagePath = settings.LogoImagePath;
+        LogoImage = LoadBitmap(settings.LogoImagePath);
+        LogoScaleMultiplier = settings.LogoScaleMultiplier;
         HeaderImage = LoadBitmap(settings.HeaderImagePath);
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
@@ -165,6 +209,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             ReceiptPrinterName = SelectedPrinter.Trim(),
             HeaderTitle = HeaderTitle.Trim(),
             ReceiptRemarks = ReceiptRemarks,
+            LogoImagePath = LogoImagePath.Trim(),
+            LogoScaleMultiplier = LogoScaleMultiplier,
             HeaderImagePath = HeaderImagePath.Trim(),
             IsVatEnabled = IsVatEnabled,
             VatRatePercent = ParseVatRatePercent()
@@ -185,6 +231,27 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         return 12.5m;
     }
 
+     public async Task SetLogoImageAsync(string sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            StatusMessage = "Image not found.";
+            return;
+        }
+
+        var destPath = CopyBrandingImage(sourcePath, "receipt-logo");
+        LogoImagePath = destPath;
+        LogoImage = LoadBitmap(destPath);
+        StatusMessage = "Logo image updated.";
+        await Task.CompletedTask;
+    }
+
+    public void SetLogoScaleMultiplier(int multiplier)
+    {
+        LogoScaleMultiplier = multiplier;
+        StatusMessage = $"Logo size set to {LogoScaleMultiplier}x.";
+    }
+
     public async Task SetHeaderImageAsync(string sourcePath)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
@@ -193,21 +260,21 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             return;
         }
 
-        var destPath = CopyHeaderImage(sourcePath);
+        var destPath = CopyBrandingImage(sourcePath, "header-logo");
         HeaderImagePath = destPath;
         HeaderImage = LoadBitmap(destPath);
         StatusMessage = "Header image updated.";
         await Task.CompletedTask;
     }
 
-    private static string CopyHeaderImage(string sourcePath)
+    private static string CopyBrandingImage(string sourcePath, string filePrefix)
     {
         var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var folder = Path.Combine(root, "ModernPOS", "branding");
         Directory.CreateDirectory(folder);
 
         var extension = Path.GetExtension(sourcePath);
-        var destPath = Path.Combine(folder, $"header-logo{extension}");
+        var destPath = Path.Combine(folder, $"{filePrefix}{extension}");
         File.Copy(sourcePath, destPath, true);
         return destPath;
     }

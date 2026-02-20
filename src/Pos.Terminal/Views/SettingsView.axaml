@@ -38,6 +38,18 @@
             </StackPanel>
 
             <Image Source="{Binding HeaderImage}" Width="180" Height="80" Stretch="Uniform" IsVisible="{Binding HasHeaderImage}"/>
+
+            
+            <TextBlock Text="Receipt Logo" Margin="0,10,0,0"/>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Button Content="Upload Logo" Click="UploadLogoImage_Click"/>
+              <Button Content="1x" Click="SetLogoScale1x_Click"/>
+              <Button Content="2x" Click="SetLogoScale2x_Click"/>
+              <Button Content="3x" Click="SetLogoScale3x_Click"/>
+              <Button Content="4x" Click="SetLogoScale4x_Click"/>
+            </StackPanel>
+            <TextBlock Text="{Binding LogoImagePath}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <Image Source="{Binding LogoImage}" Width="120" Height="120" Stretch="Uniform" IsVisible="{Binding HasLogoImage}"/>
           </StackPanel>
         </TabItem>
 

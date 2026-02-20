@@ -13,7 +13,7 @@ public static class PhysicalReceiptRenderer
     public sealed class InvoicePrintState
     {
         public int ItemIndex;
-        public List<(string desc, decimal amount)> Items { get; init; } = new();
+        public List<(string description, string qty, decimal unitPrice, decimal amount)> Items { get; init; } = new();
     }
 
     public sealed record ReceiptCustomerInfo(string Name, string Phone, string Email);
@@ -28,8 +28,7 @@ public static class PhysicalReceiptRenderer
             Items = lines.Select(line =>
             {
                 var qtyLabel = line.IsLength ? $"{line.QtyInches:0.##} in" : $"{line.Qty:0.##}";
-                var desc = $"{line.Name}\nQty: {qtyLabel}  @  {line.UnitPrice:0.00}";
-                return (desc, line.LineTotal);
+                 return (line.Name, qtyLabel, line.UnitPrice, line.LineTotal);
             }).ToList()
         };
     }
@@ -196,27 +195,7 @@ public static class PhysicalReceiptRenderer
 
         while (state.ItemIndex < state.Items.Count)
         {
-            var (desc, amount) = state.Items[state.ItemIndex];
-           var compactDesc = desc.Replace("\n", "   ");
-            var qtyText = "1";
-            var unitPrice = amount;
-
-            var qtyStart = desc.IndexOf("Qty:", StringComparison.OrdinalIgnoreCase);
-            var atMarker = desc.IndexOf("@", StringComparison.OrdinalIgnoreCase);
-            if (qtyStart >= 0 && atMarker > qtyStart)
-            {
-                qtyText = desc[(qtyStart + 4)..atMarker].Trim();
-            }
-
-            if (atMarker >= 0)
-            {
-                var priceSlice = desc[(atMarker + 1)..].Trim();
-                if (decimal.TryParse(priceSlice, NumberStyles.Number, CultureInfo.CurrentCulture, out var parsedPrice) ||
-                    decimal.TryParse(priceSlice, NumberStyles.Number, CultureInfo.InvariantCulture, out parsedPrice))
-                {
-                    unitPrice = parsedPrice;
-                }
-            }
+            var (description, qtyText, unitPrice, amount) = state.Items[state.ItemIndex];
 
             float thisRowH = rowHeight;
 
@@ -234,7 +213,7 @@ public static class PhysicalReceiptRenderer
             var amtRect = new RectangleF(tableX + descW + qtyW + unitW + 6, curY + 2, amtW - 12, thisRowH - 4);
 
 
-            g.DrawString(compactDesc, fontTable, Brushes.Black, descRect, sfNearTop);
+            g.DrawString(description, fontTable, Brushes.Black, descRect, sfNearTop);
             g.DrawString(qtyText, fontTable, Brushes.Black, qtyRect, sfFarTop);
             g.DrawString(unitPrice.ToString("0.00", CultureInfo.CurrentCulture), fontTable, Brushes.Black, unitRect, sfFarTop);
             g.DrawString(amount.ToString("0.00", CultureInfo.CurrentCulture), fontTable, Brushes.Black, amtRect, sfFarTop);

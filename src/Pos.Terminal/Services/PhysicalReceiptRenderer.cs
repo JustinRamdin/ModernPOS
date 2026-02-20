@@ -69,6 +69,7 @@ public static class PhysicalReceiptRenderer
         using var fontTableHeader = new Font("Segoe UI", 8.5f, FontStyle.Bold);
         using var fontTable = new Font("Segoe UI", 8.5f, FontStyle.Regular);
         using var fontPaid = new Font("Segoe UI", 12f, FontStyle.Bold);
+        using var fontRemarks = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
         using var penLight = new Pen(Color.FromArgb(180, 180, 180), 0.9f);
         using var penDark = new Pen(Color.FromArgb(95, 95, 95), 1f);
@@ -253,7 +254,7 @@ public static class PhysicalReceiptRenderer
            var remarksText = Safe(remarks);
         if (!string.IsNullOrWhiteSpace(remarksText))
         {
-            g.DrawString(remarksText, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 48f), sfCenter);
+            g.DrawString(remarksText, fontRemarks, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 44f, content.Width * 0.6f, 90f), sfCenter);
         }
 
          float paidY = summaryTop + (summaryRows.Count * summaryRowH) + 8f;

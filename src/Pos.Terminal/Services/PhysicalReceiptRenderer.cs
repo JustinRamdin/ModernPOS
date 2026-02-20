@@ -248,30 +248,32 @@ public static class PhysicalReceiptRenderer
         float summaryW = tableW * 0.35f;
         float summaryRowH = 15f;
 
-        var summaryRows = new (string Label, decimal Value)[]
-        {("SUBTOTAL", subtotal),
-            ("DISCOUNT", discount),
-            ("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount)),
-            ("TAX RATE", 0m),
-            ("TOTAL TAX (VAT)", vat)
+         var summaryRows = new List<(string Label, string Value)>
+        {
+            ("SUBTOTAL", subtotal.ToString("0.00", CultureInfo.CurrentCulture)),
+            ("DISCOUNT", discount.ToString("0.00", CultureInfo.CurrentCulture)),
+            ("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount).ToString("0.00", CultureInfo.CurrentCulture)),
+            ("TOTAL TAX (VAT)", vat.ToString("0.00", CultureInfo.CurrentCulture)),
+            ("PAYMENT", paymentMethod)
         };
-       for (int i = 0; i < summaryRows.Length; i++)
+       if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
+        {
+            summaryRows.Add(("CASH", totalTendered.ToString("0.00", CultureInfo.CurrentCulture)));
+            summaryRows.Add(("CHANGE", change.ToString("0.00", CultureInfo.CurrentCulture)));
+        }
+
+       for (int i = 0; i < summaryRows.Count; i++)
         {
             var rowY = summaryTop + (i * summaryRowH);
             g.DrawString(summaryRows[i].Label, fontSmallBold, Brushes.MidnightBlue, new RectangleF(summaryX, rowY, summaryW * 0.6f, summaryRowH), sfFarCenter);
 
-        var valueText = summaryRows[i].Label == "TAX RATE"
-                ? "0.00%"
-                : summaryRows[i].Value.ToString("0.00", CultureInfo.CurrentCulture);
-            g.DrawString(valueText, fontSmall, Brushes.Black, new RectangleF(summaryX + (summaryW * 0.62f), rowY, summaryW * 0.38f, summaryRowH), sfFarCenter);
+        g.DrawString(summaryRows[i].Value, fontSmall, Brushes.Black, new RectangleF(summaryX + (summaryW * 0.62f), rowY, summaryW * 0.38f, summaryRowH), sfFarCenter);
         }
 
-         var remarks = paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase)
-            ? $"Remarks: Payment CASH | Cash {totalTendered:0.00} | Change {change:0.00}"
-            : $"Remarks: Payment {paymentMethod}";
+          var remarks = "Remarks:";
         g.DrawString(remarks, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 40f));
 
-        float paidY = summaryTop + (summaryRows.Length * summaryRowH) + 8f;
+         float paidY = summaryTop + (summaryRows.Count * summaryRowH) + 8f;
         g.DrawLine(penDark, summaryX, paidY, summaryX + summaryW, paidY);
         g.DrawString("Paid", fontPaid, Brushes.Black, new RectangleF(summaryX, paidY + 4f, summaryW * 0.2f, 20f), sfFarCenter);
         g.DrawString("$", fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.24f, paidY + 4f, summaryW * 0.09f, 20f), sfCenter);

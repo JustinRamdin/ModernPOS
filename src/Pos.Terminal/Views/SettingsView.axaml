@@ -26,6 +26,9 @@
             <TextBlock Text="Contact Information"/>
             <TextBox Text="{Binding CompanyContact}" Watermark="Phone, email, website"/>
 
+            <TextBlock Text="Receipt Remarks" Margin="0,8,0,0"/>
+            <TextBox Text="{Binding ReceiptRemarks}" Watermark="Type remarks shown on the printed receipt" AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
+            
             <TextBlock Text="Header Title" Margin="0,8,0,0"/>
             <TextBox Text="{Binding HeaderTitle}" Watermark="Receipt Header Title"/>
 

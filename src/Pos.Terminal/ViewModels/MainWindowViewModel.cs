@@ -939,6 +939,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     totalDue: totalDue,
                     totalTendered: cashGiven,
                     change: change,
+                    remarks: settings.ReceiptRemarks,
                     state: state
                 );
             };

@@ -47,6 +47,7 @@ public static class PhysicalReceiptRenderer
         decimal totalDue,
         decimal totalTendered,
         decimal change,
+        string remarks,
         InvoicePrintState state)
     {
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -249,8 +250,8 @@ public static class PhysicalReceiptRenderer
         g.DrawString(summaryRows[i].Value, fontSmall, Brushes.Black, new RectangleF(summaryX + (summaryW * 0.62f), rowY, summaryW * 0.38f, summaryRowH), sfFarCenter);
         }
 
-          var remarks = "Remarks:";
-        g.DrawString(remarks, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 40f));
+            var remarksText = string.IsNullOrWhiteSpace(remarks) ? "Remarks:" : $"Remarks: {remarks}";
+        g.DrawString(remarksText, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 48f), sfNearTop);
 
          float paidY = summaryTop + (summaryRows.Count * summaryRowH) + 8f;
         g.DrawLine(penDark, summaryX, paidY, summaryX + summaryW, paidY);

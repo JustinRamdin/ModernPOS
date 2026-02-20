@@ -53,6 +53,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set { _headerTitle = value ?? ""; OnPropertyChanged(); }
     }
 
+    private string _receiptRemarks = "";
+    public string ReceiptRemarks
+    {
+        get => _receiptRemarks;
+        set { _receiptRemarks = value ?? ""; OnPropertyChanged(); }
+    }
+
     private string _headerImagePath = "";
     public string HeaderImagePath
     {
@@ -110,6 +117,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         CompanyContact = settings.CompanyContact;
         SelectedPrinter = settings.ReceiptPrinterName;
         HeaderTitle = settings.HeaderTitle;
+        ReceiptRemarks = settings.ReceiptRemarks;
         HeaderImagePath = settings.HeaderImagePath;
         HeaderImage = LoadBitmap(settings.HeaderImagePath);
         IsVatEnabled = settings.IsVatEnabled;
@@ -156,6 +164,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             CompanyContact = CompanyContact.Trim(),
             ReceiptPrinterName = SelectedPrinter.Trim(),
             HeaderTitle = HeaderTitle.Trim(),
+            ReceiptRemarks = ReceiptRemarks,
             HeaderImagePath = HeaderImagePath.Trim(),
             IsVatEnabled = IsVatEnabled,
             VatRatePercent = ParseVatRatePercent()

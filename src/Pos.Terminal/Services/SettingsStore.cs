@@ -15,6 +15,7 @@ public sealed class SettingsStore
     private const string HeaderImagePathKey = "header.image.path";
     private const string FinanceVatEnabledKey = "finance.vat.enabled";
     private const string FinanceVatRatePercentKey = "finance.vat.rate.percent";
+     private const string ReceiptRemarksKey = "receipt.remarks";
 
     public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
     {
@@ -31,7 +32,8 @@ public sealed class SettingsStore
             CompanyContact = GetValue(lookup, CompanyContactKey),
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
             HeaderTitle = GetValue(lookup, HeaderTitleKey),
-           HeaderImagePath = GetValue(lookup, HeaderImagePathKey),
+            HeaderImagePath = GetValue(lookup, HeaderImagePathKey),
+            ReceiptRemarks = GetValue(lookup, ReceiptRemarksKey),
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
             VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m)
         };
@@ -48,6 +50,7 @@ public sealed class SettingsStore
         await UpsertAsync(db, ReceiptPrinterKey, settings.ReceiptPrinterName, ct);
         await UpsertAsync(db, HeaderTitleKey, settings.HeaderTitle, ct);
         await UpsertAsync(db, HeaderImagePathKey, settings.HeaderImagePath, ct);
+        await UpsertAsync(db, ReceiptRemarksKey, settings.ReceiptRemarks, ct);
         await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
 

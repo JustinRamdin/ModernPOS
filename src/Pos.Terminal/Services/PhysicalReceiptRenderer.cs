@@ -96,10 +96,10 @@ public static class PhysicalReceiptRenderer
         g.DrawString("RECEIPT", fontTitle, Brushes.DimGray, new RectangleF(content.Left + 2f, y, content.Width * 0.45f, 40f));
 
         float metaX = content.Right - 100f;
-        float metaY = content.Top + stripeH + 22f;
+        float metaY = content.Top + stripeH + 34f;
 
         var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
-        float desiredLogoSize = 76f * logoMultiplier;
+        float desiredLogoSize = 84f * logoMultiplier;
         float logoTopLimit = content.Top + stripeH + 4f;
         float logoBottomLimit = metaY - 8f;
         float logoSize = Math.Max(40f, Math.Min(desiredLogoSize, logoBottomLimit - logoTopLimit));

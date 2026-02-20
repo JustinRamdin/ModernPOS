@@ -98,7 +98,7 @@ public static class PhysicalReceiptRenderer
         var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
         float logoSize = 76f * logoMultiplier;
         float logoX = content.Right - logoSize - 8f;
-        float logoY = y - 60f;
+        float logoY = y - 90f;
        var logoRect = new RectangleF(logoX, logoY, logoSize, logoSize);
 
         if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage))
@@ -115,7 +115,7 @@ public static class PhysicalReceiptRenderer
         }
 
         float metaX = content.Right - 100f;
-        float metaY = logoY + logoSize + 12f;
+        float metaY = y + 28f;
         g.DrawString("PAYMENT DATE", fontSmallBold, Brushes.MidnightBlue, new RectangleF(metaX, metaY, 95f, 16f), sfFarCenter);
         g.DrawLine(penLight, metaX, metaY + 18f, metaX + 95f, metaY + 18f);
         g.DrawString(invoiceDate.ToString("yyyy-MM-dd"), fontSmall, Brushes.Black, new RectangleF(metaX, metaY + 20f, 95f, 14f), sfFarCenter);

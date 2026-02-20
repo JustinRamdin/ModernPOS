@@ -279,6 +279,7 @@ public static class PhysicalReceiptRenderer
         g.DrawString("$", fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.24f, paidY + 4f, summaryW * 0.09f, 20f), sfCenter);
          var paidAmount = Math.Round(Math.Max(0m, totalDue), 2, MidpointRounding.AwayFromZero);
         var paidAmountText = paidAmount.ToString("0.00", CultureInfo.CurrentCulture);
+        g.DrawString(paidAmountText, fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.7f, paidY + 4f, summaryW * 0.24f, 20f), sfFarCenter);
         g.DrawLine(penDark, summaryX, paidY + 28f, summaryX + summaryW, paidY + 28f);
 
         g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, content.Bottom - stripeH - 4f, content.Width, stripeH));

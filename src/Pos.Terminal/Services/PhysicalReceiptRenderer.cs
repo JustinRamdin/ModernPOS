@@ -98,7 +98,7 @@ public static class PhysicalReceiptRenderer
         var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
         float logoSize = 76f * logoMultiplier;
         float logoX = content.Right - logoSize - 8f;
-        float logoY = y - 20f;
+        float logoY = y - 60f;
        var logoRect = new RectangleF(logoX, logoY, logoSize, logoSize);
 
         if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage))

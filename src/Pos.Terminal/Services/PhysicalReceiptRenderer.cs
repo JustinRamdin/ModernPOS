@@ -250,8 +250,11 @@ public static class PhysicalReceiptRenderer
         g.DrawString(summaryRows[i].Value, fontSmall, Brushes.Black, new RectangleF(summaryX + (summaryW * 0.62f), rowY, summaryW * 0.38f, summaryRowH), sfFarCenter);
         }
 
-            var remarksText = string.IsNullOrWhiteSpace(remarks) ? "Remarks:" : $"Remarks: {remarks}";
-        g.DrawString(remarksText, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 48f), sfNearTop);
+           var remarksText = Safe(remarks);
+        if (!string.IsNullOrWhiteSpace(remarksText))
+        {
+            g.DrawString(remarksText, fontSmall, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 56f, content.Width * 0.6f, 48f), sfCenter);
+        }
 
          float paidY = summaryTop + (summaryRows.Count * summaryRowH) + 8f;
         g.DrawLine(penDark, summaryX, paidY, summaryX + summaryW, paidY);

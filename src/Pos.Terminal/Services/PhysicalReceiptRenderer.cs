@@ -132,8 +132,8 @@ public static class PhysicalReceiptRenderer
         g.DrawLine(penLight, rightColX, y + 16f, rightColX + leftColW, y + 16f);
         var shipText =
             $"{Safe(customer.Name)}\n" +
-            $"{Safe(settings.CompanyName)}\n" +
-            $"{Safe(customer.Phone)}";
+            $"{Safe(customer.Phone)}\n" +
+            $"{Safe(customer.Email)}";
         g.DrawString(shipText, fontBody, Brushes.Black, new RectangleF(rightColX, y + 22f, leftColW, infoH));
 
          y += infoH + 22f;

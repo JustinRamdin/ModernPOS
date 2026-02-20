@@ -54,6 +54,8 @@ public sealed class SettingsStore
         await UpsertAsync(db, ReceiptPrinterKey, settings.ReceiptPrinterName, ct);
         await UpsertAsync(db, HeaderTitleKey, settings.HeaderTitle, ct);
         await UpsertAsync(db, HeaderImagePathKey, settings.HeaderImagePath, ct);
+        await UpsertAsync(db, LogoImagePathKey, settings.LogoImagePath, ct);
+        await UpsertAsync(db, LogoScaleMultiplierKey, settings.LogoScaleMultiplier.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
         await UpsertAsync(db, ReceiptRemarksKey, settings.ReceiptRemarks, ct);
         await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
@@ -82,7 +84,7 @@ public sealed class SettingsStore
 
         return Math.Clamp(parsed, minValue, maxValue);
     }
-    
+
     private static decimal GetDecimalValue(Dictionary<string, string> lookup, string key, decimal defaultValue)
     {
         if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))

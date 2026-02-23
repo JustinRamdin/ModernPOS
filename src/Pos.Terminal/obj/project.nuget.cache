@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "LhYgAIlmvy0=",
+  "dgSpecHash": "zuKnuQixWHI=",
   "success": true,
-  "projectFilePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+  "projectFilePath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Justin\\.nuget\\packages\\avalonia\\11.0.6\\avalonia.11.0.6.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\avalonia.angle.windows.natives\\2.1.0.2023020321\\avalonia.angle.windows.natives.2.1.0.2023020321.nupkg.sha512",
@@ -73,9 +73,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'System.IO.Packaging' 6.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-f32c-w444-8ppv",
-      "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "filePath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
       "libraryId": "System.IO.Packaging",
       "targetGraphs": [
         "net10.0"
@@ -85,9 +85,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'System.IO.Packaging' 6.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
-      "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "filePath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
       "libraryId": "System.IO.Packaging",
       "targetGraphs": [
         "net10.0"

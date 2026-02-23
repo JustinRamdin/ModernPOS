@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pos.Local.Data;
+using Pos.Local.Entities;
 using DataLocalDb = Pos.Local.Data.LocalDb;
 namespace Pos.Local.Services;
 
@@ -18,6 +19,39 @@ public static class LocalDb
         var options = BuildOptions(dbPath);
         await using var db = new PosLocalDbContext(options);
         await db.Database.EnsureCreatedAsync(ct);
+        await EnsureReceiptLogoDefaultsAsync(db, ct);
+    }
+
+    private static async Task EnsureReceiptLogoDefaultsAsync(PosLocalDbContext db, CancellationToken ct)
+    {
+        var defaults = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["PhysicalReceipt.Logo.RenderMode"] = "background",
+            ["PhysicalReceipt.Logo.Size"] = "large",
+            ["PhysicalReceipt.Logo.BackgroundWidthPx"] = "280",
+            ["PhysicalReceipt.Logo.BackgroundHeightPx"] = "120"
+        };
+
+        var existingKeys = await db.DeviceConfig
+            .AsNoTracking()
+            .Select(c => c.Key)
+            .ToListAsync(ct);
+
+        var existingSet = new HashSet<string>(existingKeys, StringComparer.Ordinal);
+
+        foreach (var (key, value) in defaults)
+        {
+            if (existingSet.Contains(key))
+                continue;
+
+            db.DeviceConfig.Add(new DeviceConfig
+            {
+                Key = key,
+                Value = value
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
     }
 
     // ✅ OVERLOAD: no-argument migrate for existing call sites (like App.axaml.cs)

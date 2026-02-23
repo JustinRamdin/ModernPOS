@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj": {}
+    "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj": {}
   },
   "projects": {
     "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
@@ -1090,14 +1090,14 @@
         }
       }
     },
-    "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj": {
+    "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
         "projectName": "Pos.Terminal",
-        "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\ModernPOS\\src\\Pos.Terminal\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.terminal\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
         "configFilePaths": [

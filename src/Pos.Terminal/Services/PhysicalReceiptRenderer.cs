@@ -61,15 +61,23 @@ public static class PhysicalReceiptRenderer
             height: marginBounds.Height
         );
 
-        using var fontBody = new Font("Segoe UI", 9f, FontStyle.Regular);
-        using var fontSmall = new Font("Segoe UI", 8f, FontStyle.Regular);
-        using var fontSmallBold = new Font("Segoe UI", 8f, FontStyle.Bold);
-        using var fontTitle = new Font("Segoe UI", 21f, FontStyle.Regular);
-        using var fontLogo = new Font("Segoe UI", 15f, FontStyle.Regular);
-        using var fontTableHeader = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-        using var fontTable = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-        using var fontPaid = new Font("Segoe UI", 12f, FontStyle.Bold);
-        using var fontRemarks = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+        // Keep the receipt content proportional to A4/letter printables so printers with
+        // larger hard-margins still fit all sections on a single page.
+        const float baselineWidth = 807f;
+        const float baselineHeight = 1149f;
+        var pageScale = Math.Min(content.Width / baselineWidth, content.Height / baselineHeight);
+        var scale = Math.Clamp(pageScale, 0.72f, 1f);
+        float S(float value) => value * scale;
+
+        using var fontBody = new Font("Segoe UI", S(9f), FontStyle.Regular);
+        using var fontSmall = new Font("Segoe UI", S(8f), FontStyle.Regular);
+        using var fontSmallBold = new Font("Segoe UI", S(8f), FontStyle.Bold);
+        using var fontTitle = new Font("Segoe UI", S(21f), FontStyle.Regular);
+        using var fontLogo = new Font("Segoe UI", S(15f), FontStyle.Regular);
+        using var fontTableHeader = new Font("Segoe UI", S(8.5f), FontStyle.Bold);
+        using var fontTable = new Font("Segoe UI", S(8.5f), FontStyle.Regular);
+        using var fontPaid = new Font("Segoe UI", S(12f), FontStyle.Bold);
+        using var fontRemarks = new Font("Segoe UI", S(9.5f), FontStyle.Regular);
 
         using var penLight = new Pen(Color.FromArgb(180, 180, 180), 0.9f);
         using var penDark = new Pen(Color.FromArgb(95, 95, 95), 1f);
@@ -87,18 +95,18 @@ public static class PhysicalReceiptRenderer
 
         g.FillRectangle(brushPage, content);
 
-        float y = content.Top + 4f;
-        float stripeH = 12f;
+        float y = content.Top + S(4f);
+        float stripeH = S(12f);
         g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, y, content.Width, stripeH));
         y += stripeH + 30f;
 
-        g.DrawString("RECEIPT", fontTitle, Brushes.DimGray, new RectangleF(content.Left + 2f, y, content.Width * 0.45f, 40f));
+        g.DrawString("RECEIPT", fontTitle, Brushes.DimGray, new RectangleF(content.Left + S(2f), y, content.Width * 0.45f, S(40f)));
 
         // --- LOGO + META (logo larger, meta moved below logo) ---
-        float metaW = 95f;
-        float rightPad = 16f;    // safe on printers with larger hard-margins
-        float topPad = 6f;
-        float gapBelowLogo = 10f;
+        float metaW = S(95f);
+        float rightPad = S(16f);    // safe on printers with larger hard-margins
+        float topPad = S(6f);
+        float gapBelowLogo = S(10f);
 
         float metaX = content.Right - metaW - rightPad;
 
@@ -119,8 +127,8 @@ public static class PhysicalReceiptRenderer
         var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
 
         // Bigger logo box (especially for wide logos like SGLTT)
-        float desiredLogoW = 240f * logoMultiplier;
-        float desiredLogoH = 120f * logoMultiplier;
+         float desiredLogoW = S(240f) * logoMultiplier;
+        float desiredLogoH = S(120f) * logoMultiplier;
 
         // Place logo under the red stripe, right-aligned
         float logoTop = content.Top + stripeH + topPad;
@@ -155,32 +163,32 @@ public static class PhysicalReceiptRenderer
         float metaY = logoBox.Bottom + gapBelowLogo;
 
         g.DrawString("PAYMENT DATE", fontSmallBold, Brushes.MidnightBlue,
-            new RectangleF(metaX, metaY, metaW, 16f), sfFarCenter);
-        g.DrawLine(penLight, metaX, metaY + 18f, metaX + metaW, metaY + 18f);
+            new RectangleF(metaX, metaY, metaW, S(16f)), sfFarCenter);
+        g.DrawLine(penLight, metaX, metaY + S(18f), metaX + metaW, metaY + S(18f));
         g.DrawString(invoiceDate.ToString("yyyy-MM-dd"), fontSmall, Brushes.Black,
-            new RectangleF(metaX, metaY + 20f, metaW, 14f), sfFarCenter);
+           new RectangleF(metaX, metaY + S(20f), metaW, S(14f)), sfFarCenter);
 
         g.DrawString("RECEIPT NO.", fontSmallBold, Brushes.MidnightBlue,
-            new RectangleF(metaX, metaY + 40f, metaW, 16f), sfFarCenter);
-        g.DrawLine(penLight, metaX, metaY + 58f, metaX + metaW, metaY + 58f);
+            new RectangleF(metaX, metaY + S(40f), metaW, S(16f)), sfFarCenter);
+        g.DrawLine(penLight, metaX, metaY + S(58f), metaX + metaW, metaY + S(58f));
         g.DrawString(receiptNo, fontSmall, Brushes.Black,
-            new RectangleF(metaX, metaY + 60f, metaW, 14f), sfFarCenter);
+            new RectangleF(metaX, metaY + S(60f), metaW, S(14f)), sfFarCenter);
 
         var companyText =
             $"{Safe(settings.CompanyName)}\n" +
             $"{Safe(settings.CompanyAddress)}\n" +
             $"{Safe(settings.CompanyContact)}";
-        g.DrawString(companyText, fontBody, Brushes.Black, new RectangleF(content.Left + 2f, y + 55f, content.Width * 0.5f, 84f));
+         g.DrawString(companyText, fontBody, Brushes.Black, new RectangleF(content.Left + S(2f), y + S(55f), content.Width * 0.5f, S(84f)));
 
-        y += 165f;
+        y += S(165f);
 
         float leftColW = content.Width * 0.44f;
-        float gap = 26f;
+        float gap = S(26f);
         float rightColX = content.Left + leftColW + gap;
-        float infoH = 110f;
+        float infoH = S(110f);
 
-        g.DrawString("BILL TO", fontSmallBold, Brushes.MidnightBlue, new RectangleF(content.Left, y, leftColW, 14f));
-        g.DrawLine(penLight, content.Left, y + 16f, content.Left + leftColW, y + 16f);
+        g.DrawString("BILL TO", fontSmallBold, Brushes.MidnightBlue, new RectangleF(content.Left, y, leftColW, S(14f)));
+        g.DrawLine(penLight, content.Left, y + S(16f), content.Left + leftColW, y + S(16f));
         var billText =
             $"{Safe(customer.Name)}\n" +
             $"{Safe(customer.Phone)}\n" +
@@ -193,16 +201,16 @@ public static class PhysicalReceiptRenderer
             $"{Safe(customer.Name)}\n" +
             $"{Safe(customer.Phone)}\n" +
             $"{Safe(customer.Email)}";
-        g.DrawString(shipText, fontBody, Brushes.Black, new RectangleF(rightColX, y + 22f, leftColW, infoH));
+        g.DrawString(shipText, fontBody, Brushes.Black, new RectangleF(rightColX, y + S(22f), leftColW, infoH));
 
-        y += infoH + 22f;
+         y += infoH + S(22f);
 
         float tableX = content.Left;
         float tableW = content.Width;
         float tableTop = y;
 
-        float rowHeight = 17f;
-        float headerHeight = 18f;
+        float rowHeight = S(17f);
+        float headerHeight = S(18f);
 
         float descW = tableW * 0.51f;
         float qtyW = tableW * 0.14f;
@@ -220,32 +228,32 @@ public static class PhysicalReceiptRenderer
             "DESCRIPTION",
             fontTableHeader,
             Brushes.White,
-            new RectangleF(tableX + 6, tableTop, descW - 12, headerHeight),
+            new RectangleF(tableX + S(6f), tableTop, descW - S(12f), headerHeight),
             sfCenter);
 
         g.DrawString(
             "QTY",
             fontTableHeader,
             Brushes.White,
-            new RectangleF(tableX + descW + 6, tableTop, qtyW - 12, headerHeight),
+             new RectangleF(tableX + descW + S(6f), tableTop, qtyW - S(12f), headerHeight),
             sfCenter);
 
         g.DrawString(
             "UNIT PRICE",
             fontTableHeader,
             Brushes.White,
-            new RectangleF(tableX + descW + qtyW + 6, tableTop, unitW - 12, headerHeight),
+            new RectangleF(tableX + descW + qtyW + S(6f), tableTop, unitW - S(12f), headerHeight),
             sfCenter);
 
         g.DrawString(
             "TOTAL",
             fontTableHeader,
             Brushes.White,
-            new RectangleF(tableX + descW + qtyW + unitW + 6, tableTop, amtW - 12, headerHeight),
+            new RectangleF(tableX + descW + qtyW + unitW + S(6f), tableTop, amtW - S(12f), headerHeight),
             sfCenter);
 
         float bodyTop = tableTop + headerHeight;
-        float bodyH = content.Bottom - bodyTop - 186f;
+        float bodyH = content.Bottom - bodyTop - S(186f);
         var bodyRect = new RectangleF(tableX, bodyTop, tableW, bodyH);
         g.DrawRectangle(penLight, bodyRect.X, bodyRect.Y, bodyRect.Width, bodyRect.Height);
 
@@ -258,7 +266,7 @@ public static class PhysicalReceiptRenderer
 
             float thisRowH = rowHeight;
 
-            if (curY + thisRowH > bodyRect.Bottom - 4)
+            if (curY + thisRowH > bodyRect.Bottom - S(4f))
                 break;
 
             g.DrawLine(penLight, tableX, curY + thisRowH, tableX + tableW, curY + thisRowH);
@@ -266,10 +274,10 @@ public static class PhysicalReceiptRenderer
             g.DrawLine(penLight, tableX + descW + qtyW, curY, tableX + descW + qtyW, curY + thisRowH);
             g.DrawLine(penLight, tableX + descW + qtyW + unitW, curY, tableX + descW + qtyW + unitW, curY + thisRowH);
 
-            var descRect = new RectangleF(tableX + 6, curY + 2, descW - 12, thisRowH - 4);
-            var qtyRect = new RectangleF(tableX + descW + 6, curY + 2, qtyW - 12, thisRowH - 4);
-            var unitRect = new RectangleF(tableX + descW + qtyW + 6, curY + 2, unitW - 12, thisRowH - 4);
-            var amtRect = new RectangleF(tableX + descW + qtyW + unitW + 6, curY + 2, amtW - 12, thisRowH - 4);
+            var descRect = new RectangleF(tableX + S(6f), curY + S(2f), descW - S(12f), thisRowH - S(4f));
+            var qtyRect = new RectangleF(tableX + descW + S(6f), curY + S(2f), qtyW - S(12f), thisRowH - S(4f));
+            var unitRect = new RectangleF(tableX + descW + qtyW + S(6f), curY + S(2f), unitW - S(12f), thisRowH - S(4f));
+            var amtRect = new RectangleF(tableX + descW + qtyW + unitW + S(6f), curY + S(2f), amtW - S(12f), thisRowH - S(4f));
 
             g.DrawString(description, fontTable, Brushes.Black, descRect, sfNearTop);
             g.DrawString(qtyText, fontTable, Brushes.Black, qtyRect, sfFarTop);
@@ -280,10 +288,10 @@ public static class PhysicalReceiptRenderer
             state.ItemIndex++;
         }
 
-        float summaryTop = bodyRect.Bottom + 6f;
+        float summaryTop = bodyRect.Bottom + S(6f);
         float summaryX = content.Right - (tableW * 0.35f);
         float summaryW = tableW * 0.35f;
-        float summaryRowH = 15f;
+        float summaryRowH = S(15f);
 
         var summaryRows = new List<(string Label, string Value)>
         {
@@ -310,19 +318,19 @@ public static class PhysicalReceiptRenderer
         var remarksText = Safe(remarks);
         if (!string.IsNullOrWhiteSpace(remarksText))
         {
-            g.DrawString(remarksText, fontRemarks, Brushes.Black, new RectangleF(content.Left + 2f, summaryTop + 44f, content.Width * 0.6f, 90f), sfCenter);
+           g.DrawString(remarksText, fontRemarks, Brushes.Black, new RectangleF(content.Left + S(2f), summaryTop + S(44f), content.Width * 0.6f, S(90f)), sfCenter);
         }
 
-        float paidY = summaryTop + (summaryRows.Count * summaryRowH) + 8f;
+        float paidY = summaryTop + (summaryRows.Count * summaryRowH) + S(8f);
         g.DrawLine(penDark, summaryX, paidY, summaryX + summaryW, paidY);
-        g.DrawString("Paid", fontPaid, Brushes.Black, new RectangleF(summaryX, paidY + 4f, summaryW * 0.2f, 20f), sfFarCenter);
-        g.DrawString("$", fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.24f, paidY + 4f, summaryW * 0.09f, 20f), sfCenter);
+        g.DrawString("Paid", fontPaid, Brushes.Black, new RectangleF(summaryX, paidY + S(4f), summaryW * 0.2f, S(20f)), sfFarCenter);
+        g.DrawString("$", fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.24f, paidY + S(4f), summaryW * 0.09f, S(20f)), sfCenter);
         var paidAmount = Math.Round(Math.Max(0m, totalDue), 2, MidpointRounding.AwayFromZero);
         var paidAmountText = paidAmount.ToString("0.00", CultureInfo.CurrentCulture);
-        g.DrawString(paidAmountText, fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.7f, paidY + 4f, summaryW * 0.24f, 20f), sfFarCenter);
-        g.DrawLine(penDark, summaryX, paidY + 28f, summaryX + summaryW, paidY + 28f);
+        g.DrawString(paidAmountText, fontPaid, Brushes.Black, new RectangleF(summaryX + summaryW * 0.7f, paidY + S(4f), summaryW * 0.24f, S(20f)), sfFarCenter);
+        g.DrawLine(penDark, summaryX, paidY + S(28f), summaryX + summaryW, paidY + S(28f));
 
-        g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, content.Bottom - stripeH - 4f, content.Width, stripeH));
+        g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, content.Bottom - stripeH - S(4f), content.Width, stripeH));
 
         bool hasMore = state.ItemIndex < state.Items.Count;
 

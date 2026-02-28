@@ -175,3 +175,11 @@ C:\Users\Justin\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.pdb
 C:\Users\Justin\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Term.D116B67A.Up2Date
 C:\Users\Justin\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.genruntimeconfig.cache
 C:\Users\Justin\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\ref\Pos.Terminal.dll
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.csproj.AssemblyReference.cache
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\Resources.Inputs.cache
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\resources
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.GeneratedMSBuildEditorConfig.editorconfig
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.AssemblyInfoInputs.cache
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.AssemblyInfo.cs
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.csproj.CoreCompileInputs.cache
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.sourcelink.json

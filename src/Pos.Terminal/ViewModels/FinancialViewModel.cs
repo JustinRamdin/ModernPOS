@@ -388,6 +388,17 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
     private decimal _taxRate = 0m;
     public decimal TaxRate { get => _taxRate; set { _taxRate = value; Raise(); RecalculateTotals(); } }
 
+    private decimal _discountAmount;
+    public decimal DiscountAmount
+    {
+        get => _discountAmount;
+        set
+        {
+            _discountAmount = Math.Max(0m, value);
+            Raise();
+            RecalculateTotals();
+        }
+    }
     private string _notes = "";
     public string Notes { get => _notes; set { _notes = value ?? ""; Raise(); } }
 
@@ -429,8 +440,9 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
     public void RecalculateTotals()
     {
         Subtotal = Math.Round(Lines.Sum(x => x.LineTotal), 2);
-        TaxAmount = Math.Round(Subtotal * (TaxRate / 100m), 2);
-        Total = Math.Round(Subtotal + TaxAmount, 2);
+        var taxableSubtotal = Math.Max(0m, Subtotal - DiscountAmount);
+        TaxAmount = Math.Round(taxableSubtotal * (TaxRate / 100m), 2);
+        Total = Math.Round(taxableSubtotal + TaxAmount, 2);
     }
 
     private void Raise([CallerMemberName] string? n = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));

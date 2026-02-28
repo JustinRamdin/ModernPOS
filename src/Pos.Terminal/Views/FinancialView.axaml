@@ -24,7 +24,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
-              <ComboBox ItemsSource="{Binding Quote.FilteredCustomers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+               <TextBox Text="{Binding Quote.CustomerSearchText}" Watermark="Search customer by name, phone, or email"/>
+            <ComboBox ItemsSource="{Binding Quote.FilteredCustomers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -44,7 +45,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
-             <ComboBox ItemsSource="{Binding Quote.FilteredProducts}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
+             <TextBox Text="{Binding Quote.ProductSearchText}" Watermark="Search inventory by item name or SKU"/>
+            <ComboBox ItemsSource="{Binding Quote.FilteredProducts}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -102,7 +104,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
-             <ComboBox ItemsSource="{Binding Invoice.FilteredCustomers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+             <TextBox Text="{Binding Invoice.CustomerSearchText}" Watermark="Search customer by name, phone, or email"/>
+            <ComboBox ItemsSource="{Binding Invoice.FilteredCustomers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -122,6 +125,7 @@
 
           <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
+            <TextBox Text="{Binding Invoice.ProductSearchText}" Watermark="Search inventory by item name or SKU"/>
             <ComboBox ItemsSource="{Binding Invoice.FilteredProducts}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>

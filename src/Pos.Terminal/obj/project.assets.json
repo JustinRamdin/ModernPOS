@@ -821,6 +821,117 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
+      "QuestPDF/2024.3.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/QuestPDF.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/QuestPDF.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/any/native/LatoFont/Lato-Black.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-BlackItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Bold.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-BoldItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-ExtraBold.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-ExtraBoldItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-ExtraLight.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-ExtraLightItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Italic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Light.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-LightItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Medium.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-MediumItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Regular.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-SemiBold.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-SemiBoldItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-Thin.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/Lato-ThinItalic.ttf": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/any/native/LatoFont/OFL.txt": {
+            "assetType": "native",
+            "rid": "any"
+          },
+          "runtimes/linux-arm64/native/libQuestPdfSkia.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-x64/native/libQuestPdfSkia.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/osx-arm64/native/libQuestPdfSkia.dylib": {
+            "assetType": "native",
+            "rid": "osx-arm64"
+          },
+          "runtimes/osx-x64/native/libQuestPdfSkia.dylib": {
+            "assetType": "native",
+            "rid": "osx-x64"
+          },
+          "runtimes/win-x64/native/QuestPdfSkia.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          }
+        }
+      },
       "ReactiveUI/18.3.1": {
         "type": "package",
         "dependencies": {
@@ -1140,20 +1251,20 @@
           }
         }
       },
-      "System.IO.Packaging/6.0.0": {
+      "System.IO.Packaging/8.0.0": {
         "type": "package",
         "compile": {
-          "lib/net6.0/System.IO.Packaging.dll": {
+          "lib/net8.0/System.IO.Packaging.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/System.IO.Packaging.dll": {
+          "lib/net8.0/System.IO.Packaging.dll": {
             "related": ".xml"
           }
         },
         "build": {
-          "buildTransitive/netcoreapp3.1/_._": {}
+          "buildTransitive/net6.0/_._": {}
         }
       },
       "System.Reactive/5.0.0": {
@@ -2432,6 +2543,67 @@
         "netstandard.library.nuspec"
       ]
     },
+    "QuestPDF/2024.3.0": {
+      "sha512": "3UsHztlheCEa+EgGaND8jSwQrAduayBwwerzAfb40AJM+epRCz/jome2qadEeFrmAC7bqSsggalsSsAriCKHnA==",
+      "type": "package",
+      "path": "questpdf/2024.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Contributors.md",
+        "Description.md",
+        "Documentation.xml",
+        "ExternalDependencyLicenses/emsdk.txt",
+        "ExternalDependencyLicenses/expat.txt",
+        "ExternalDependencyLicenses/harfbuzz/ExternalDependencyLicenses/harfbuzz",
+        "ExternalDependencyLicenses/icu.txt",
+        "ExternalDependencyLicenses/libjpeg-turbo.txt",
+        "ExternalDependencyLicenses/libpng.txt",
+        "ExternalDependencyLicenses/libwebp.txt",
+        "ExternalDependencyLicenses/ninja-build.txt",
+        "ExternalDependencyLicenses/readme.txt",
+        "ExternalDependencyLicenses/skia.txt",
+        "ExternalDependencyLicenses/wuffs.txt",
+        "ExternalDependencyLicenses/zlib.txt",
+        "Logo.png",
+        "PackageLicense.md",
+        "PackageReadme.md",
+        "ReleaseNotes.txt",
+        "build/net4/QuestPDF.targets",
+        "lib/net6.0/QuestPDF.dll",
+        "lib/net6.0/QuestPDF.xml",
+        "lib/net8.0/QuestPDF.dll",
+        "lib/net8.0/QuestPDF.xml",
+        "lib/netstandard2.0/QuestPDF.dll",
+        "lib/netstandard2.0/QuestPDF.xml",
+        "questpdf.2024.3.0.nupkg.sha512",
+        "questpdf.nuspec",
+        "runtimes/any/native/LatoFont/Lato-Black.ttf",
+        "runtimes/any/native/LatoFont/Lato-BlackItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Bold.ttf",
+        "runtimes/any/native/LatoFont/Lato-BoldItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-ExtraBold.ttf",
+        "runtimes/any/native/LatoFont/Lato-ExtraBoldItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-ExtraLight.ttf",
+        "runtimes/any/native/LatoFont/Lato-ExtraLightItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Italic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Light.ttf",
+        "runtimes/any/native/LatoFont/Lato-LightItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Medium.ttf",
+        "runtimes/any/native/LatoFont/Lato-MediumItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Regular.ttf",
+        "runtimes/any/native/LatoFont/Lato-SemiBold.ttf",
+        "runtimes/any/native/LatoFont/Lato-SemiBoldItalic.ttf",
+        "runtimes/any/native/LatoFont/Lato-Thin.ttf",
+        "runtimes/any/native/LatoFont/Lato-ThinItalic.ttf",
+        "runtimes/any/native/LatoFont/OFL.txt",
+        "runtimes/linux-arm64/native/libQuestPdfSkia.so",
+        "runtimes/linux-x64/native/libQuestPdfSkia.so",
+        "runtimes/osx-arm64/native/libQuestPdfSkia.dylib",
+        "runtimes/osx-x64/native/libQuestPdfSkia.dylib",
+        "runtimes/win-x64/native/QuestPdfSkia.dll"
+      ]
+    },
     "ReactiveUI/18.3.1": {
       "sha512": "0tclGtjrRPfA2gbjiM7O3DeNmo6/TpDn7CMN6jgzDrbgrnysM7oEzjGEeXbtXaOxH6kEf6RiMKWobZoSgbBXhQ==",
       "type": "package",
@@ -2910,25 +3082,31 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.IO.Packaging/6.0.0": {
-      "sha512": "C7OkTRIjqIjAKu6ef/fuj8ynCZTPcTYZnvHaq48bniACgXXJogmEoIc56YCDNTc14xhsbLmgpS3KP+evbsUa2g==",
+    "System.IO.Packaging/8.0.0": {
+      "sha512": "8g1V4YRpdGAxFcK8v9OjuMdIOJSpF30Zb1JGicwVZhly3I994WFyBdV6mQEo8d3T+URQe55/M0U0eIH0Hts1bg==",
       "type": "package",
-      "path": "system.io.packaging/6.0.0",
+      "path": "system.io.packaging/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.IO.Packaging.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
         "buildTransitive/netcoreapp2.0/System.IO.Packaging.targets",
-        "buildTransitive/netcoreapp3.1/_._",
-        "lib/net461/System.IO.Packaging.dll",
-        "lib/net461/System.IO.Packaging.xml",
+        "lib/net462/System.IO.Packaging.dll",
+        "lib/net462/System.IO.Packaging.xml",
         "lib/net6.0/System.IO.Packaging.dll",
         "lib/net6.0/System.IO.Packaging.xml",
+        "lib/net7.0/System.IO.Packaging.dll",
+        "lib/net7.0/System.IO.Packaging.xml",
+        "lib/net8.0/System.IO.Packaging.dll",
+        "lib/net8.0/System.IO.Packaging.xml",
         "lib/netstandard2.0/System.IO.Packaging.dll",
         "lib/netstandard2.0/System.IO.Packaging.xml",
-        "system.io.packaging.6.0.0.nupkg.sha512",
+        "system.io.packaging.8.0.0.nupkg.sha512",
         "system.io.packaging.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3016,7 +3194,9 @@
       "Avalonia.Themes.Fluent >= 11.0.6",
       "ClosedXML >= 0.102.2",
       "Pos.Application >= 1.0.0",
-      "Pos.Local >= 1.0.0"
+      "Pos.Local >= 1.0.0",
+      "QuestPDF >= 2024.3.0",
+      "System.IO.Packaging >= 8.0.0"
     ]
   },
   "packageFolders": {
@@ -3103,6 +3283,16 @@
           "ClosedXML": {
             "target": "Package",
             "version": "[0.102.2, )",
+            "versionCentrallyManaged": true
+          },
+          "QuestPDF": {
+            "target": "Package",
+            "version": "[2024.3.0, )",
+            "versionCentrallyManaged": true
+          },
+          "System.IO.Packaging": {
+            "target": "Package",
+            "version": "[8.0.0, )",
             "versionCentrallyManaged": true
           }
         },
@@ -3426,7 +3616,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'System.IO.Packaging' 6.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-f32c-w444-8ppv",
+      "message": "Package 'System.IO.Packaging' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-f32c-w444-8ppv",
       "libraryId": "System.IO.Packaging",
       "targetGraphs": [
         "net10.0"
@@ -3436,7 +3626,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'System.IO.Packaging' 6.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
+      "message": "Package 'System.IO.Packaging' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
       "libraryId": "System.IO.Packaging",
       "targetGraphs": [
         "net10.0"

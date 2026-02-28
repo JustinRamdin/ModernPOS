@@ -88,9 +88,9 @@
             <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
               <TextBlock Text="Tax Rate (%)"/>
               <TextBox Text="{Binding Quote.TaxRate}"/>
-              <TextBlock Text="Subtotal: {Binding Quote.Subtotal, StringFormat={}{0:0.00}}"/>
-              <TextBlock Text="Tax: {Binding Quote.TaxAmount, StringFormat={}{0:0.00}}"/>
-              <TextBlock Text="Total: {Binding Quote.Total, StringFormat={}{0:0.00}}" FontWeight="Bold"/>
+              <TextBlock Text="{Binding Quote.Subtotal, StringFormat=Subtotal: {0:0.00}}"/>
+              <TextBlock Text="{Binding Quote.TaxAmount, StringFormat=Tax: {0:0.00}}"/>
+              <TextBlock Text="{Binding Quote.Total, StringFormat=Total: {0:0.00}}" FontWeight="Bold"/>
               <Button Content="Save as PDF" Click="SaveQuotePdf_Click"/>
               <Button Content="Print" Click="PrintQuote_Click"/>
             </StackPanel>
@@ -168,9 +168,9 @@
             <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
               <TextBlock Text="Tax Rate (%)"/>
               <TextBox Text="{Binding Invoice.TaxRate}"/>
-              <TextBlock Text="Subtotal: {Binding Invoice.Subtotal, StringFormat={}{0:0.00}}"/>
-              <TextBlock Text="Tax: {Binding Invoice.TaxAmount, StringFormat={}{0:0.00}}"/>
-              <TextBlock Text="Total: {Binding Invoice.Total, StringFormat={}{0:0.00}}" FontWeight="Bold"/>
+              <TextBlock Text="{Binding Invoice.Subtotal, StringFormat=Subtotal: {0:0.00}}"/>
+              <TextBlock Text="{Binding Invoice.TaxAmount, StringFormat=Tax: {0:0.00}}"/>
+              <TextBlock Text="{Binding Invoice.Total, StringFormat=Total: {0:0.00}}" FontWeight="Bold"/>
               <Button Content="Save as PDF" Click="SaveInvoicePdf_Click"/>
               <Button Content="Print" Click="PrintInvoice_Click"/>
             </StackPanel>

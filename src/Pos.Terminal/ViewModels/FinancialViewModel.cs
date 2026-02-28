@@ -86,7 +86,9 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         var qty = editor.LineQuantity <= 0 ? 1m : editor.LineQuantity;
         var unitPrice = editor.LineUnitPrice <= 0 ? product.Price : editor.LineUnitPrice;
 
-        editor.Lines.Add(new FinancialLineItem(product.Id, product.DisplayName, qty, unitPrice, editor.RecalculateTotals));
+        var line = new FinancialLineItem(product.Id, product.DisplayName, qty, unitPrice, editor.RecalculateTotals);
+        editor.Lines.Add(line);
+        editor.SelectedLine = line;
         editor.LineQuantity = 1m;
         editor.LineUnitPrice = product.Price;
         editor.RecalculateTotals();
@@ -101,7 +103,9 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             return;
         }
 
-        editor.Lines.Remove(editor.SelectedLine);
+        var removedLine = editor.SelectedLine;
+        editor.Lines.Remove(removedLine);
+        editor.SelectedLine = editor.Lines.FirstOrDefault();
         editor.RecalculateTotals();
         Status = "Line removed.";
     }
@@ -380,10 +384,32 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
     }
 
     private decimal _lineQuantity = 1m;
-    public decimal LineQuantity { get => _lineQuantity; set { _lineQuantity = value; Raise(); } }
+     public decimal LineQuantity
+    {
+        get => _lineQuantity;
+        set
+        {
+            _lineQuantity = value;
+            Raise();
+
+            if (SelectedLine != null)
+                SelectedLine.Quantity = value <= 0 ? 1m : value;
+        }
+    }
 
     private decimal _lineUnitPrice;
-    public decimal LineUnitPrice { get => _lineUnitPrice; set { _lineUnitPrice = value; Raise(); } }
+     public decimal LineUnitPrice
+    {
+        get => _lineUnitPrice;
+        set
+        {
+            _lineUnitPrice = value;
+            Raise();
+
+            if (SelectedLine != null)
+                SelectedLine.UnitPrice = value;
+        }
+    }
 
     private decimal _taxRate = 0m;
     public decimal TaxRate { get => _taxRate; set { _taxRate = value; Raise(); RecalculateTotals(); } }
@@ -403,7 +429,24 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
     public string Notes { get => _notes; set { _notes = value ?? ""; Raise(); } }
 
     private FinancialLineItem? _selectedLine;
-    public FinancialLineItem? SelectedLine { get => _selectedLine; set { _selectedLine = value; Raise(); } }
+    public FinancialLineItem? SelectedLine
+    {
+        get => _selectedLine;
+        set
+        {
+            _selectedLine = value;
+            Raise();
+
+            if (_selectedLine == null)
+                return;
+
+            _lineQuantity = _selectedLine.Quantity;
+            Raise(nameof(LineQuantity));
+
+            _lineUnitPrice = _selectedLine.UnitPrice;
+            Raise(nameof(LineUnitPrice));
+        }
+    }
 
     private decimal _subtotal;
     public decimal Subtotal { get => _subtotal; private set { _subtotal = value; Raise(); } }

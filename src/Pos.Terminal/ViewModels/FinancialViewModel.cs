@@ -231,7 +231,45 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
 public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
 {
+    private IReadOnlyList<CustomerChoice> _customers = Array.Empty<CustomerChoice>();
     private IReadOnlyList<ProductChoice> _products = Array.Empty<ProductChoice>();
+
+    private string _customerSearchText = "";
+    public string CustomerSearchText
+    {
+        get => _customerSearchText;
+        set
+        {
+            _customerSearchText = value ?? "";
+            Raise();
+            Raise(nameof(FilteredCustomers));
+        }
+    }
+
+    private string _productSearchText = "";
+    public string ProductSearchText
+    {
+        get => _productSearchText;
+        set
+        {
+            _productSearchText = value ?? "";
+            Raise();
+            Raise(nameof(FilteredProducts));
+        }
+    }
+
+    public IEnumerable<CustomerChoice> FilteredCustomers => string.IsNullOrWhiteSpace(CustomerSearchText)
+        ? _customers
+        : _customers.Where(c =>
+            (c.Name ?? "").Contains(CustomerSearchText, StringComparison.OrdinalIgnoreCase)
+            || (c.Phone ?? "").Contains(CustomerSearchText, StringComparison.OrdinalIgnoreCase)
+            || (c.Email ?? "").Contains(CustomerSearchText, StringComparison.OrdinalIgnoreCase));
+
+    public IEnumerable<ProductChoice> FilteredProducts => string.IsNullOrWhiteSpace(ProductSearchText)
+        ? _products
+        : _products.Where(p =>
+            (p.Name ?? "").Contains(ProductSearchText, StringComparison.OrdinalIgnoreCase)
+            || (p.Sku ?? "").Contains(ProductSearchText, StringComparison.OrdinalIgnoreCase));
 
     public string DocumentType { get; }
     public ObservableCollection<FinancialLineItem> Lines { get; } = new();
@@ -298,7 +336,10 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
 
     public void BindReferences(IReadOnlyList<CustomerChoice> customers, IReadOnlyList<ProductChoice> products)
     {
+        _customers = customers;
         _products = products;
+        Raise(nameof(FilteredCustomers));
+        Raise(nameof(FilteredProducts));
         if (SelectedCustomerId == null && customers.Count > 0)
             SelectedCustomerId = customers[0].Id;
 

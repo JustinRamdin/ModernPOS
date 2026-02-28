@@ -24,7 +24,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
-            <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+             <ComboBox ItemsSource="{Binding Quote.FilteredCustomers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}"
+                       IsEditable="True" Text="{Binding Quote.CustomerSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -44,7 +45,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
-            <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
+            <ComboBox ItemsSource="{Binding Quote.FilteredProducts}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}"
+                      IsEditable="True" Text="{Binding Quote.ProductSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -102,7 +104,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
-            <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+             <ComboBox ItemsSource="{Binding Invoice.FilteredCustomers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}"
+                      IsEditable="True" Text="{Binding Invoice.CustomerSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>
@@ -122,7 +125,8 @@
 
           <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
-            <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}">
+            <ComboBox ItemsSource="{Binding Invoice.FilteredProducts}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}"
+                      IsEditable="True" Text="{Binding Invoice.ProductSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding DisplayName}"/>

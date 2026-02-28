@@ -133,10 +133,9 @@
             <Grid ColumnDefinitions="*,*">
               <StackPanel Margin="0,0,4,0">
                 <TextBlock Text="Quantity"/>
-                <TextBlock Text="Quantity"/>
                 <TextBox Text="{Binding Invoice.LineQuantity}"/>
-             <StackPanel Grid.Column="1" Margin="4,0,0,0">
-              <StackPanel Grid.Column="1">
+              </StackPanel>
+              <StackPanel Grid.Column="1" Margin="4,0,0,0">
                 <TextBlock Text="Unit Price"/>
                 <TextBox Text="{Binding Invoice.LineUnitPrice}"/>
               </StackPanel>

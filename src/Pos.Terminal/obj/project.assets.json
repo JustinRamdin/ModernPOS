@@ -13,7 +13,7 @@
       "Avalonia.ReactiveUI >= 11.0.6",
       "Avalonia.Themes.Fluent >= 11.0.6",
       "ClosedXML >= 0.102.2",
-      "QuestPDF >= 2024.7.1"
+      "QuestPDF"
     ]
   },
   "packageFolders": {
@@ -104,7 +104,7 @@
           },
           "QuestPDF": {
             "target": "Package",
-            "version": "[2024.7.1, )"
+            "version": "(, )"
           }
         },
         "centralPackageVersions": {
@@ -423,9 +423,9 @@
   },
   "logs": [
     {
-      "code": "NU1008",
+      "code": "NU1010",
       "level": "Error",
-      "message": "The following PackageReference items cannot define a value for Version: QuestPDF. Projects using Central Package Management must define a Version value on a PackageVersion item. For more information, visit https://aka.ms/nuget/cpm/gettingstarted"
+      "message": "The following PackageReference items do not define a corresponding PackageVersion item: QuestPDF. Projects using Central Package Management must declare PackageReference and PackageVersion items with matching names. For more information, visit https://aka.ms/nuget/cpm/gettingstarted"
     }
   ]
 }

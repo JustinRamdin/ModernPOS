@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "ZevXy+oYW/c=",
+  "dgSpecHash": "8JXjicuei9Q=",
   "success": false,
   "projectFilePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
   "expectedPackageFiles": [],
   "logs": [
     {
-      "code": "NU1008",
+      "code": "NU1010",
       "level": "Error",
-      "message": "The following PackageReference items cannot define a value for Version: QuestPDF. Projects using Central Package Management must define a Version value on a PackageVersion item. For more information, visit https://aka.ms/nuget/cpm/gettingstarted",
+      "message": "The following PackageReference items do not define a corresponding PackageVersion item: QuestPDF. Projects using Central Package Management must declare PackageReference and PackageVersion items with matching names. For more information, visit https://aka.ms/nuget/cpm/gettingstarted",
       "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
       "filePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
       "targetGraphs": []

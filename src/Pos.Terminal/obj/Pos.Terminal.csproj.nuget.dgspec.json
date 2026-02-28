@@ -1175,7 +1175,7 @@
             },
             "QuestPDF": {
               "target": "Package",
-              "version": "[2024.7.1, )"
+              "version": "(, )"
             }
           },
           "centralPackageVersions": {

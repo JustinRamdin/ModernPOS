@@ -391,7 +391,11 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
             Raise();
 
             var product = _products.FirstOrDefault(p => p.Id == value);
-            if (product != null) LineUnitPrice = product.Price;
+            if (product != null)
+            {
+                _lineUnitPrice = product.Price;
+                Raise(nameof(LineUnitPrice));
+            }
         }
     }
 

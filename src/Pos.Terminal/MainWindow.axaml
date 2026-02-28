@@ -47,8 +47,9 @@
         <Button Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
         <Button Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
         <Button Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
+        <Button Content="Financial" Click="NavFinancial_Click" Margin="0,0,0,8"/>
         <Button Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
-
+        
         <Border Height="1"
                 Background="{StaticResource BorderBrushLight}"
                 Margin="0,16,0,10"/>

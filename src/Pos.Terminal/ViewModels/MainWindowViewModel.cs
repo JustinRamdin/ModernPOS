@@ -322,6 +322,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         await vm.LoadAsync();
     }
 
+
+     public async void ShowFinancial()
+    {
+        PageTitle = "Financial";
+        var vm = new FinancialViewModel();
+        CurrentView = new FinancialView { DataContext = vm };
+        await vm.LoadAsync();
+    }
+
     public async void ShowReports()
     {
         PageTitle = "Reports";
@@ -920,8 +929,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 DocumentName = $"Invoice {receiptNo}"
             };
 
-            doc.DefaultPageSettings.PaperSize = new PaperSize("A4", 827, 1169);
-            doc.DefaultPageSettings.Margins = new Margins(10, 10, 10, 10);
+             // Use wider print margins so content stays inside printable bounds on
+            // printers with larger hardware non-printable areas.
+            doc.DefaultPageSettings.Margins = new Margins(18, 25, 25, 25);
 
             doc.PrintPage += (_, e) =>
             {

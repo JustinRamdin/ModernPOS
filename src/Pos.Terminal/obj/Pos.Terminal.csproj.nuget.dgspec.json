@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj": {}
+    "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj": {}
   },
   "projects": {
     "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
@@ -1090,14 +1090,14 @@
         }
       }
     },
-    "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj": {
+    "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
+        "projectUniqueName": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
         "projectName": "Pos.Terminal",
-        "projectPath": "C:\\ModernPOS\\src\\Pos.terminal\\Pos.Terminal.csproj",
+        "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
         "packagesPath": "C:\\Users\\Justin\\.nuget\\packages\\",
-        "outputPath": "C:\\ModernPOS\\src\\Pos.terminal\\obj\\",
+        "outputPath": "C:\\ModernPOS\\src\\Pos.Terminal\\obj\\",
         "projectStyle": "PackageReference",
         "centralPackageVersionsManagementEnabled": true,
         "configFilePaths": [
@@ -1172,6 +1172,10 @@
               "target": "Package",
               "version": "[0.102.2, )",
               "versionCentrallyManaged": true
+            },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2024.7.1, )"
             }
           },
           "centralPackageVersions": {

@@ -1,0 +1,178 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="Pos.Terminal.Views.FinancialView">
+
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <Border Padding="14" Margin="0,0,0,12" CornerRadius="12" BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Left">
+          <TextBlock Text="Financial" FontSize="22" FontWeight="Bold"/>
+          <TextBlock Text="Build quotes and invoices, then save as A4 PDF or print." Opacity="0.75"/>
+        </StackPanel>
+        <TextBlock DockPanel.Dock="Right" Text="{Binding Status}" VerticalAlignment="Center" Opacity="0.75"/>
+      </DockPanel>
+    </Border>
+
+    <TabControl Grid.Row="1">
+      <TabItem Header="Quotes">
+        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*" ColumnSpacing="12" RowSpacing="10">
+          <TextBlock Grid.ColumnSpan="2" Text="Quote Details" FontSize="16" FontWeight="SemiBold"/>
+
+          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+            <TextBlock Text="Customer"/>
+            <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding DisplayName}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBlock Text="Document Number"/>
+            <TextBox Text="{Binding Quote.DocumentNumber}"/>
+
+            <TextBlock Text="Issue Date"/>
+            <DatePicker SelectedDate="{Binding Quote.IssueDate, Mode=TwoWay}"/>
+
+            <TextBlock Text="Valid Until"/>
+            <DatePicker SelectedDate="{Binding Quote.DueDate, Mode=TwoWay}"/>
+          </StackPanel>
+
+          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+            <TextBlock Text="Inventory Item"/>
+            <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding DisplayName}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+              <StackPanel>
+                <TextBlock Text="Quantity"/>
+                <TextBox Text="{Binding Quote.LineQuantity}"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Unit Price"/>
+                <TextBox Text="{Binding Quote.LineUnitPrice}"/>
+              </StackPanel>
+            </Grid>
+
+            <Button Content="Add Item" Click="AddQuoteItem_Click" HorizontalAlignment="Left"/>
+            <Button Content="Remove Selected Item" Click="RemoveQuoteItem_Click" HorizontalAlignment="Left"/>
+          </StackPanel>
+
+          <DataGrid Grid.Row="2" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
+                    ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
+              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
+              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
+              <DataGridTextColumn Header="Total" Binding="{Binding LineTotal}" IsReadOnly="True" Width="140"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+            <StackPanel>
+              <TextBlock Text="Notes"/>
+              <TextBox Text="{Binding Quote.Notes}" AcceptsReturn="True" Height="70" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
+              <TextBlock Text="Tax Rate (%)"/>
+              <TextBox Text="{Binding Quote.TaxRate}"/>
+              <TextBlock Text="Subtotal: {Binding Quote.Subtotal, StringFormat={}{0:0.00}}"/>
+              <TextBlock Text="Tax: {Binding Quote.TaxAmount, StringFormat={}{0:0.00}}"/>
+              <TextBlock Text="Total: {Binding Quote.Total, StringFormat={}{0:0.00}}" FontWeight="Bold"/>
+              <Button Content="Save as PDF" Click="SaveQuotePdf_Click"/>
+              <Button Content="Print" Click="PrintQuote_Click"/>
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Invoices">
+        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*" ColumnSpacing="12" RowSpacing="10">
+          <TextBlock Grid.ColumnSpan="2" Text="Invoice Details" FontSize="16" FontWeight="SemiBold"/>
+
+          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+            <TextBlock Text="Customer"/>
+            <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding DisplayName}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBlock Text="Document Number"/>
+            <TextBox Text="{Binding Invoice.DocumentNumber}"/>
+
+            <TextBlock Text="Issue Date"/>
+            <DatePicker SelectedDate="{Binding Invoice.IssueDate, Mode=TwoWay}"/>
+
+            <TextBlock Text="Due Date"/>
+            <DatePicker SelectedDate="{Binding Invoice.DueDate, Mode=TwoWay}"/>
+          </StackPanel>
+
+          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+            <TextBlock Text="Inventory Item"/>
+            <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding DisplayName}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+              <StackPanel>
+                <TextBlock Text="Quantity"/>
+                <TextBox Text="{Binding Invoice.LineQuantity}"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Unit Price"/>
+                <TextBox Text="{Binding Invoice.LineUnitPrice}"/>
+              </StackPanel>
+            </Grid>
+
+            <Button Content="Add Item" Click="AddInvoiceItem_Click" HorizontalAlignment="Left"/>
+            <Button Content="Remove Selected Item" Click="RemoveInvoiceItem_Click" HorizontalAlignment="Left"/>
+          </StackPanel>
+
+          <DataGrid Grid.Row="2" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
+                    ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
+              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
+              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
+              <DataGridTextColumn Header="Total" Binding="{Binding LineTotal}" IsReadOnly="True" Width="140"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+            <StackPanel>
+              <TextBlock Text="Notes"/>
+              <TextBox Text="{Binding Invoice.Notes}" AcceptsReturn="True" Height="70" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
+              <TextBlock Text="Tax Rate (%)"/>
+              <TextBox Text="{Binding Invoice.TaxRate}"/>
+              <TextBlock Text="Subtotal: {Binding Invoice.Subtotal, StringFormat={}{0:0.00}}"/>
+              <TextBlock Text="Tax: {Binding Invoice.TaxAmount, StringFormat={}{0:0.00}}"/>
+              <TextBlock Text="Total: {Binding Invoice.Total, StringFormat={}{0:0.00}}" FontWeight="Bold"/>
+              <Button Content="Save as PDF" Click="SaveInvoicePdf_Click"/>
+              <Button Content="Print" Click="PrintInvoice_Click"/>
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</UserControl>

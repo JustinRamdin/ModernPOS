@@ -31,6 +31,11 @@ public partial class MainWindow : Window
     {
         VM.ShowReports();
     }
+    private void NavFinancial_Click(object? sender, RoutedEventArgs e)
+    {
+        VM.ShowFinancial();
+    }
+
     private void NavSettings_Click(object? sender, RoutedEventArgs e)
     {
         VM.ShowSettings();

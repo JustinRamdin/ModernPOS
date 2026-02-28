@@ -19,10 +19,10 @@
 
     <TabControl Grid.Row="1">
       <TabItem Header="Quotes">
-        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*" ColumnSpacing="12" RowSpacing="10">
+        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*">
           <TextBlock Grid.ColumnSpan="2" Text="Quote Details" FontSize="16" FontWeight="SemiBold"/>
 
-          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
             <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Quote.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
@@ -42,7 +42,7 @@
             <DatePicker SelectedDate="{Binding Quote.DueDate, Mode=TwoWay}"/>
           </StackPanel>
 
-          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
             <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
@@ -52,12 +52,12 @@
               </ComboBox.ItemTemplate>
             </ComboBox>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-              <StackPanel>
+            <Grid ColumnDefinitions="*,*">
+              <StackPanel Margin="0,0,4,0">
                 <TextBlock Text="Quantity"/>
                 <TextBox Text="{Binding Quote.LineQuantity}"/>
               </StackPanel>
-              <StackPanel Grid.Column="1">
+               <StackPanel Grid.Column="1" Margin="4,0,0,0">
                 <TextBlock Text="Unit Price"/>
                 <TextBox Text="{Binding Quote.LineUnitPrice}"/>
               </StackPanel>
@@ -97,10 +97,10 @@
       </TabItem>
 
       <TabItem Header="Invoices">
-        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*" ColumnSpacing="12" RowSpacing="10">
+         <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*">
           <TextBlock Grid.ColumnSpan="2" Text="Invoice Details" FontSize="16" FontWeight="SemiBold"/>
 
-          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+          <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
             <TextBlock Text="Customer"/>
             <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding Invoice.SelectedCustomerId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
@@ -120,7 +120,7 @@
             <DatePicker SelectedDate="{Binding Invoice.DueDate, Mode=TwoWay}"/>
           </StackPanel>
 
-          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
             <TextBlock Text="Inventory Item"/>
             <ComboBox ItemsSource="{Binding Products}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}">
               <ComboBox.ItemTemplate>
@@ -130,11 +130,12 @@
               </ComboBox.ItemTemplate>
             </ComboBox>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-              <StackPanel>
+            <Grid ColumnDefinitions="*,*">
+              <StackPanel Margin="0,0,4,0">
+                <TextBlock Text="Quantity"/>
                 <TextBlock Text="Quantity"/>
                 <TextBox Text="{Binding Invoice.LineQuantity}"/>
-              </StackPanel>
+             <StackPanel Grid.Column="1" Margin="4,0,0,0">
               <StackPanel Grid.Column="1">
                 <TextBlock Text="Unit Price"/>
                 <TextBox Text="{Binding Invoice.LineUnitPrice}"/>

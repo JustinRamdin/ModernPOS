@@ -183,3 +183,8 @@ C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.AssemblyInfoInputs.
 C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.AssemblyInfo.cs
 C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.csproj.CoreCompileInputs.cache
 C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Pos.Terminal.sourcelink.json
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\references
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\original.dll
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\original.pdb
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\Avalonia\original.ref.dll
+C:\ModernPOS\src\Pos.Terminal\obj\Debug\net10.0\refint\Pos.Terminal.dll

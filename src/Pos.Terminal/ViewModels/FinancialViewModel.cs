@@ -239,11 +239,11 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
     private string _documentNumber;
     public string DocumentNumber { get => _documentNumber; set { _documentNumber = value ?? ""; Raise(); } }
 
-    private DateTime _issueDate = DateTime.Today;
-    public DateTime IssueDate { get => _issueDate; set { _issueDate = value; Raise(); } }
+    private DateTimeOffset _issueDate = DateTimeOffset.Now.Date;
+    public DateTimeOffset IssueDate { get => _issueDate; set { _issueDate = value; Raise(); } }
 
-    private DateTime? _dueDate = DateTime.Today.AddDays(14);
-    public DateTime? DueDate { get => _dueDate; set { _dueDate = value; Raise(); } }
+     private DateTimeOffset? _dueDate = DateTimeOffset.Now.Date.AddDays(14);
+    public DateTimeOffset? DueDate { get => _dueDate; set { _dueDate = value; Raise(); } }
 
     private Guid? _selectedCustomerId;
     public Guid? SelectedCustomerId { get => _selectedCustomerId; set { _selectedCustomerId = value; Raise(); } }

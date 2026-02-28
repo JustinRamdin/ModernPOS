@@ -70,7 +70,7 @@
           </StackPanel>
 
           <DataGrid Grid.Row="2" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
-                    ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine}">
+                    ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine, Mode=TwoWay}">
             <DataGrid.Columns>
               <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
               <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
@@ -150,7 +150,7 @@
           </StackPanel>
 
           <DataGrid Grid.Row="2" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
-                    ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine}">
+                    ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine, Mode=TwoWay}">
             <DataGrid.Columns>
               <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
               <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>

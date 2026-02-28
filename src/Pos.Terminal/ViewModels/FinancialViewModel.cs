@@ -142,7 +142,13 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
     private static void BuildPdf(FinancialDocumentEditorViewModel editor, CustomerChoice customer, AppSettings settings, string filePath)
     {
+        static Container CellStyle(Container c)
+            => c.Border(1).BorderColor(Colors.White).PaddingVertical(5).PaddingHorizontal(6);
+
+        static Container BodyCellStyle(Container c)
+            => c.Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten4).PaddingVertical(5).PaddingHorizontal(6);
         QuestPDF.Settings.License = LicenseType.Community;
+
         var dir = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
 
@@ -250,13 +256,6 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                             table.Cell().Element(BodyCellStyle).AlignRight().Text(line.UnitPrice.ToString("0.00", CultureInfo.InvariantCulture));
                             table.Cell().Element(BodyCellStyle).AlignRight().Text(line.LineTotal.ToString("0.00", CultureInfo.InvariantCulture));
                         }
-
-                           static Container CellStyle(Container c)
-                            => c.Border(1).BorderColor(Colors.White).PaddingVertical(5).PaddingHorizontal(6);
-                    });
-
-                    static Container BodyCellStyle(Container c)
-                            => c.Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten4).PaddingVertical(5).PaddingHorizontal(6);
                     });
 
                     col.Item().Row(r =>
@@ -302,7 +301,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             return false;
         }
     }
-    
+
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
    => DataLocalDb.BuildOptions();
 

@@ -23,14 +23,14 @@
     <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,10">
       <WrapPanel>
 
-        <StackPanel Width="160" Margin="0,0,10,10">
+        <StackPanel Width="300" Spacing="6" Margin="0,0,10,10">
           <TextBlock Text="From" />
-          <DatePicker SelectedDate="{Binding FromDate}" />
+           <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" />
         </StackPanel>
 
-        <StackPanel Width="160" Margin="0,0,10,10">
+        <StackPanel Width="300" Spacing="6" Margin="0,0,10,10">
           <TextBlock Text="To" />
-          <DatePicker SelectedDate="{Binding ToDate}" />
+          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" />
         </StackPanel>
 
         <StackPanel Width="200" Margin="0,0,10,10">

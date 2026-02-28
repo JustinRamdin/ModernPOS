@@ -538,7 +538,13 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             for (var c = 0; c < ColumnHeaders.Count; c++)
             {
                 var header = ColumnHeaders[c];
-                worksheet.Cell(r + 2, c + 1).Value = row[header];
+                 var cell = worksheet.Cell(r + 2, c + 1);
+                var value = row[header];
+
+                if (TryWriteTypedValue(cell, header, value))
+                    continue;
+
+                cell.Value = value;
             }
         }
 
@@ -549,6 +555,33 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         return Task.CompletedTask;
     }
 
+    private static bool TryWriteTypedValue(IXLCell cell, string header, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        if (header.Contains("Date", StringComparison.OrdinalIgnoreCase) &&
+            DateTime.TryParseExact(
+                value,
+                "yyyy-MM-dd HH:mm",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var parsedUtc))
+        {
+            cell.Value = parsedUtc;
+            cell.Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+            return true;
+        }
+
+        if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var numericValue))
+        {
+            cell.Value = numericValue;
+            cell.Style.NumberFormat.Format = "0.00";
+            return true;
+        }
+
+        return false;
+    }
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
    => DataLocalDb.BuildOptions();
 

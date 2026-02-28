@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Pos.Local.Data;
 using DataLocalDb = Pos.Local.Data.LocalDb;
 using Pos.Local.Entities;
+using Pos.Terminal.Models;
+using Pos.Terminal.Services;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -108,7 +110,8 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
     {
         if (!ValidateDocument(editor, out var customer)) return;
 
-        await Task.Run(() => BuildPdf(editor, customer!, filePath));
+        var settings = await new SettingsStore().LoadAsync();
+        await Task.Run(() => BuildPdf(editor, customer!, settings, filePath));
         Status = $"PDF saved: {filePath}";
     }
 
@@ -137,7 +140,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         return true;
     }
 
-    private static void BuildPdf(FinancialDocumentEditorViewModel editor, CustomerChoice customer, string filePath)
+    private static void BuildPdf(FinancialDocumentEditorViewModel editor, CustomerChoice customer, AppSettings settings, string filePath)
     {
         QuestPDF.Settings.License = LicenseType.Community;
         var dir = Path.GetDirectoryName(filePath);
@@ -148,29 +151,79 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(30);
+                page.Margin(20);
                 page.DefaultTextStyle(x => x.FontSize(10));
 
                 page.Header().Column(col =>
                 {
-                    col.Item().Text($"MODERNPOS {editor.DocumentType.ToUpperInvariant()}")
-                        .FontSize(20).Bold();
-                    col.Item().Text($"Document #: {editor.DocumentNumber}");
-                    col.Item().Text($"Date: {editor.IssueDate:yyyy-MM-dd}");
-                    if (editor.DueDate != null)
-                        col.Item().Text($"Due Date: {editor.DueDate:yyyy-MM-dd}");
+                      col.Item().Background("#E35A2C").Height(10);
+
+                    col.Item().Background(Colors.Grey.Lighten3).Padding(18).Row(row =>
+                    {
+                        row.RelativeItem(6).Row(left =>
+                        {
+                            left.ConstantItem(68).Height(68).AlignMiddle().AlignCenter().Element(box =>
+                            {
+                                if (TryLoadImageBytes(settings.LogoImagePath, out var logoBytes))
+                                    box.Image(logoBytes).FitArea();
+                                else
+                                    box.Border(1).BorderColor(Colors.Grey.Lighten1).AlignCenter().AlignMiddle().Text("LOGO").FontSize(9);
+                            });
+
+                            left.RelativeItem().PaddingLeft(12).Column(company =>
+                            {
+                                company.Spacing(3);
+                                company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyName) ? "<Your Company Name>" : settings.CompanyName).Bold();
+                                company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyAddress) ? "<Your address>" : settings.CompanyAddress);
+                                company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyContact) ? "<Your contact details>" : settings.CompanyContact);
+                            });
+                        });
+
+                        row.RelativeItem(4).AlignRight().Column(meta =>
+                        {
+                            meta.Item().Text(editor.DocumentType.ToUpperInvariant() == "QUOTE" ? "PRICE QUOTE" : editor.DocumentType.ToUpperInvariant())
+                                .FontSize(24).FontColor(Colors.Grey.Darken2).SemiBold();
+                            meta.Item().PaddingTop(10).AlignRight().Width(180).Column(c =>
+                            {
+                                c.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).PaddingBottom(4).Row(r =>
+                                {
+                                    r.RelativeItem().AlignRight().Text("DATE").SemiBold();
+                                    r.ConstantItem(90).AlignRight().Text($"{editor.IssueDate:yyyy-MM-dd}");
+                                });
+                                c.Item().PaddingTop(8).BorderBottom(1).BorderColor(Colors.Grey.Lighten1).PaddingBottom(4).Row(r =>
+                                {
+                                    r.RelativeItem().AlignRight().Text("QUOTE NO.").SemiBold();
+                                    r.ConstantItem(90).AlignRight().Text(editor.DocumentNumber);
+                                });
+                            });
+                        });
+                    });
                 });
 
                 page.Content().Column(col =>
                 {
-                    col.Spacing(12);
-
-                    col.Item().Border(1).Padding(10).Column(customerCol =>
+                    col.Spacing(14);
+                    col.Item().PaddingTop(10).Row(info =>
                     {
-                        customerCol.Item().Text("Bill To").Bold();
-                        customerCol.Item().Text(customer.Name);
-                        if (!string.IsNullOrWhiteSpace(customer.Phone)) customerCol.Item().Text(customer.Phone);
-                        if (!string.IsNullOrWhiteSpace(customer.Email)) customerCol.Item().Text(customer.Email);
+                         info.RelativeItem().Column(customerCol =>
+                        {
+                            customerCol.Item().Text("BILL TO").SemiBold();
+                            customerCol.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+                            customerCol.Item().PaddingTop(4).Text(customer.Name);
+                            if (!string.IsNullOrWhiteSpace(customer.Phone)) customerCol.Item().Text(customer.Phone);
+                            if (!string.IsNullOrWhiteSpace(customer.Email)) customerCol.Item().Text(customer.Email);
+                        });
+
+                        info.ConstantItem(30);
+
+                        info.RelativeItem().Column(shipCol =>
+                        {
+                            shipCol.Item().Text("SHIP TO").SemiBold();
+                            shipCol.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+                            shipCol.Item().PaddingTop(4).Text(customer.Name);
+                            if (!string.IsNullOrWhiteSpace(customer.Phone)) shipCol.Item().Text(customer.Phone);
+                            if (!string.IsNullOrWhiteSpace(customer.Email)) shipCol.Item().Text(customer.Email);
+                        });
                     });
 
                     col.Item().Table(table =>
@@ -182,47 +235,74 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                             cols.RelativeColumn(2);
                             cols.RelativeColumn(2);
                         });
-
                         table.Header(header =>
                         {
-                            header.Cell().Element(CellStyle).Text("Item").Bold();
-                            header.Cell().Element(CellStyle).AlignRight().Text("Qty").Bold();
-                            header.Cell().Element(CellStyle).AlignRight().Text("Unit Price").Bold();
-                            header.Cell().Element(CellStyle).AlignRight().Text("Line Total").Bold();
+                            header.Cell().Background("#E35A2C").Element(CellStyle).Text("DESCRIPTION").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#E35A2C").Element(CellStyle).AlignRight().Text("QTY").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#E35A2C").Element(CellStyle).AlignRight().Text("UNIT PRICE").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#E35A2C").Element(CellStyle).AlignRight().Text("TOTAL").Bold().FontColor(Colors.White);
                         });
 
                         foreach (var line in editor.Lines)
                         {
-                            table.Cell().Element(CellStyle).Text(line.Description);
-                            table.Cell().Element(CellStyle).AlignRight().Text(line.Quantity.ToString("0.##", CultureInfo.InvariantCulture));
-                            table.Cell().Element(CellStyle).AlignRight().Text(line.UnitPrice.ToString("0.00", CultureInfo.InvariantCulture));
-                            table.Cell().Element(CellStyle).AlignRight().Text(line.LineTotal.ToString("0.00", CultureInfo.InvariantCulture));
+                            table.Cell().Element(BodyCellStyle).Text(line.Description);
+                            table.Cell().Element(BodyCellStyle).AlignRight().Text(line.Quantity.ToString("0.##", CultureInfo.InvariantCulture));
+                            table.Cell().Element(BodyCellStyle).AlignRight().Text(line.UnitPrice.ToString("0.00", CultureInfo.InvariantCulture));
+                            table.Cell().Element(BodyCellStyle).AlignRight().Text(line.LineTotal.ToString("0.00", CultureInfo.InvariantCulture));
                         }
 
-                          static Container CellStyle(Container c)
-                            => c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(3);
+                           static Container CellStyle(Container c)
+                            => c.Border(1).BorderColor(Colors.White).PaddingVertical(5).PaddingHorizontal(6);
                     });
 
-                    col.Item().AlignRight().Width(220).Column(sum =>
-                    {
-                        sum.Item().Row(r => { r.RelativeItem().Text("Subtotal"); r.ConstantItem(90).AlignRight().Text(editor.Subtotal.ToString("0.00")); });
-                        sum.Item().Row(r => { r.RelativeItem().Text($"Tax ({editor.TaxRate:0.##}%)"); r.ConstantItem(90).AlignRight().Text(editor.TaxAmount.ToString("0.00")); });
-                        sum.Item().BorderTop(1).PaddingTop(4).Row(r => { r.RelativeItem().Text("Total").Bold(); r.ConstantItem(90).AlignRight().Text(editor.Total.ToString("0.00")).Bold(); });
+                    static Container BodyCellStyle(Container c)
+                            => c.Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten4).PaddingVertical(5).PaddingHorizontal(6);
                     });
 
-                    if (!string.IsNullOrWhiteSpace(editor.Notes))
+                    col.Item().Row(r =>
                     {
-                        col.Item().Border(1).Padding(10).Column(note =>
+                        r.RelativeItem().PaddingTop(8).Text(string.IsNullOrWhiteSpace(editor.Notes)
+                            ? "Remarks, notes on estimate validity and project duration."
+                            : editor.Notes);
+
+                        r.ConstantItem(280).Column(sum =>
                         {
-                            note.Item().Text("Notes").Bold();
-                            note.Item().Text(editor.Notes);
+                           sum.Item().Row(x => { x.RelativeItem().AlignRight().Text("SUBTOTAL"); x.ConstantItem(90).AlignRight().Text(editor.Subtotal.ToString("0.00")); });
+                            sum.Item().Row(x => { x.RelativeItem().AlignRight().Text("DISCOUNT"); x.ConstantItem(90).AlignRight().Text(editor.DiscountAmount.ToString("0.00")); });
+                            sum.Item().Row(x => { x.RelativeItem().AlignRight().Text("SUBTOTAL LESS DISCOUNT"); x.ConstantItem(90).AlignRight().Text((editor.Subtotal - editor.DiscountAmount).ToString("0.00")); });
+                            sum.Item().Row(x => { x.RelativeItem().AlignRight().Text($"TAX RATE"); x.ConstantItem(90).AlignRight().Text($"{editor.TaxRate:0.##}%"); });
+                            sum.Item().Row(x => { x.RelativeItem().AlignRight().Text("TOTAL TAX"); x.ConstantItem(90).AlignRight().Text(editor.TaxAmount.ToString("0.00")); });
+                            sum.Item().BorderTop(1).BorderColor(Colors.Grey.Lighten1).PaddingTop(4).Background("#DCE6D6").Padding(6).Row(x =>
+                            {
+                                x.RelativeItem().Text($"{editor.DocumentType} Total").Bold();
+                                x.ConstantItem(90).AlignRight().Text(editor.Total.ToString("0.00")).Bold();
+                            });
                         });
-                    }
+                    });
                 });
+
+                page.Footer().Background("#E35A2C").Height(10);
             });
         }).GeneratePdf(filePath);
     }
 
+    private static bool TryLoadImageBytes(string? imagePath, out byte[] imageBytes)
+    {
+        imageBytes = Array.Empty<byte>();
+        if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
+            return false;
+
+        try
+        {
+            imageBytes = File.ReadAllBytes(imagePath);
+            return imageBytes.Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
    => DataLocalDb.BuildOptions();
 

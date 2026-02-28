@@ -14,6 +14,7 @@ using Pos.Local.Entities;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Container = QuestPDF.Infrastructure.IContainer;
 
 namespace Pos.Terminal.ViewModels;
 
@@ -198,7 +199,8 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                             table.Cell().Element(CellStyle).AlignRight().Text(line.LineTotal.ToString("0.00", CultureInfo.InvariantCulture));
                         }
 
-                        static IContainer CellStyle(IContainer c) => c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(3);
+                          static Container CellStyle(Container c)
+                            => c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(3);
                     });
 
                     col.Item().AlignRight().Width(220).Column(sum =>
@@ -222,10 +224,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
     }
 
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    {
-        var dbPath = DataLocalDb.ResolveDatabasePath("pos.local.db");
-        return DataLocalDb.CreateOptions(dbPath);
-    }
+   => DataLocalDb.BuildOptions();
 
     private void Raise([CallerMemberName] string? n = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }

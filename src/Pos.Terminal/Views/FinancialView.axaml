@@ -74,16 +74,18 @@
             <StackPanel Spacing="6">
               <TextBlock Text="Cart Preview" FontWeight="SemiBold"/>
               <TextBlock Text="Items you added" Opacity="0.65" FontSize="12"/>
-              <ItemsControl ItemsSource="{Binding Quote.Lines}">
-                <ItemsControl.ItemTemplate>
+                <ListBox ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine, Mode=TwoWay}" MinHeight="80" BorderThickness="0" Background="Transparent">
+                <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
-                      <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
-                    </Grid>
+                    <Border Padding="4" CornerRadius="4">
+                      <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
+                        <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
+                      </Grid>
+                    </Border>
                   </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+                 </ListBox.ItemTemplate>
+              </ListBox>
             </StackPanel>
           </Border>
 
@@ -172,16 +174,18 @@
             <StackPanel Spacing="6">
               <TextBlock Text="Cart Preview" FontWeight="SemiBold"/>
               <TextBlock Text="Items you added" Opacity="0.65" FontSize="12"/>
-              <ItemsControl ItemsSource="{Binding Invoice.Lines}">
-                <ItemsControl.ItemTemplate>
+              <ListBox ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine, Mode=TwoWay}" MinHeight="80" BorderThickness="0" Background="Transparent">
+                <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
-                      <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
-                    </Grid>
+                    <Border Padding="4" CornerRadius="4">
+                      <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
+                        <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
+                      </Grid>
+                    </Border>
                   </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+                 </ListBox.ItemTemplate>
+              </ListBox>
             </StackPanel>
           </Border>
 

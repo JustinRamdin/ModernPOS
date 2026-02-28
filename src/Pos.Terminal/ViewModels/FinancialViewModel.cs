@@ -86,6 +86,18 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         var qty = editor.LineQuantity <= 0 ? 1m : editor.LineQuantity;
         var unitPrice = editor.LineUnitPrice <= 0 ? product.Price : editor.LineUnitPrice;
 
+        var existingLine = editor.Lines.FirstOrDefault(line => line.ProductId == product.Id);
+        if (existingLine != null)
+        {
+            existingLine.Quantity += qty;
+            editor.SelectedLine = existingLine;
+            editor.LineQuantity = 1m;
+            editor.LineUnitPrice = existingLine.UnitPrice;
+            editor.RecalculateTotals();
+            Status = $"Updated {product.Name} quantity.";
+            return;
+        }
+
         var line = new FinancialLineItem(product.Id, product.DisplayName, qty, unitPrice, editor.RecalculateTotals);
         editor.Lines.Add(line);
         editor.SelectedLine = line;

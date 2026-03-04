@@ -25,6 +25,11 @@
       <Setter Property="Background" Value="#DBEAFE"/>
       <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
     </Style>
+
+    <Style Selector="Button.nav-button">
+      <Setter Property="Width" Value="120"/>
+      <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    </Style>
   </Window.Styles>
 
   <Grid ColumnDefinitions="240,*" RowDefinitions="Auto,*">
@@ -43,12 +48,12 @@
                    Foreground="{StaticResource PrimaryTextBrush}"
                    Margin="0,0,0,18"/>
 
-        <Button Content="Terminal" Click="NavTerminal_Click" Margin="0,0,0,8"/>
-        <Button Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
-        <Button Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
-        <Button Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
-        <Button Content="Financial" Click="NavFinancial_Click" Margin="0,0,0,8"/>
-        <Button Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Terminal" Click="NavTerminal_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Financial" Click="NavFinancial_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
         
         <Border Height="1"
                 Background="{StaticResource BorderBrushLight}"

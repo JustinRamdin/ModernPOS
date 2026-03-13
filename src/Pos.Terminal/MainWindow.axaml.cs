@@ -46,6 +46,15 @@ public partial class MainWindow : Window
     private void NavReports_Click(object? sender, RoutedEventArgs e) => VM.ShowReports();
     private void NavFinancial_Click(object? sender, RoutedEventArgs e) => VM.ShowFinancial();
     private void NavSettings_Click(object? sender, RoutedEventArgs e) => VM.ShowSettings();
+     private void UserAdmin_Click(object? sender, RoutedEventArgs e)
+    {
+        VM.ShowSettings();
+        VM.Toast("User management is available in Settings.");
+    }
+
+    private async void Backup_Click(object? sender, RoutedEventArgs e)
+        => await VM.TriggerServerBackupAsync();
+
     public void AddCommand(object? param)
 
     {

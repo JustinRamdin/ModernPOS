@@ -155,5 +155,5 @@ public sealed class SettingsStore
         }
     }
 
-    private static PosLocalDbContext CreateLocalDb() => new(LocalDb.BuildOptions());;
+    private static PosLocalDbContext CreateLocalDb() => new(LocalDb.BuildOptions());
 }

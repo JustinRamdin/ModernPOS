@@ -25,7 +25,7 @@
     <PackageVersion Include="System.Net.Http.Json" Version="10.0.2" />
     <PackageVersion Include="ClosedXML" Version="0.102.2" />
     <PackageVersion Include="QuestPDF" Version="2024.3.0" />
-    <PackageVersion Include="System.IO.Packaging" Version="8.0.0" />
+    <PackageVersion Include="System.IO.Packaging" Version="8.0.1" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 </Project>

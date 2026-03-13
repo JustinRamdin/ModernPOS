@@ -10,7 +10,9 @@ public sealed class LanDiscoveryService
     public async Task<IReadOnlyList<DiscoveredServer>> ScanAsync(int udpPort = 40444, int timeoutMs = 2500)
     {
         var found = new Dictionary<string, DiscoveredServer>(StringComparer.OrdinalIgnoreCase);
-        using var udp = new UdpClient(udpPort);
+        using var udp = new UdpClient(AddressFamily.InterNetwork);
+        udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        udp.Client.Bind(new IPEndPoint(IPAddress.Any, udpPort));
         using var cts = new CancellationTokenSource(timeoutMs);
 
         while (!cts.IsCancellationRequested)

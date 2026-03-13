@@ -209,7 +209,13 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
             var rows = await q
                 .OrderBy(c => c.Name)
-                .Select(c => new CustomerRow(c.Id, c.Name, c.Phone, c.Email, c.Area, c.Balance))
+                .Select(c => new CustomerRow(
+                    c.Id,
+                    c.Name,
+                    c.Phone,
+                    c.Email,
+                    EF.Property<string>(c, "Area"),
+                    c.Balance))
                 .ToListAsync();
 
             Customers.Clear();
@@ -281,11 +287,12 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
                 Name = EditName.Trim(),
                 Phone = (EditPhone ?? "").Trim(),
                 Email = (EditEmail ?? "").Trim(),
-                Area = (EditArea ?? "").Trim(),
                 Balance = Balance,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow
             };
+
+            db.Entry(entity).Property("Area").CurrentValue = (EditArea ?? "").Trim();
 
             db.Customers.Add(entity);
             await db.SaveChangesAsync();
@@ -301,10 +308,11 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             entity.Name = EditName.Trim();
             entity.Phone = (EditPhone ?? "").Trim();
             entity.Email = (EditEmail ?? "").Trim();
-            entity.Area = (EditArea ?? "").Trim();
             entity.Balance = Balance;
             entity.UpdatedAtUtc = DateTime.UtcNow;
 
+            db.Entry(entity).Property("Area").CurrentValue = (EditArea ?? "").Trim();
+            
             await db.SaveChangesAsync();
 
             await LoadAsync();

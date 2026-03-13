@@ -111,14 +111,21 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
     public string EditPhone
     {
         get => _editPhone;
-        set { _editPhone = value ?? ""; Raise(); }
+        set { _editPhone = value ?? ""; Raise(); (SaveCommand as VmRelayCommand)?.NotifyCanExecuteChanged(); }
     }
 
     private string _editEmail = "";
     public string EditEmail
     {
         get => _editEmail;
-        set { _editEmail = value ?? ""; Raise(); }
+        set { _editEmail = value ?? ""; Raise(); (SaveCommand as VmRelayCommand)?.NotifyCanExecuteChanged(); }
+    }
+
+    private string _editArea = "";
+    public string EditArea
+    {
+        get => _editArea;
+        set { _editArea = value ?? ""; Raise(); (SaveCommand as VmRelayCommand)?.NotifyCanExecuteChanged(); }
     }
 
     private decimal _balance;
@@ -186,6 +193,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             ListStatus = "Loading...";
             await using var db = new PosLocalDbContext(BuildDbOptions());
             await db.Database.EnsureCreatedAsync();
+            await EnsureCustomerAreaColumnAsync(db);
 
             var s = (Search ?? "").Trim();
 
@@ -201,7 +209,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
             var rows = await q
                 .OrderBy(c => c.Name)
-                .Select(c => new CustomerRow(c.Id, c.Name, c.Phone, c.Email, c.Balance))
+                .Select(c => new CustomerRow(c.Id, c.Name, c.Phone, c.Email, c.Area, c.Balance))
                 .ToListAsync();
 
             Customers.Clear();
@@ -226,6 +234,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             EditName = "";
             EditPhone = "";
             EditEmail = "";
+            EditArea = "";
             Balance = 0m;
             return;
         }
@@ -234,6 +243,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         EditName = Selected.Name;
         EditPhone = Selected.Phone;
         EditEmail = Selected.Email;
+        EditArea = Selected.Area;
         Balance = Selected.Balance;
     }
 
@@ -244,11 +254,16 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         EditName = "";
         EditPhone = "";
         EditEmail = "";
+        EditArea = "";
         Balance = 0m;
         ClearPayment();
     }
 
-    private bool CanSave() => !string.IsNullOrWhiteSpace(EditName);
+    private bool CanSave() =>
+        !string.IsNullOrWhiteSpace(EditName)
+        && !string.IsNullOrWhiteSpace(EditPhone)
+        && !string.IsNullOrWhiteSpace(EditEmail)
+        && !string.IsNullOrWhiteSpace(EditArea);
 
     private async Task SaveAsync()
     {
@@ -256,6 +271,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
         await using var db = new PosLocalDbContext(BuildDbOptions());
         await db.Database.EnsureCreatedAsync();
+        await EnsureCustomerAreaColumnAsync(db);
 
         if (_editId == null)
         {
@@ -265,6 +281,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
                 Name = EditName.Trim(),
                 Phone = (EditPhone ?? "").Trim(),
                 Email = (EditEmail ?? "").Trim(),
+                Area = (EditArea ?? "").Trim(),
                 Balance = Balance,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow
@@ -284,6 +301,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             entity.Name = EditName.Trim();
             entity.Phone = (EditPhone ?? "").Trim();
             entity.Email = (EditEmail ?? "").Trim();
+            entity.Area = (EditArea ?? "").Trim();
             entity.Balance = Balance;
             entity.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -302,6 +320,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
         await using var db = new PosLocalDbContext(BuildDbOptions());
         await db.Database.EnsureCreatedAsync();
+        await EnsureCustomerAreaColumnAsync(db);
 
         var entity = await db.Customers.FirstOrDefaultAsync(x => x.Id == id);
         if (entity != null)
@@ -333,6 +352,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
 
         await using var db = new PosLocalDbContext(BuildDbOptions());
         await db.Database.EnsureCreatedAsync();
+        await EnsureCustomerAreaColumnAsync(db);
 
         var entity = await db.Customers.FirstOrDefaultAsync(x => x.Id == id);
         if (entity == null) return;
@@ -382,6 +402,18 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         await _onPicked(null);
     }
 
+     private static async Task EnsureCustomerAreaColumnAsync(PosLocalDbContext db)
+    {
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Customers ADD COLUMN Area TEXT NOT NULL DEFAULT '';");
+        }
+        catch (SqliteException ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+        {
+            // Column already exists.
+        }
+    }
+
     // ✅ SAME DB OPTIONS as Terminal + Inventory
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
     => DataLocalDb.BuildOptions();
@@ -415,11 +447,16 @@ public sealed class CustomerRow : INotifyPropertyChanged
     private string _email;
     public string Email { get => _email; set { _email = value; Raise(); Raise(nameof(EmailLine)); } }
 
+
+    private string _area;
+    public string Area { get => _area; set { _area = value; Raise(); Raise(nameof(AreaLine)); } }
+
     private decimal _balance;
     public decimal Balance { get => _balance; set { _balance = value; Raise(); } }
 
     public string PhoneLine => string.IsNullOrWhiteSpace(Phone) ? "—" : Phone;
     public string EmailLine => string.IsNullOrWhiteSpace(Email) ? "—" : Email;
+    public string AreaLine => string.IsNullOrWhiteSpace(Area) ? "—" : Area;
 
     public CustomerRow(Guid id, string name, string phone, string email, decimal balance)
     {
@@ -427,6 +464,7 @@ public sealed class CustomerRow : INotifyPropertyChanged
         _name = name;
         _phone = phone;
         _email = email;
+        _area = area;
         _balance = balance;
     }
 }

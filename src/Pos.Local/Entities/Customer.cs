@@ -17,6 +17,10 @@ public sealed class Customer
     [MaxLength(200)]
     public string Email { get; set; } = "";
 
+    [MaxLength(200)]
+    public string Area { get; set; } = "";
+
+
     // ✅ Needed because your CustomersViewModel uses Customer.Balance
     public decimal Balance { get; set; } = 0m;
 

@@ -195,7 +195,7 @@
                          Text="{Binding EditPhone}" />
               </Grid>
 
-              <Grid ColumnDefinitions="120,*">
+              <Grid ColumnDefinitions="120,*" Margin="0,0,0,8">
                 <TextBlock VerticalAlignment="Center" Text="Email" />
                 <TextBox Grid.Column="1"
                          Classes="field"
@@ -203,6 +203,14 @@
                          Text="{Binding EditEmail}" />
               </Grid>
 
+              <Grid ColumnDefinitions="120,*">
+                <TextBlock VerticalAlignment="Center" Text="Area" />
+                <TextBox Grid.Column="1"
+                         Classes="field"
+                         IsEnabled="{Binding IsNotPicker}"
+                         Text="{Binding EditArea}" />
+              </Grid>
+              
               <Border Margin="0,12,0,0"
                       Padding="10"
                       CornerRadius="10"

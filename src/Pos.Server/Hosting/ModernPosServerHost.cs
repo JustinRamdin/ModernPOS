@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,9 @@ public static class ModernPosServerHost
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls($"http://0.0.0.0:{options.Port}");
-
+        builder.Services
+            .AddControllers()
+            .PartManager.ApplicationParts.Add(new AssemblyPart(typeof(ModernPosServerHost).Assembly));
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
         builder.Services.AddDbContext<PosDbContext>(x => x.UseSqlite(options.ConnectionString));
@@ -45,3 +48,4 @@ public static class ModernPosServerHost
         return app;
     }
 }
+ 

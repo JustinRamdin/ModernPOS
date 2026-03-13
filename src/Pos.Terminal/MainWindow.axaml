@@ -75,8 +75,8 @@
         <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
         <Image Grid.Column="0"
                Source="{Binding HeaderImage}"
-               Width="48"
-               Height="48"
+               Width="88"
+               Height="88"
                Stretch="Uniform"
                Margin="0,0,12,0"
                IsVisible="{Binding HasHeaderImage}"/>
@@ -84,7 +84,7 @@
       <TextBlock Grid.Column="1"
                    Text="{Binding HeaderTitle}"
                    Foreground="{StaticResource PrimaryTextBrush}"
-                   FontSize="18"
+                   FontSize="32"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"/>
       </Grid>

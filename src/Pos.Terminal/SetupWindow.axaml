@@ -28,7 +28,7 @@
       <TextBox x:Name="LoginUserBox" Watermark="Username"/>
       <TextBox x:Name="LoginPassBox" PasswordChar="*" Watermark="Password"/>
 
-      <Button Content="Save & Continue" Click="Continue_Click" Width="180"/>
+      <Button Content="Save &amp; Continue" Click="Continue_Click" Width="180"/>
       <TextBlock x:Name="StatusText" Foreground="DarkGreen" TextWrapping="Wrap"/>
     </StackPanel>
   </ScrollViewer>

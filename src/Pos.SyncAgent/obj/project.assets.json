@@ -1337,6 +1337,7 @@
           "Microsoft.EntityFrameworkCore.Design": "10.0.0",
           "Microsoft.EntityFrameworkCore.Sqlite": "10.0.0",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
+          "Pos.Application": "1.0.0",
           "Pos.Domain": "1.0.0"
         },
         "compile": {

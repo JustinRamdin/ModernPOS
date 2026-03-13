@@ -1576,6 +1576,19 @@
           }
         }
       },
+      "Pos.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Pos.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Pos.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Pos.Application.dll": {}
+        }
+      },
       "Pos.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -3959,6 +3972,11 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Pos.Application/1.0.0": {
+      "type": "project",
+      "path": "../Pos.Application/Pos.Application.csproj",
+      "msbuildProject": "../Pos.Application/Pos.Application.csproj"
+    },
     "Pos.Domain/1.0.0": {
       "type": "project",
       "path": "../Pos.Domain/Pos.Domain.csproj",
@@ -3972,6 +3990,7 @@
       "Microsoft.EntityFrameworkCore.Design >= 10.0.0",
       "Microsoft.EntityFrameworkCore.Sqlite >= 10.0.0",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.0",
+      "Pos.Application >= 1.0.0",
       "Pos.Domain >= 1.0.0"
     ]
   },
@@ -4001,6 +4020,9 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
+            "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
+              "projectPath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj"
+            },
             "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
               "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"
             }

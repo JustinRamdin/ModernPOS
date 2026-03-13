@@ -1,63 +1,29 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Microsoft.Extensions.Hosting;
-using Pos.Contracts;
-using Pos.Server.Hosting;
-using Pos.ServerApp.Services;
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.ServerApp.InitialSetupWindow"
+        Width="520"
+        Height="520"
+        Title="ModernPOS Server Setup">
+  <StackPanel Margin="16" Spacing="8">
+    <TextBlock Text="Initial Server Setup" FontSize="22" FontWeight="Bold" />
+    <TextBlock Text="Configure your server and create the first administrator account." TextWrapping="Wrap" />
 
-namespace Pos.ServerApp;
+    <TextBlock Text="Company Name" Margin="0,8,0,0" />
+    <TextBox x:Name="CompanyNameBox" Text="ModernPOS" />
 
-public partial class DashboardWindow : Window
-{
-    private readonly ServerAppSettings _settings;
-    private readonly ServerAdminApi _api;
-    private IHost? _host;
+    <TextBlock Text="Port" Margin="0,8,0,0" />
+    <TextBox x:Name="PortBox" Text="5050" />
 
-    public DashboardWindow(ServerAppSettings settings, IHost? existingHost = null)
-    {
-        InitializeComponent();
-        _settings = settings;
-        _api = new ServerAdminApi("127.0.0.1", _settings.Port);
-        _host = existingHost;
-        Opened += OnOpened;
-    }
+    <TextBlock Text="Admin Username" Margin="0,8,0,0" />
+    <TextBox x:Name="SuperUserBox" Text="admin" />
 
-    private async void OnOpened(object? sender, EventArgs e)
-    {
-        _host ??= await ModernPosServerHost.StartAsync(new ModernPosServerOptions(_settings.ConnectionString, _settings.Port, _settings.CompanyName));
-        await RefreshDashboardAsync();
-    }
+    <TextBlock Text="Admin Password" Margin="0,8,0,0" />
+    <TextBox x:Name="PasswordBox" PasswordChar="*" />
 
-    private async Task RefreshDashboardAsync()
-    {
-        var dto = await _api.GetDashboardAsync();
-        if (dto is null) return;
-        CompanyText.Text = $"Company: {dto.CompanyName}";
-        PortText.Text = $"Port: {dto.Port}";
-        DbText.Text = $"Database: {dto.DatabasePath}";
-        BackupText.Text = $"Last backup: {dto.LastBackupAtUtc?.ToLocalTime().ToString() ?? "Never"}";
-        EnableSchedule.IsChecked = dto.Schedule.Enabled;
-        BackupFolder.Text = dto.Schedule.BackupFolder;
-        RetentionBox.Text = dto.Schedule.RetentionCount.ToString();
-    }
+    <TextBlock Text="Confirm Password" Margin="0,8,0,0" />
+    <TextBox x:Name="ConfirmPasswordBox" PasswordChar="*" />
 
-    private async void Backup_Click(object? sender, RoutedEventArgs e)
-    {
-        await _api.TriggerBackupAsync(BackupFolder.Text);
-        await RefreshDashboardAsync();
-        StatusText.Text = "Backup completed.";
-    }
-
-    private async void SaveSchedule_Click(object? sender, RoutedEventArgs e)
-    {
-        var settings = new ScheduledBackupSettings(EnableSchedule.IsChecked == true, BackupFolder.Text ?? AppContext.BaseDirectory, new TimeOnly(2,0), int.TryParse(RetentionBox.Text, out var r) ? r : 14);
-        await _api.SaveScheduleAsync(settings);
-        StatusText.Text = "Schedule saved.";
-    }
-
-    private async void Restore_Click(object? sender, RoutedEventArgs e)
-    {
-        await _api.RestoreAsync(RestoreFileBox.Text ?? string.Empty);
-        StatusText.Text = "Restore completed. Restart server app recommended.";
-    }
-}
+    <Button Content="Initialize Server" Margin="0,12,0,0" Click="Initialize_Click" />
+    <TextBlock x:Name="StatusText" TextWrapping="Wrap" />
+  </StackPanel>
+</Window>

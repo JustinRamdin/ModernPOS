@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Pos.Application.Auth;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
-using Pos.Server.Contracts;
+using Pos.Contracts;
 using Pos.Server.Hosting;
 
 namespace Pos.Server.Controllers;
@@ -26,7 +26,9 @@ public sealed class SetupController(PosDbContext db, IPasswordHasher hasher, ILo
             Company = company,
             Username = request.SuperUsername.Trim(),
             PasswordHash = hasher.Hash(request.SuperPassword),
-            Role = UserRole.SuperUser
+            DisplayName = request.SuperUsername.Trim(),
+            Role = UserRole.SuperUser,
+            UpdatedAtUtc = DateTime.UtcNow
         };
 
         db.Companies.Add(company);

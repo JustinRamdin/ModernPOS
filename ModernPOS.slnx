@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Pos.Application/Pos.Application.csproj" />
+    <Project Path="src/Pos.ServerApp/Pos.ServerApp.csproj" />
+    <Project Path="src/Pos.Contracts/Pos.Contracts.csproj" />
     <Project Path="src/Pos.Domain/Pos.Domain.csproj" />
     <Project Path="src/Pos.Infrastructure/Pos.Infrastructure.csproj" />
     <Project Path="src/Pos.InitializeDb/Pos.InitializeDb.csproj" />

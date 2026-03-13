@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.Terminal.UserManagementWindow" Width="520" Height="420" Title="User Management">
+  <StackPanel Margin="14" Spacing="8">
+    <TextBlock Text="Create User" FontSize="18" FontWeight="Bold"/>
+    <TextBox x:Name="UsernameBox" Watermark="Username"/>
+    <TextBox x:Name="DisplayNameBox" Watermark="Display Name"/>
+    <TextBox x:Name="PasswordBox" PasswordChar="*" Watermark="Password"/>
+    <ComboBox x:Name="RoleBox" SelectedIndex="0">
+      <ComboBoxItem Content="Manager"/>
+      <ComboBoxItem Content="Accounts"/>
+      <ComboBoxItem Content="Cashier"/>
+    </ComboBox>
+    <Button Content="Create" Click="Create_Click"/>
+    <TextBlock x:Name="StatusText" TextWrapping="Wrap"/>
+  </StackPanel>
+</Window>

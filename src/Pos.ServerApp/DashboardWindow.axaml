@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.ServerApp.DashboardWindow" Width="700" Height="560" Title="ModernPOS Server Dashboard">
+  <StackPanel Margin="16" Spacing="8">
+    <TextBlock Text="Server Dashboard" FontSize="22" FontWeight="Bold"/>
+    <TextBlock x:Name="CompanyText"/>
+    <TextBlock x:Name="PortText"/>
+    <TextBlock x:Name="DbText" TextWrapping="Wrap"/>
+    <TextBlock x:Name="BackupText"/>
+    <Button Content="Create Backup Now" Click="Backup_Click"/>
+    <TextBlock Text="Scheduled Backups" FontWeight="Bold" Margin="0,8,0,0"/>
+    <CheckBox x:Name="EnableSchedule" Content="Enable daily backup"/>
+    <TextBox x:Name="BackupFolder" Watermark="Backup Folder"/>
+    <TextBox x:Name="RetentionBox" Text="14" Watermark="Retention Count"/>
+    <Button Content="Save Schedule" Click="SaveSchedule_Click"/>
+    <TextBlock Text="Restore" FontWeight="Bold" Margin="0,8,0,0"/>
+    <TextBox x:Name="RestoreFileBox" Watermark="Backup file path (*.db)"/>
+    <Button Content="Restore Backup" Click="Restore_Click"/>
+    <TextBlock x:Name="StatusText" TextWrapping="Wrap"/>
+  </StackPanel>
+</Window>

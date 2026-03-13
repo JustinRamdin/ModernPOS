@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Pos.Terminal.Models;
-using Pos.Terminal.ViewModels;
 using Pos.Terminal.Services;
+using Pos.Terminal.ViewModels;
 
 namespace Pos.Terminal;
 
@@ -19,10 +19,11 @@ public partial class MainWindow : Window
 
         vm.ShowTerminal();
 
-         Opened += async (_, __) =>
+        Opened += async (_, __) =>
         {
             await vm.LoadAsync();
             await ApplyRoleRestrictionsAsync();
+            await vm.LoadSessionHeaderAsync();
         };
     }
 
@@ -32,13 +33,15 @@ public partial class MainWindow : Window
         var role = deployment.Role;
 
 
-        SettingsButton.IsVisible = role is "SuperUser" or "4";
-        FinancialButton.IsVisible = role is "SuperUser" or "4" or "Accountant" or "3";
-        InventoryButton.IsVisible = role is not ("Cashier" or "1");
+        SettingsButton.IsVisible = role is "SuperUser";
+        UserAdminButton.IsVisible = role is "SuperUser";
+        BackupButton.IsVisible = role is "SuperUser" or "Manager";
+        FinancialButton.IsVisible = role is "SuperUser" or "Accounts";
+        InventoryButton.IsVisible = role is not "Cashier";
     }
 
    public void NavTerminal_Click(object? sender, RoutedEventArgs e) => VM.ShowTerminal();
-    public void NavInventory_Click(object? sender, RoutedEventArgs e) => VM.ShowInventory();
+   public void NavInventory_Click(object? sender, RoutedEventArgs e) => VM.ShowInventory();
     public void NavCustomers_Click(object? sender, RoutedEventArgs e) => VM.ShowCustomers();
     private void NavReports_Click(object? sender, RoutedEventArgs e) => VM.ShowReports();
     private void NavFinancial_Click(object? sender, RoutedEventArgs e) => VM.ShowFinancial();

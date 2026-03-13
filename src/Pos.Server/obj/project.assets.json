@@ -1379,6 +1379,16 @@
           "bin/placeholder/Pos.Application.dll": {}
         }
       },
+      "Pos.Contracts/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Pos.Contracts.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Pos.Contracts.dll": {}
+        }
+      },
       "Pos.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -3434,6 +3444,11 @@
       "path": "../Pos.Application/Pos.Application.csproj",
       "msbuildProject": "../Pos.Application/Pos.Application.csproj"
     },
+    "Pos.Contracts/1.0.0": {
+      "type": "project",
+      "path": "../Pos.Contracts/Pos.Contracts.csproj",
+      "msbuildProject": "../Pos.Contracts/Pos.Contracts.csproj"
+    },
     "Pos.Domain/1.0.0": {
       "type": "project",
       "path": "../Pos.Domain/Pos.Domain.csproj",
@@ -3452,6 +3467,7 @@
       "Microsoft.EntityFrameworkCore.Sqlite >= 10.0.0",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.0",
       "Pos.Application >= 1.0.0",
+      "Pos.Contracts >= 1.0.0",
       "Pos.Domain >= 1.0.0",
       "Pos.Infrastructure >= 1.0.0"
     ]
@@ -3484,6 +3500,9 @@
           "projectReferences": {
             "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj": {
               "projectPath": "C:\\ModernPOS\\src\\Pos.Application\\Pos.Application.csproj"
+            },
+            "C:\\ModernPOS\\src\\Pos.Contracts\\Pos.Contracts.csproj": {
+              "projectPath": "C:\\ModernPOS\\src\\Pos.Contracts\\Pos.Contracts.csproj"
             },
             "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj": {
               "projectPath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj"

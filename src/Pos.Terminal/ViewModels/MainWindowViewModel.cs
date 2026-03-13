@@ -42,7 +42,7 @@ using LocalLineKind = Pos.Local.Entities.LineQuantityKind;
 
 namespace Pos.Terminal.ViewModels;
 
-public sealed class MainWindowViewModel : INotifyPropertyChanged
+public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 {
      private CheckoutCalculator _checkout = new(new VatCalculator());
     private readonly SettingsStore _settingsStore = new();

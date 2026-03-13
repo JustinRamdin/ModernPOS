@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
 using Pos.Server.Auth;
-using Pos.Server.Contracts;
+using Pos.Contracts;
 using System.Text.Json;
 
 namespace Pos.Server.Controllers;

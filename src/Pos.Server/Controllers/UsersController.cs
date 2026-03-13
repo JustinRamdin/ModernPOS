@@ -4,7 +4,7 @@ using Pos.Application.Auth;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
 using Pos.Server.Auth;
-using Pos.Server.Contracts;
+using Pos.Contracts;
 
 namespace Pos.Server.Controllers;
 
@@ -19,12 +19,12 @@ public sealed class UsersController(PosDbContext db, IPasswordHasher hasher) : C
         if (principal is null)
             return Unauthorized();
 
-        if (!HttpContext.RequireRole(UserRole.SuperUser, UserRole.Manager))
+        if (!HttpContext.RequireRole(UserRole.SuperUser))
             return Forbid();
 
         var users = await db.UserAccounts
             .Where(x => x.CompanyId == principal.CompanyId)
-            .Select(x => new { x.Id, x.Username, role = x.Role.ToString(), x.IsActive })
+            .Select(x => new { x.Id, x.Username, x.DisplayName, role = x.Role.ToString(), x.IsActive, x.CreatedAtUtc, x.UpdatedAtUtc })
             .ToListAsync();
 
         return Ok(users);
@@ -52,7 +52,9 @@ public sealed class UsersController(PosDbContext db, IPasswordHasher hasher) : C
             CompanyId = principal.CompanyId,
             Username = request.Username.Trim(),
             PasswordHash = hasher.Hash(request.Password),
-            Role = role
+            DisplayName = request.DisplayName?.Trim() ?? request.Username.Trim(),
+            Role = role,
+            UpdatedAtUtc = DateTime.UtcNow
         };
 
         db.UserAccounts.Add(user);

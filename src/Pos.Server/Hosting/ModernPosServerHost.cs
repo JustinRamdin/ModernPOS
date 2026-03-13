@@ -10,6 +10,7 @@ using Pos.Infrastructure.Data;
 using Pos.Server.Auth;
 using Pos.Server.Data;
 using Pos.Server.Discovery;
+using Pos.Server.Services;
 
 namespace Pos.Server.Hosting;
 
@@ -31,6 +32,11 @@ public static class ModernPosServerHost
         builder.Services.AddSingleton<ISessionTokenStore, InMemorySessionTokenStore>();
         builder.Services.AddSingleton(new LanAdvertiserOptions { CompanyName = options.CompanyName, ServerPort = options.Port });
         builder.Services.AddHostedService<LanAdvertiserHostedService>();
+        builder.Services.AddSingleton<ServerRuntimeState>();
+        builder.Services.AddSingleton<ScheduledBackupOptionsStore>();
+        builder.Services.AddScoped<BackupOrchestrator>();
+        builder.Services.AddHostedService<ScheduledBackupHostedService>();
+
 
         var app = builder.Build();
 

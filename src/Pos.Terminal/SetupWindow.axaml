@@ -2,25 +2,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Pos.Terminal.SetupWindow"
         Width="700" Height="620"
-        Title="ModernPOS First Run Setup">
+        Title="ModernPOS Terminal - Connect to Server">
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="8">
-      <TextBlock Text="First Run Wizard" FontSize="24" FontWeight="Bold"/>
-      <TextBlock Text="Select deployment mode"/>
-      <ComboBox x:Name="ModeCombo" SelectedIndex="1">
-        <ComboBoxItem Content="Server"/>
-        <ComboBoxItem Content="Client"/>
-      </ComboBox>
-
-      <TextBlock Text="Server Mode" FontWeight="Bold" Margin="0,14,0,0"/>
-      <TextBox x:Name="CompanyNameBox" Watermark="Company Name"/>
-      <TextBox x:Name="SuperUserBox" Watermark="Super User Username"/>
-      <TextBox x:Name="SuperPassBox" PasswordChar="*" Watermark="Super User Password"/>
-      <TextBox x:Name="ServerPortBox" Text="5050" Watermark="Server Port"/>
-
-      <TextBlock Text="Client Mode" FontWeight="Bold" Margin="0,14,0,0"/>
+      <TextBlock Text="Select Server" FontSize="24" FontWeight="Bold"/>
       <Button Content="Scan LAN" Click="ScanLan_Click" Width="140"/>
-      <ListBox x:Name="DiscoveredList" Height="120"/>
+      <ListBox x:Name="DiscoveredList" Height="140" SelectionChanged="DiscoveredList_SelectionChanged"/>
       <TextBox x:Name="ManualHostBox" Watermark="Manual Host/IP" Text="127.0.0.1"/>
       <TextBox x:Name="ManualPortBox" Watermark="Manual Port" Text="5050"/>
 
@@ -28,7 +15,7 @@
       <TextBox x:Name="LoginUserBox" Watermark="Username"/>
       <TextBox x:Name="LoginPassBox" PasswordChar="*" Watermark="Password"/>
 
-      <Button Content="Save &amp; Continue" Click="Continue_Click" Width="180"/>
+      <Button Content="Connect &amp; Login" Click="Continue_Click" Width="180"/>
       <TextBlock x:Name="StatusText" Foreground="DarkGreen" TextWrapping="Wrap"/>
     </StackPanel>
   </ScrollViewer>

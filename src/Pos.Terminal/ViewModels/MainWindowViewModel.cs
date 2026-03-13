@@ -857,7 +857,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-        private async Task PrintReceiptAsync(
+    private async Task PrintReceiptAsync(
         string receiptNo,
         string paymentMethod,
         decimal subtotal,
@@ -933,9 +933,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             // printers with larger hardware non-printable areas.
             doc.DefaultPageSettings.Margins = new Margins(18, 25, 25, 25);
 
+ #pragma warning disable CA1416
             doc.PrintPage += (_, e) =>
             {
-               e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
+               if (e.Graphics is null)
+                {
+                    e.HasMorePages = false;
+                    return;
+                }
+
+                e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
                     g: e.Graphics,
                     marginBounds: e.MarginBounds,
                     settings: settings,
@@ -953,7 +960,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     state: state
                 );
             };
-
+    #pragma warning restore CA1416
             doc.Print();
             Status = $"Invoice sent to {settings.ReceiptPrinterName}";
         }

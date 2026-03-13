@@ -4,11 +4,13 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 
 using Pos.Terminal.Models;
 
 namespace Pos.Terminal.Services;
 
+[SupportedOSPlatform("windows")]
 public static class PhysicalReceiptRenderer
 {
     public sealed class InvoicePrintState
@@ -142,7 +144,7 @@ public static class PhysicalReceiptRenderer
             height: boxH
         );
 
-        if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage))
+        if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage) && logoImage is not null)
         {
             using (logoImage)
             {

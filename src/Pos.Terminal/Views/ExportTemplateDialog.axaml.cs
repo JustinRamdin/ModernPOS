@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using System;
-using System.Collections.Generic;
 
 namespace Pos.Terminal.Views;
 
@@ -45,18 +45,21 @@ public partial class ExportTemplateDialog : Window
         if (DataContext is not Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
             return;
 
-        var dialog = new SaveFileDialog
+         var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.StorageProvider is null)
+            return;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             DefaultExtension = "xlsx",
-            InitialFileName = $"{vm.TemplateName}-{DateTime.Now:yyyyMMdd}.xlsx",
-            Filters = new List<FileDialogFilter>
+             SuggestedFileName = $"{vm.TemplateName}-{DateTime.Now:yyyyMMdd}.xlsx",
+            FileTypeChoices = new[]
             {
-                new() { Name = "Excel Workbook", Extensions = { "xlsx" } },
-                new() { Name = "All Files", Extensions = { "*" } }
+                 new FilePickerFileType("Excel Workbook") { Patterns = new[] { "*.xlsx" } }
             }
-        };
+        });
 
-        var path = await dialog.ShowAsync(this);
+        var path = file?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path))
             return;
 

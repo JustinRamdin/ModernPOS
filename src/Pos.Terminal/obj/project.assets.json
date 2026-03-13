@@ -2018,7 +2018,7 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "System.IO.Packaging/8.0.0": {
+      "System.IO.Packaging/8.0.1": {
         "type": "package",
         "compile": {
           "lib/net8.0/System.IO.Packaging.dll": {
@@ -5670,10 +5670,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.IO.Packaging/8.0.0": {
-      "sha512": "8g1V4YRpdGAxFcK8v9OjuMdIOJSpF30Zb1JGicwVZhly3I994WFyBdV6mQEo8d3T+URQe55/M0U0eIH0Hts1bg==",
+    "System.IO.Packaging/8.0.1": {
+      "sha512": "KYkIOAvPexQOLDxPO2g0BVoWInnQhPpkFzRqvNrNrMhVT6kqhVr0zEb6KCHlptLFukxnZrjuMVAnxK7pOGUYrw==",
       "type": "package",
-      "path": "system.io.packaging/8.0.0",
+      "path": "system.io.packaging/8.0.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5694,7 +5694,7 @@
         "lib/net8.0/System.IO.Packaging.xml",
         "lib/netstandard2.0/System.IO.Packaging.dll",
         "lib/netstandard2.0/System.IO.Packaging.xml",
-        "system.io.packaging.8.0.0.nupkg.sha512",
+        "system.io.packaging.8.0.1.nupkg.sha512",
         "system.io.packaging.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -5995,7 +5995,7 @@
       "Pos.Local >= 1.0.0",
       "Pos.Server >= 1.0.0",
       "QuestPDF >= 2024.3.0",
-      "System.IO.Packaging >= 8.0.0"
+      "System.IO.Packaging >= 8.0.1"
     ]
   },
   "packageFolders": {
@@ -6094,7 +6094,7 @@
           },
           "System.IO.Packaging": {
             "target": "Package",
-            "version": "[8.0.0, )",
+            "version": "[8.0.1, )",
             "versionCentrallyManaged": true
           }
         },
@@ -6117,7 +6117,7 @@
           "Microsoft.EntityFrameworkCore.Tools": "10.0.0",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
           "QuestPDF": "2024.3.0",
-          "System.IO.Packaging": "8.0.0",
+          "System.IO.Packaging": "8.0.1",
           "System.Net.Http.Json": "10.0.2"
         },
         "imports": [
@@ -6413,27 +6413,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'System.IO.Packaging' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-f32c-w444-8ppv",
-      "libraryId": "System.IO.Packaging",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'System.IO.Packaging' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
-      "libraryId": "System.IO.Packaging",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }

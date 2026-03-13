@@ -544,7 +544,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                 if (TryWriteTypedValue(cell, header, value))
                     continue;
 
-                cell.Value = value;
+                cell.Value = value ?? string.Empty;
             }
         }
 
@@ -555,7 +555,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         return Task.CompletedTask;
     }
 
-    private static bool TryWriteTypedValue(IXLCell cell, string header, string value)
+     private static bool TryWriteTypedValue(IXLCell cell, string header, string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return false;

@@ -41,13 +41,13 @@ public partial class SetupWindow : Window
                 port = int.TryParse(ServerPortBox.Text, out var serverPort) ? serverPort : 5050;
 
                 _embeddedServer = await ModernPosServerHost.StartAsync(new ModernPosServerOptions($"Data Source=server-{port}.db", port, company));
-                var api = new RemoteServerApi("127.0.0.1", port);
+                using var api = new RemoteServerApi("127.0.0.1", port);
                 await api.BootstrapAsync(company, superUser, superPass, port);
                 host = "127.0.0.1";
                 StatusText.Text = "Server initialized and listening.";
             }
 
-            var loginApi = new RemoteServerApi(host, port);
+            using var loginApi = new RemoteServerApi(host, port);
             var login = await loginApi.LoginAsync(LoginUserBox.Text ?? "", LoginPassBox.Text ?? "");
 
             await _settings.SaveDeploymentAsync(new DeploymentSettings
@@ -56,10 +56,10 @@ public partial class SetupWindow : Window
                 Mode = isServer ? "Server" : "Client",
                 ServerHost = host,
                 ServerPort = port,
-                CompanyName = login.companyName,
-                AuthToken = login.token,
+                CompanyName = login.CompanyName,
+                AuthToken = login.Token,
                 Username = LoginUserBox.Text ?? "",
-                Role = login.role
+                Role = login.Role.ToString()
             });
 
             var main = new MainWindow();

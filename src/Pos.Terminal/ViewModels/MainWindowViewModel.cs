@@ -901,6 +901,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             customerInfo = new PhysicalReceiptRenderer.ReceiptCustomerInfo(name, phone, email);
         }
 
+#pragma warning disable CA1416
         var state = PhysicalReceiptRenderer.CreateState(
             CartLines.Select(line => new PhysicalReceiptRenderer.ReceiptRenderLine(
                 line.Name,
@@ -909,6 +910,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 line.QtyInches,
                 line.UnitPrice,
                 line.LineTotal)));
+#pragma warning restore CA1416
 
         try
         {

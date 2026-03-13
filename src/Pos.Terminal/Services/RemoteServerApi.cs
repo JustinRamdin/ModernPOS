@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using Pos.Application.Auth;
 using Pos.Contracts;
 
@@ -12,7 +13,7 @@ public sealed class RemoteServerApi : IDisposable
     {
         _http = new HttpClient { BaseAddress = new Uri($"http://{host}:{port}/") };
         if (!string.IsNullOrWhiteSpace(authToken))
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);;
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
     }
 
     public async Task<LoginResult> LoginAsync(string username, string password)

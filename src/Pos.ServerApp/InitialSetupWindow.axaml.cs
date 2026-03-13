@@ -24,7 +24,12 @@ public partial class InitialSetupWindow : Window
 
         var server = await ModernPosServerHost.StartAsync(new ModernPosServerOptions(settings.ConnectionString, settings.Port, settings.CompanyName));
         var api = new ServerAdminApi("127.0.0.1", settings.Port);
-        await api.BootstrapAsync(new BootstrapServerRequest(company, SuperUserBox.Text ?? "admin", PasswordBox.Text ?? string.Empty, port));
+         var initialized = await api.BootstrapAsync(new BootstrapServerRequest(company, SuperUserBox.Text ?? "admin", PasswordBox.Text ?? string.Empty, port));
+
+        if (!initialized)
+        {
+            StatusText.Text = "Server is already initialized. Opening dashboard.";
+        }
 
         new ServerAppSettingsStore().Save(settings);
 

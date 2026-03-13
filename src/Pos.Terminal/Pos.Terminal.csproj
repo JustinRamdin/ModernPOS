@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pos.Local\Pos.Local.csproj" />
     <ProjectReference Include="..\Pos.Application\Pos.Application.csproj" />
+    <ProjectReference Include="..\Pos.Server\Pos.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
+using Pos.Server.Auth;
 using Pos.Server.Contracts;
 using System.Text.Json;
 
@@ -17,6 +18,7 @@ public class SalesController : ControllerBase
     [HttpPost("checkout")]
     public async Task<ActionResult<object>> Checkout([FromBody] CheckoutRequest req)
     {
+        if (!HttpContext.RequireRole(UserRole.Cashier, UserRole.Manager, UserRole.SuperUser)) return Unauthorized();
         if (req.Lines is null || req.Lines.Count == 0)
             return BadRequest("No lines.");
 

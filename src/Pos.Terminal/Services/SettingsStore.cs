@@ -13,11 +13,21 @@ public sealed class SettingsStore
     private const string ReceiptPrinterKey = "printer.receipt.name";
     private const string HeaderTitleKey = "header.title";
     private const string HeaderImagePathKey = "header.image.path";
-     private const string LogoImagePathKey = "logo.image.path";
+    private const string LogoImagePathKey = "logo.image.path";
     private const string LogoScaleMultiplierKey = "logo.scale.multiplier";
     private const string FinanceVatEnabledKey = "finance.vat.enabled";
     private const string FinanceVatRatePercentKey = "finance.vat.rate.percent";
-     private const string ReceiptRemarksKey = "receipt.remarks";
+    private const string ReceiptRemarksKey = "receipt.remarks";
+
+    private const string DeployConfiguredKey = "deploy.configured";
+    private const string DeployModeKey = "deploy.mode";
+    private const string DeployServerHostKey = "deploy.server.host";
+    private const string DeployServerPortKey = "deploy.server.port";
+    private const string DeployCompanyNameKey = "deploy.company.name";
+    private const string DeployAuthTokenKey = "deploy.auth.token";
+    private const string DeployUsernameKey = "deploy.username";
+    private const string DeployRoleKey = "deploy.role";
+
 
     public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
     {
@@ -43,6 +53,43 @@ public sealed class SettingsStore
         };
     }
 
+     public async Task<DeploymentSettings> LoadDeploymentAsync(CancellationToken ct = default)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync(ct);
+        var entries = await db.DeviceConfig.AsNoTracking().ToListAsync(ct);
+        var lookup = entries.ToDictionary(x => x.Key, x => x.Value ?? "");
+
+        return new DeploymentSettings
+        {
+            IsConfigured = GetBoolValue(lookup, DeployConfiguredKey, false),
+            Mode = GetValue(lookup, DeployModeKey, "Client"),
+            ServerHost = GetValue(lookup, DeployServerHostKey, "127.0.0.1"),
+            ServerPort = GetIntValue(lookup, DeployServerPortKey, 5050, 1, 65535),
+            CompanyName = GetValue(lookup, DeployCompanyNameKey),
+            AuthToken = GetValue(lookup, DeployAuthTokenKey),
+            Username = GetValue(lookup, DeployUsernameKey),
+            Role = GetValue(lookup, DeployRoleKey)
+        };
+    }
+
+    public async Task SaveDeploymentAsync(DeploymentSettings deployment, CancellationToken ct = default)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync(ct);
+
+        await UpsertAsync(db, DeployConfiguredKey, deployment.IsConfigured ? "true" : "false", ct);
+        await UpsertAsync(db, DeployModeKey, deployment.Mode, ct);
+        await UpsertAsync(db, DeployServerHostKey, deployment.ServerHost, ct);
+        await UpsertAsync(db, DeployServerPortKey, deployment.ServerPort.ToString(), ct);
+        await UpsertAsync(db, DeployCompanyNameKey, deployment.CompanyName, ct);
+        await UpsertAsync(db, DeployAuthTokenKey, deployment.AuthToken, ct);
+        await UpsertAsync(db, DeployUsernameKey, deployment.Username, ct);
+        await UpsertAsync(db, DeployRoleKey, deployment.Role, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
+
     public async Task SaveAsync(AppSettings settings, CancellationToken ct = default)
     {
         await using var db = CreateLocalDb();
@@ -63,10 +110,10 @@ public sealed class SettingsStore
         await db.SaveChangesAsync(ct);
     }
 
-    private static string GetValue(Dictionary<string, string> lookup, string key)
-        => lookup.TryGetValue(key, out var value) ? value : "";
+   private static string GetValue(Dictionary<string, string> lookup, string key, string defaultValue = "")
+        => lookup.TryGetValue(key, out var value) ? value : defaultValue;
 
-        private static bool GetBoolValue(Dictionary<string, string> lookup, string key, bool defaultValue)
+    private static bool GetBoolValue(Dictionary<string, string> lookup, string key, bool defaultValue)
     {
         if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
             return defaultValue;
@@ -74,7 +121,7 @@ public sealed class SettingsStore
         return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 
-     private static int GetIntValue(Dictionary<string, string> lookup, string key, int defaultValue, int minValue, int maxValue)
+    private static int GetIntValue(Dictionary<string, string> lookup, string key, int defaultValue, int minValue, int maxValue)
     {
         if (!lookup.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
             return defaultValue;
@@ -108,6 +155,5 @@ public sealed class SettingsStore
         }
     }
 
-    private static PosLocalDbContext CreateLocalDb()
-        => new PosLocalDbContext(LocalDb.BuildOptions());
+    private static PosLocalDbContext CreateLocalDb() => new(LocalDb.BuildOptions());;
 }

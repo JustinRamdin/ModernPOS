@@ -12,6 +12,8 @@ public class PosDbContext : DbContext
     public DbSet<SaleLine> SaleLines => Set<SaleLine>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<OutboxEvent> OutboxEvents => Set<OutboxEvent>();
+    public DbSet<Company> Companies => Set<Company>();
+    public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -52,6 +54,22 @@ public class PosDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Type).HasMaxLength(100);
+        });
+        
+        b.Entity<Company>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.HasIndex(x => x.Name).IsUnique();
+        });
+
+        b.Entity<UserAccount>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Username).HasMaxLength(120);
+            e.Property(x => x.PasswordHash).HasMaxLength(500);
+            e.HasIndex(x => new { x.CompanyId, x.Username }).IsUnique();
+            e.HasOne(x => x.Company).WithMany(x => x.Users).HasForeignKey(x => x.CompanyId);
         });
     }
 }

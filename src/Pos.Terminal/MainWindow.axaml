@@ -49,11 +49,11 @@
                    Margin="0,0,0,18"/>
 
         <Button Classes="nav-button" Content="Terminal" Click="NavTerminal_Click" Margin="0,0,0,8"/>
-        <Button Classes="nav-button" Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" x:Name="InventoryButton" Content="Inventory" Click="NavInventory_Click" Margin="0,0,0,8"/>
         <Button Classes="nav-button" Content="Customers" Click="NavCustomers_Click" Margin="0,0,0,8"/>
         <Button Classes="nav-button" Content="Reports" Click="NavReports_Click" Margin="0,0,0,8"/>
-        <Button Classes="nav-button" Content="Financial" Click="NavFinancial_Click" Margin="0,0,0,8"/>
-        <Button Classes="nav-button" Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" x:Name="FinancialButton" Content="Financial" Click="NavFinancial_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" x:Name="SettingsButton" Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
         
         <Border Height="1"
                 Background="{StaticResource BorderBrushLight}"

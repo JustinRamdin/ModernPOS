@@ -2,7 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using ServicesLocalDb = Pos.Local.Services.LocalDb;
+using Pos.Terminal.Services;
 
 namespace Pos.Terminal;
 
@@ -17,19 +17,19 @@ public partial class App : Avalonia.Application
     {
         try
         {
-            // Ensure local SQLite database exists and is migrated
             await Pos.Local.Services.LocalDb.MigrateAsync();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("Failed to initialize local database:");
             Console.Error.WriteLine(ex);
             throw;
         }
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow();
+            var settings = new SettingsStore();
+            var deploy = await settings.LoadDeploymentAsync();
+            desktop.MainWindow = deploy.IsConfigured ? new MainWindow() : new SetupWindow();
         }
 
         base.OnFrameworkInitializationCompleted();

@@ -458,7 +458,7 @@ public sealed class CustomerRow : INotifyPropertyChanged
     public string EmailLine => string.IsNullOrWhiteSpace(Email) ? "—" : Email;
     public string AreaLine => string.IsNullOrWhiteSpace(Area) ? "—" : Area;
 
-    public CustomerRow(Guid id, string name, string phone, string email, decimal balance)
+    public CustomerRow(Guid id, string name, string phone, string email, string area, decimal balance)
     {
         Id = id;
         _name = name;

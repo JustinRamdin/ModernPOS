@@ -126,3 +126,5 @@ C:\ModernPOS\src\Pos.Infrastructure\obj\Debug\net10.0\refint\Pos.Infrastructure.
 C:\ModernPOS\src\Pos.Infrastructure\obj\Debug\net10.0\Pos.Infrastructure.pdb
 C:\ModernPOS\src\Pos.Infrastructure\obj\Debug\net10.0\Pos.Infrastructure.genruntimeconfig.cache
 C:\ModernPOS\src\Pos.Infrastructure\obj\Debug\net10.0\ref\Pos.Infrastructure.dll
+C:\ModernPOS\src\Pos.Infrastructure\bin\Debug\net10.0\Pos.Application.dll
+C:\ModernPOS\src\Pos.Infrastructure\bin\Debug\net10.0\Pos.Application.pdb

@@ -399,3 +399,5 @@ C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\runtimes\win-arm\native\e_sqlite3.
 C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\runtimes\win-arm64\native\e_sqlite3.dll
 C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\runtimes\win-x64\native\e_sqlite3.dll
 C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\runtimes\win-x86\native\e_sqlite3.dll
+C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\Pos.Contracts.dll
+C:\ModernPOS\src\Pos.Server\bin\Debug\net10.0\Pos.Contracts.pdb

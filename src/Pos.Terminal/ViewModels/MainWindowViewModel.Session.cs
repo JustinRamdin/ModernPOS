@@ -27,9 +27,16 @@ public sealed partial class MainWindowViewModel
 
     public async Task TriggerServerBackupAsync()
     {
-        var deploy = await new SettingsStore().LoadDeploymentAsync();
-        using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
-        await api.TriggerBackupAsync();
-        Toast("Backup request sent to server.");
+        try
+        {
+            var deploy = await new SettingsStore().LoadDeploymentAsync();
+            using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+            await api.TriggerBackupAsync();
+            Toast("Backup request sent to server.");
+        }
+        catch (HttpRequestException)
+        {
+            Toast("Unable to reach the server for backup. Verify server connection and try again.");
+        }
     }
 }

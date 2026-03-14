@@ -27,7 +27,7 @@ public static class Seeder
             return;
 
         const string hasDisplayNameColumnQuery = """
-            SELECT COUNT(1)
+            SELECT COUNT(1) AS Value
             FROM pragma_table_info('UserAccounts')
             WHERE name = 'DisplayName'
             """;

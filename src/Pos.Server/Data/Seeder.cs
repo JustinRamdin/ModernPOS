@@ -21,18 +21,18 @@ public static class Seeder
 
         await db.SaveChangesAsync();
     }
-     private static async Task EnsureSqliteCompatibilityAsync(PosDbContext db)
+    private static async Task EnsureSqliteCompatibilityAsync(PosDbContext db)
     {
         if (!db.Database.IsSqlite())
             return;
 
-        const string missingDisplayNameColumnQuery = """
+        const string hasDisplayNameColumnQuery = """
             SELECT COUNT(1)
             FROM pragma_table_info('UserAccounts')
-            WHERE name = 'DisplayName';
+            WHERE name = 'DisplayName'
             """;
 
-        var hasDisplayNameColumn = await db.Database.SqlQueryRaw<int>(missingDisplayNameColumnQuery).SingleAsync() == 1;
+        var hasDisplayNameColumn = await db.Database.SqlQueryRaw<int>(hasDisplayNameColumnQuery).SingleAsync() == 1;
         if (hasDisplayNameColumn)
             return;
 

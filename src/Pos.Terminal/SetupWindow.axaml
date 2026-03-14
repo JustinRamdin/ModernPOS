@@ -1,21 +1,19 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Pos.Terminal.SetupWindow"
-        Width="700" Height="620"
-        Title="ModernPOS Terminal - Connect to Server">
+        Width="700" Height="560"
+        Title="ModernPOS Terminal - Discover Server">
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="8">
-      <TextBlock Text="Select Server" FontSize="24" FontWeight="Bold"/>
+      <TextBlock Text="Find Active Server" FontSize="24" FontWeight="Bold"/>
+      <TextBlock Text="Scan your LAN for available ModernPOS servers or enter host/port manually." TextWrapping="Wrap"/>
       <Button Content="Scan LAN" Click="ScanLan_Click" Width="140"/>
-      <ListBox x:Name="DiscoveredList" Height="140" SelectionChanged="DiscoveredList_SelectionChanged"/>
-      <TextBox x:Name="ManualHostBox" Watermark="Manual Host/IP" Text="127.0.0.1"/>
-      <TextBox x:Name="ManualPortBox" Watermark="Manual Port" Text="5050"/>
+      <ListBox x:Name="DiscoveredList" Height="180" SelectionChanged="DiscoveredList_SelectionChanged"/>
 
-      <TextBlock Text="Login" FontWeight="Bold" Margin="0,14,0,0"/>
-      <TextBox x:Name="LoginUserBox" Watermark="Username"/>
-      <TextBox x:Name="LoginPassBox" PasswordChar="*" Watermark="Password"/>
+      <TextBox x:Name="ManualHostBox" Watermark="Server Host/IP" Text="127.0.0.1"/>
+      <TextBox x:Name="ManualPortBox" Watermark="Server Port" Text="5050"/>
 
-      <Button Content="Connect &amp; Login" Click="Continue_Click" Width="180"/>
+      <Button Content="Connect" Click="Continue_Click" Width="120" Margin="0,8,0,0"/>
       <TextBlock x:Name="StatusText" Foreground="DarkGreen" TextWrapping="Wrap"/>
     </StackPanel>
   </ScrollViewer>

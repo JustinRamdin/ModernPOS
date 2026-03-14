@@ -16,6 +16,12 @@ public sealed class RemoteServerApi : IDisposable
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
     }
 
+       public async Task ValidateServerAsync()
+    {
+        var response = await _http.GetAsync("health");
+        response.EnsureSuccessStatusCode();
+    }
+    
     public async Task<LoginResult> LoginAsync(string username, string password)
     {
         var response = await _http.PostAsJsonAsync("api/auth/login", new LoginRequest(username, password));

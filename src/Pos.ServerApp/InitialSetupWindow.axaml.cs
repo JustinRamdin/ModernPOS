@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Pos.Contracts;
@@ -24,7 +26,18 @@ public partial class InitialSetupWindow : Window
 
         var server = await ModernPosServerHost.StartAsync(new ModernPosServerOptions(settings.ConnectionString, settings.Port, settings.CompanyName));
         var api = new ServerAdminApi("127.0.0.1", settings.Port);
-        await api.BootstrapAsync(new BootstrapServerRequest(company, SuperUserBox.Text ?? "admin", PasswordBox.Text ?? string.Empty, port));
+         if (!await api.IsInitializedAsync())
+        {
+            try
+            {
+                await api.BootstrapAsync(new BootstrapServerRequest(company, SuperUserBox.Text ?? "admin", PasswordBox.Text ?? string.Empty, port));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                // Server was initialized by another process between status check and bootstrap call.
+            }
+        }
+
 
         new ServerAppSettingsStore().Save(settings);
 

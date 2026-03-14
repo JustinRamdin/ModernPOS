@@ -18,8 +18,16 @@ public sealed class ServerAdminApi
         response.EnsureSuccessStatusCode();
     }
 
+     public async Task<bool> IsInitializedAsync()
+    {
+        var status = await _http.GetFromJsonAsync<SetupStatusResponse>("api/setup/status");
+        return status?.Initialized ?? false;
+    }
+
     public Task<ServerDashboardDto?> GetDashboardAsync() => _http.GetFromJsonAsync<ServerDashboardDto>("api/admin/dashboard");
     public async Task TriggerBackupAsync(string? folder = null) => (await _http.PostAsJsonAsync("api/admin/backup", new BackupRequest(folder))).EnsureSuccessStatusCode();
     public async Task RestoreAsync(string file) => (await _http.PostAsJsonAsync("api/admin/restore", new RestoreBackupRequest(file))).EnsureSuccessStatusCode();
     public async Task SaveScheduleAsync(ScheduledBackupSettings s) => (await _http.PostAsJsonAsync("api/admin/schedule", s)).EnsureSuccessStatusCode();
+
+     private sealed record SetupStatusResponse(bool Initialized);
 }

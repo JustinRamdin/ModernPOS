@@ -11,6 +11,10 @@ public partial class LoginWindow : Window
     private readonly string _host;
     private readonly int _port;
 
+    public LoginWindow() : this("127.0.0.1", 5050)
+    {
+    }
+    
     public LoginWindow(string host, int port)
     {
         _host = host;

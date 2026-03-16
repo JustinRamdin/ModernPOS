@@ -12,8 +12,7 @@ public sealed class AdminController(
     PosDbContext db,
     BackupOrchestrator backups,
     ScheduledBackupOptionsStore scheduleStore,
-    ServerRuntimeState runtime,
-    IConfiguration config) : ControllerBase
+     ServerRuntimeState runtime) : ControllerBase
 {
     [HttpGet("dashboard")]
     public async Task<ActionResult<ServerDashboardDto>> Dashboard()

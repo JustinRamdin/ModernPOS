@@ -13,6 +13,9 @@ public partial class DashboardWindow : Window
     private readonly ServerAdminApi _api;
     private IHost? _host;
 
+    public DashboardWindow() : this(new ServerAppSettings())
+    {
+    }
     public DashboardWindow(ServerAppSettings settings, IHost? existingHost = null)
     {
         InitializeComponent();

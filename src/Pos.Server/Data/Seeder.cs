@@ -26,16 +26,40 @@ public static class Seeder
         if (!db.Database.IsSqlite())
             return;
 
-        const string hasDisplayNameColumnQuery = """
+        await EnsureColumnAsync(
+            db,
+            tableName: "UserAccounts",
+            columnName: "DisplayName",
+            alterSql: "ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
+
+        await EnsureColumnAsync(
+            db,
+            tableName: "UserAccounts",
+            columnName: "UpdatedAtUtc",
+            alterSql: "ALTER TABLE \"UserAccounts\" ADD COLUMN \"UpdatedAtUtc\" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'; ",
+            afterAddedSql: "UPDATE \"UserAccounts\" SET \"UpdatedAtUtc\" = \"CreatedAtUtc\" WHERE \"UpdatedAtUtc\" = '0001-01-01T00:00:00.0000000Z';");
+    }
+
+    private static async Task EnsureColumnAsync(
+        PosDbContext db,
+        string tableName,
+        string columnName,
+        string alterSql,
+        string? afterAddedSql = null)
+    {
+        var hasColumnQuery = $"""
             SELECT COUNT(1) AS Value
-            FROM pragma_table_info('UserAccounts')
-            WHERE name = 'DisplayName'
+            FROM pragma_table_info('{tableName}')
+            WHERE name = '{columnName}'
             """;
 
-        var hasDisplayNameColumn = await db.Database.SqlQueryRaw<int>(hasDisplayNameColumnQuery).SingleAsync() == 1;
-        if (hasDisplayNameColumn)
+        var hasColumn = await db.Database.SqlQueryRaw<int>(hasColumnQuery).SingleAsync() == 1;
+        if (hasColumn)
             return;
 
-        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
+        await db.Database.ExecuteSqlRawAsync(alterSql);
+
+        if (!string.IsNullOrWhiteSpace(afterAddedSql))
+            await db.Database.ExecuteSqlRawAsync(afterAddedSql);
     }
 }

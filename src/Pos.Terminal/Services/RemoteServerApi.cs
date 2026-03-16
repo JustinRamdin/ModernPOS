@@ -35,7 +35,7 @@ public sealed class RemoteServerApi : IDisposable
     
     public sealed record ServerCheckoutResponse(Guid SaleId, decimal Total, decimal Paid, decimal Change);
 
-    public async Task<ServerCheckoutResponse> CheckoutAsync(CheckoutRequest request)
+    public async Task<ServerCheckoutResponse> CheckoutAsync(Pos.Contracts.CheckoutRequest request)
     {
         var response = await _http.PostAsJsonAsync("api/sales/checkout", request);
         response.EnsureSuccessStatusCode();

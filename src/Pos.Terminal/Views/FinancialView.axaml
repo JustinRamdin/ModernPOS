@@ -193,7 +193,6 @@
                     ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine, Mode=TwoWay}">
             <DataGrid.Columns>
               <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
-               <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
               <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
               <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
             </DataGrid.Columns>

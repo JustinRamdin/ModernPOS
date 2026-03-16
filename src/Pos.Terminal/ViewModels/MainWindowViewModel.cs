@@ -380,34 +380,21 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     }
 
     // -----------------------------
-    // Load products (and stock) from the SAME DB as Inventory/Customers
+    // Load products from the connected server only.
     // -----------------------------
     public async Task LoadAsync()
     {
         try
         {
-            Status = "Loading products...";
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
+            Status = "Loading products from server...";
+            var deploy = await _settingsStore.LoadDeploymentAsync();
 
-            var products = await db.Products.AsNoTracking()
-                .Where(p => p.IsActive && p.DeletedAtUtc == null)
+             using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+            var products = await api.GetProductsAsync();
+
+             _allProducts = products
                 .OrderBy(p => p.Name)
-                .ToListAsync();
-
-            // DEFAULT location (change later if you support multiple)
-            var balances = await db.Inventory.AsNoTracking()
-                .Where(b => b.LocationCode == "DEFAULT")
-                .ToListAsync();
-
-            var balanceByProduct = balances
-                .GroupBy(b => b.ProductId)
-                .ToDictionary(g => g.Key, g => g.First());
-
-            _allProducts = products.Select(p =>
-            {
-                balanceByProduct.TryGetValue(p.Id, out var bal);
-                return new ProductDto
+                .Select(p => new ProductDto
                 {
                     Id = p.Id,
                     Name = p.Name,
@@ -416,23 +403,56 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     VatInclusive = p.VatInclusive,
                     IsLength = p.IsLength,
                     Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
-                    OnHand = bal?.OnHand ?? 0m,
-                    OnHandInches = bal?.OnHandInches ?? 0
-                };
-            }).ToList();
+                    OnHand = p.OnHand,
+                    OnHandInches = p.OnHandInches
+                })
+                .ToList();
 
             BuildCategories();
             ApplyFilters();
 
-            Status = $"Loaded {_allProducts.Count} products ({DataLocalDb.DefaultDbPath})";
+            Status = $"Loaded {_allProducts.Count} products from server";
         }
         catch (Exception ex)
         {
-            Status = $"Load failed: {ex.Message}";
-            Toast("Failed to load products");
+            _allProducts = [];
+            Products.Clear();
+            Status = $"Server unavailable: {ex.Message}";
+            Toast("Waiting for server...");
         }
     }
 
+
+    public async Task<bool> IsServerReachableAsync()
+    {
+        try
+        {
+            var deploy = await _settingsStore.LoadDeploymentAsync();
+            using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+            await api.ValidateServerAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+     public async Task HandleServerDisconnectedAsync()
+    {
+        Status = "Server unavailable. Waiting for server...";
+        PageTitle = "Waiting for server";
+        CurrentView = new WaitingForServerView { DataContext = this };
+        await Task.CompletedTask;
+    }
+
+    public async Task HandleServerReconnectedAsync()
+    {
+        Status = "Server reconnected. Syncing...";
+        Toast("Server reconnected. Resuming workflow.");
+        ShowTerminal();
+        await Task.CompletedTask;
+    }
     private void BuildCategories()
     {
         Categories.Clear();

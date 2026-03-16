@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using Pos.Application.Auth;
 using Pos.Contracts;
+using Pos.Terminal.Models;
 
 namespace Pos.Terminal.Services;
 
@@ -29,6 +30,8 @@ public sealed class RemoteServerApi : IDisposable
         return await response.Content.ReadFromJsonAsync<LoginResult>() ?? throw new InvalidOperationException("Empty login response");
     }
 
+    public async Task<IReadOnlyList<ProductDto>> GetProductsAsync()
+        => await _http.GetFromJsonAsync<List<ProductDto>>("api/products") ?? [];
          public async Task<IReadOnlyList<object>> GetUsersAsync()
         => await _http.GetFromJsonAsync<List<object>>("api/users") ?? [];
 

@@ -89,9 +89,10 @@
                    FontSize="32"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"/>
-       <StackPanel Grid.Column="2" HorizontalAlignment="Right" Spacing="2">
-        <TextBlock Text="{Binding ConnectedCompany}" FontWeight="SemiBold"/>
-        <TextBlock Text="{Binding LoggedInUserLabel}"/>
+        <StackPanel Grid.Column="2" HorizontalAlignment="Right" Spacing="6">
+        <TextBlock Text="{Binding ConnectedCompany}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+        <TextBlock Text="{Binding LoggedInUserLabel}" HorizontalAlignment="Right"/>
+        <Button Content="Logout" Click="Logout_Click" HorizontalAlignment="Right"/>
       </StackPanel>
       </Grid>
     </Border>

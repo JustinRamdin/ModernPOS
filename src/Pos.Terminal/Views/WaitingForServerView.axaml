@@ -1,0 +1,29 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="Pos.Terminal.Views.WaitingForServerView">
+  <Grid>
+    <Border HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Padding="24"
+            CornerRadius="12"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+      <StackPanel Spacing="8" Width="420">
+        <TextBlock Text="⚠ Server Unavailable"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="Waiting for server..."
+                   FontSize="18"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="This terminal will automatically reconnect and resume once the server is online."
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   Opacity="0.8"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

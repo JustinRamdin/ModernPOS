@@ -11,15 +11,38 @@ namespace Pos.Terminal.ViewModels;
 public sealed class CustomersViewModel : INotifyPropertyChanged
 {
     private readonly Func<Guid?, Task>? _onPicked;
+    private readonly VmRelayCommand _deleteCommand;
+    private readonly VmRelayCommand _pickSelectedCommand;
     public bool IsPicker { get; set; }
     public bool IsNotPicker => !IsPicker;
     public bool IsHasSelection => Selected != null;
     public bool IsNoSelection => Selected == null;
+    public bool ShowEditor => Selected != null || !IsPicker;
+    public string EditorTitle => Selected == null ? "Customer Details" : "Customer Details";
     public string PickerHint => IsPicker ? "Pick a customer and press Select." : "";
     public string Title => IsPicker ? "Select Customer" : "Customers";
     public ObservableCollection<CustomerRow> Customers { get; } = new();
     private CustomerRow? _selected;
-    public CustomerRow? Selected { get => _selected; set { _selected = value; Raise(); LoadSelectedToEditor(); } }
+    public CustomerRow? Selected
+    {
+        get => _selected;
+        set
+        {
+            if (ReferenceEquals(_selected, value)) return;
+
+            _selected = value;
+            Raise();
+            Raise(nameof(IsHasSelection));
+            Raise(nameof(IsNoSelection));
+            Raise(nameof(ShowEditor));
+            Raise(nameof(EditorTitle));
+
+            _deleteCommand.NotifyCanExecuteChanged();
+            _pickSelectedCommand.NotifyCanExecuteChanged();
+
+            LoadSelectedToEditor();
+        }
+    }
     public string Search { get; set; } = "";
     public string ListStatus { get; set; } = "Ready";
     private Guid? _editId;
@@ -45,10 +68,12 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         IsPicker = isPicker; _onPicked = onPicked;
         NewCommand = new VmRelayCommand(_ => New(), _ => !IsPicker);
         SaveCommand = new VmRelayCommand(async _ => await SaveAsync(), _ => !IsPicker);
-        DeleteCommand = new VmRelayCommand(async _ => await DeleteAsync(), _ => !IsPicker && Selected != null);
+        _deleteCommand = new VmRelayCommand(async _ => await DeleteAsync(), _ => !IsPicker && Selected != null);
+        DeleteCommand = _deleteCommand;
         ApplyPaymentCommand = new VmRelayCommand(async _ => await ApplyPaymentAsync(), _ => !IsPicker);
         ClearPaymentCommand = new VmRelayCommand(_ => ClearPayment(), _ => !IsPicker);
-        PickSelectedCommand = new VmRelayCommand(async _ => await PickSelectedAsync(), _ => IsPicker && Selected != null);
+       _pickSelectedCommand = new VmRelayCommand(async _ => await PickSelectedAsync(), _ => IsPicker && Selected != null);
+        PickSelectedCommand = _pickSelectedCommand;
         CancelPickCommand = new VmRelayCommand(async _ => await CancelPickAsync(), _ => IsPicker);
     }
 

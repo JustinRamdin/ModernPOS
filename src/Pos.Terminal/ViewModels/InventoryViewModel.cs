@@ -52,7 +52,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             ApplySearch();
             ListStatus = _all.Count == 0 ? "No inventory items on server." : $"Loaded {_all.Count} items.";
         }
-        catch (Exception ex) { ListStatus = "Load failed."; EditorStatus = ex.Message; }
+        catch (Exception ex) { ListStatus = "Load failed."; EditorStatus = BuildServerStatusMessage(ex, "load inventory"); }
     }
 
     public void NewItem() { _editingId = null; Selected = null; EditSku = EditName = EditDescription = ""; EditCostPriceText = EditSellingPriceText = "0.00"; EditVatInclusive = EditIsLength = false; EditOnHandQtyText = EditFeetText = EditInchesText = "0"; NotifyEditor(); EditorStatus = "Creating new item."; }
@@ -73,14 +73,14 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             EditorStatus = "Saved to server.";
             await LoadAsync();
         }
-        catch (Exception ex) { EditorStatus = $"Save failed: {ex.Message}"; }
+        catch (Exception ex) { EditorStatus = BuildServerStatusMessage(ex, "save inventory item"); }
     }
 
     public async Task DeleteAsync()
     {
         if (_editingId is null) return;
         try { using var api = await CreateApiAsync(); await api.DeleteInventoryAsync(_editingId.Value); NewItem(); await LoadAsync(); EditorStatus = "Deleted from server."; }
-        catch (Exception ex) { EditorStatus = $"Delete failed: {ex.Message}"; }
+        catch (Exception ex) { EditorStatus = BuildServerStatusMessage(ex, "delete inventory item"); }
     }
     private void ApplySearch() { var t = (Search ?? "").Trim(); var f = string.IsNullOrWhiteSpace(t) ? _all : _all.Where(p => p.Name.Contains(t, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(t, StringComparison.OrdinalIgnoreCase))); Products.Clear(); foreach (var p in f) Products.Add(p); }
     private void LoadSelectedIntoEditor()
@@ -95,6 +95,19 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
     {
        var deploy = await new SettingsStore().LoadDeploymentAsync();
         return new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+    }
+
+     private static string BuildServerStatusMessage(Exception ex, string operation)
+    {
+        if (ex is HttpRequestException httpEx)
+        {
+            if (httpEx.StatusCode is null)
+                return $"Cannot reach server while trying to {operation}: {httpEx.Message}";
+
+            return $"Server failed while trying to {operation} ({(int)httpEx.StatusCode} {httpEx.StatusCode}).";
+        }
+
+        return $"Operation failed while trying to {operation}: {ex.Message}";
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

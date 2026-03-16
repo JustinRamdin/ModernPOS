@@ -42,7 +42,7 @@ public static class Seeder
             "UPDATE \"UserAccounts\" SET \"UpdatedAtUtc\" = \"CreatedAtUtc\" WHERE \"UpdatedAtUtc\" = '0001-01-01T00:00:00.0000000Z';");
     }
 
-     private static async Task EnsureColumnAsync(PosDbContext db, string tableName, string columnName, string alterSql, string? afterAddedSql = null)
+    private static async Task EnsureColumnAsync(PosDbContext db, string tableName, string columnName, string alterSql, string? afterAddedSql = null)
     {
         var hasColumnQuery = $"""
             SELECT COUNT(1) AS Value
@@ -52,8 +52,6 @@ public static class Seeder
 
         var hasColumn = await db.Database.SqlQueryRaw<int>(hasColumnQuery).SingleAsync() == 1;
         if (hasColumn) return;
-
-            return;
 
         await db.Database.ExecuteSqlRawAsync(alterSql);
 

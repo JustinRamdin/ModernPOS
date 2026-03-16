@@ -433,8 +433,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         {
             _allProducts = [];
             Products.Clear();
-            Status = $"Server unavailable: {ex.Message}";
-            Toast("Waiting for server...");
+             Status = BuildServerStatusMessage(ex, "load products");
+            Toast("Server request failed.");
         }
     }
 
@@ -1017,6 +1017,20 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         var options = BuildDbOptions();
         return new PosLocalDbContext(options);
+    }
+
+
+     private static string BuildServerStatusMessage(Exception ex, string operation)
+    {
+        if (ex is HttpRequestException httpEx)
+        {
+            if (httpEx.StatusCode is null)
+                return $"Cannot reach server while trying to {operation}: {httpEx.Message}";
+
+            return $"Server error while trying to {operation} ({(int)httpEx.StatusCode} {httpEx.StatusCode}): {httpEx.Message}";
+        }
+
+        return $"Failed to {operation}: {ex.Message}";
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

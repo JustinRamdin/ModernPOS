@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 using Pos.Contracts;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
@@ -12,7 +13,13 @@ namespace Pos.Server.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly PosDbContext _db;
-    public ProductsController(PosDbContext db) => _db = db;
+    private readonly ILogger<ProductsController> _logger;
+
+    public ProductsController(PosDbContext db, ILogger<ProductsController> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     [HttpGet]
     public async Task<ActionResult<List<InventoryItemDto>>> Get(CancellationToken ct)
@@ -31,7 +38,8 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<InventoryItemDto>> Create(UpsertInventoryItemRequest req, CancellationToken ct)
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.SuperUser)) return Forbid();
-         var p = new Product
+
+        var p = new Product
         {
             Id = Guid.NewGuid(),
             Sku = req.Sku.Trim(),
@@ -46,8 +54,20 @@ public class ProductsController : ControllerBase
             IsActive = req.IsActive,
             CreatedAtUtc = DateTime.UtcNow
         };
+
         _db.Products.Add(p);
-         await _db.SaveChangesAsync(ct);
+
+          try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Failed to create product {Sku}.", p.Sku);
+            var dbError = ex.InnerException is DbException dbEx ? dbEx.Message : ex.Message;
+            return Problem(title: "Failed to save inventory item", detail: dbError, statusCode: StatusCodes.Status500InternalServerError);
+        }
+        
         return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive));
     }
 

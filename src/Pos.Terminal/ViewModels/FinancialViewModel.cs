@@ -7,10 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Pos.Local.Data;
-using DataLocalDb = Pos.Local.Data.LocalDb;
-using Pos.Local.Entities;
 using Pos.Terminal.Models;
 using Pos.Terminal.Services;
 using QuestPDF.Fluent;
@@ -41,19 +37,10 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
     {
         try
         {
-            Status = "Loading financial data...";
-            await using var db = new PosLocalDbContext(BuildDbOptions());
-            await db.Database.EnsureCreatedAsync();
-
-            var customers = await db.Customers.AsNoTracking()
-                .Where(c => c.DeletedAtUtc == null)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
-
-            var products = await db.Products.AsNoTracking()
-                .Where(p => p.IsActive && p.DeletedAtUtc == null)
-                .OrderBy(p => p.Name)
-                .ToListAsync();
+            Status = "Loading financial data from server...";
+            using var api = await CreateApiAsync();
+            var customers = await api.GetCustomersAsync();
+            var products = await api.GetInventoryAsync();
 
             Customers.Clear();
             foreach (var c in customers)
@@ -61,7 +48,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
             Products.Clear();
             foreach (var p in products)
-                Products.Add(new ProductChoice(p.Id, p.Sku, p.Name, p.Price));
+                Products.Add(new ProductChoice(p.Id, p.Sku ?? string.Empty, p.Name, p.Price));
 
             Quote.BindReferences(Customers, Products);
             Invoice.BindReferences(Customers, Products);
@@ -70,7 +57,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Status = $"Failed to load financial data: {ex.Message}";
+            Status = BuildServerStatusMessage(ex, "load financial data");
         }
     }
 
@@ -318,8 +305,24 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         }
     }
 
-    private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-   => DataLocalDb.BuildOptions();
+     private static async Task<RemoteServerApi> CreateApiAsync()
+    {
+        var deploy = await new SettingsStore().LoadDeploymentAsync();
+        return new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+    }
+
+    private static string BuildServerStatusMessage(Exception ex, string operation)
+    {
+        if (ex is HttpRequestException httpEx)
+        {
+            if (httpEx.StatusCode is null)
+                return $"Cannot reach server while trying to {operation}: {httpEx.Message}";
+
+            return $"Server failed while trying to {operation} ({(int)httpEx.StatusCode} {httpEx.StatusCode}).";
+        }
+
+        return $"Operation failed while trying to {operation}: {ex.Message}";
+    } 
 
     private void Raise([CallerMemberName] string? n = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }

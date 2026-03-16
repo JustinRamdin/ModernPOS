@@ -57,11 +57,11 @@
             <Grid ColumnDefinitions="*,*">
               <StackPanel Margin="0,0,4,0">
                 <TextBlock Text="Quantity"/>
-                <TextBox Text="{Binding Quote.LineQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Text="{Binding Quote.LineQuantity, Mode=TwoWay}"/>
               </StackPanel>
                <StackPanel Grid.Column="1" Margin="4,0,0,0">
                 <TextBlock Text="Unit Price"/>
-                <TextBox Text="{Binding Quote.LineUnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Text="{Binding Quote.LineUnitPrice, Mode=TwoWay}"/>
               </StackPanel>
             </Grid>
 
@@ -93,8 +93,8 @@
                     ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine, Mode=TwoWay}">
             <DataGrid.Columns>
               <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
-              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
-              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="140"/>
+              <<DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
+              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
               <DataGridTextColumn Header="Total" Binding="{Binding LineTotal}" IsReadOnly="True" Width="140"/>
             </DataGrid.Columns>
           </DataGrid>
@@ -157,12 +157,11 @@
             <Grid ColumnDefinitions="*,*">
               <StackPanel Margin="0,0,4,0">
                 <TextBlock Text="Quantity"/>
-                <TextBox Text="{Binding Invoice.LineQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Text="{Binding Invoice.LineQuantity, Mode=TwoWay}"/>
               </StackPanel>
               <StackPanel Grid.Column="1" Margin="4,0,0,0">
                 <TextBlock Text="Unit Price"/>
-                <TextBox Text="{Binding Invoice.LineUnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-              </StackPanel>
+                <TextBox Text="{Binding Invoice.LineUnitPrice, Mode=TwoWay}"/>
             </Grid>
 
             <Button Content="Add Item" Click="AddInvoiceItem_Click" HorizontalAlignment="Left"/>
@@ -194,8 +193,8 @@
             <DataGrid.Columns>
               <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
-              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="140"/>
-              <DataGridTextColumn Header="Total" Binding="{Binding LineTotal}" IsReadOnly="True" Width="140"/>
+              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
+              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
             </DataGrid.Columns>
           </DataGrid>
 

@@ -79,7 +79,7 @@ public partial class MainWindow : Window
         SettingsButton.IsVisible = role is "SuperUser";
         UserAdminButton.IsVisible = role is "SuperUser";
         BackupButton.IsVisible = role is "SuperUser" or "Manager";
-        FinancialButton.IsVisible = role is "SuperUser" or "Accounts";
+        FinancialButton.IsVisible = role is "SuperUser" or "Accountant";
         InventoryButton.IsVisible = role is not "Cashier";
     }
 
@@ -112,14 +112,10 @@ public partial class MainWindow : Window
     private void NavFinancial_Click(object? sender, RoutedEventArgs e) => VM.ShowFinancial();
     private void NavSettings_Click(object? sender, RoutedEventArgs e) => VM.ShowSettings();
      private void UserAdmin_Click(object? sender, RoutedEventArgs e)
-    {
-        VM.ShowSettings();
-        VM.Toast("User management is available in Settings.");
-    }
+     => VM.ShowUserManagement();
 
-    private async void Backup_Click(object? sender, RoutedEventArgs e)
-        => await VM.TriggerServerBackupAsync();
-
+    private void Backup_Click(object? sender, RoutedEventArgs e)
+        => VM.ShowBackup();
     public void AddCommand(object? param)
 
     {

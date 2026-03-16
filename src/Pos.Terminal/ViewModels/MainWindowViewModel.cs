@@ -347,6 +347,22 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         await vm.LoadAsync();
     }
 
+    public async void ShowUserManagement()
+    {
+        PageTitle = "User Management";
+        var vm = new UserManagementViewModel();
+        CurrentView = new UserManagementView { DataContext = vm };
+        await vm.LoadAsync();
+    }
+
+    public async void ShowBackup()
+    {
+        PageTitle = "Request Backup";
+        var vm = new BackupViewModel();
+        CurrentView = new BackupView { DataContext = vm };
+        await vm.LoadStatusAsync();
+    }
+
     // TerminalView expects this
     public void SelectCustomerFromTerminal() => ShowCustomerPicker();
 

@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pos.Terminal.Views.UserManagementView">
+  <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,*" Margin="16">
+    <Border Grid.ColumnSpan="2" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,12">
+      <StackPanel>
+        <TextBlock FontSize="20" FontWeight="Bold" Text="User Management"/>
+        <TextBlock Text="Create users, assign roles, disable accounts, and reset passwords." Opacity="0.75"/>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="1" Padding="12" CornerRadius="8" BorderThickness="1" Margin="0,0,12,0">
+      <Grid RowDefinitions="Auto,Auto,*">
+        <StackPanel>
+          <TextBlock Text="Create User" FontWeight="SemiBold" Margin="0,0,0,8"/>
+          <TextBox Watermark="Username" Text="{Binding NewUsername}" Margin="0,0,0,8"/>
+          <TextBox Watermark="Display name" Text="{Binding NewDisplayName}" Margin="0,0,0,8"/>
+          <TextBox Watermark="Temporary password" Text="{Binding NewPassword}" PasswordChar="*" Margin="0,0,0,8"/>
+          <ComboBox ItemsSource="{Binding RoleOptions}" SelectedItem="{Binding NewRole}" Margin="0,0,0,8"/>
+          <Button Content="Create User" Command="{Binding CreateUserCommand}"/>
+        </StackPanel>
+
+        <Button Grid.Row="1" Content="Refresh" Command="{Binding RefreshCommand}" Margin="0,12,0,12"/>
+
+        <ListBox Grid.Row="2" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock FontWeight="Bold" Text="{Binding Username}"/>
+                  <TextBlock Text="{Binding DisplayName}" Opacity="0.8"/>
+                  <TextBlock Text="{Binding Role}" Opacity="0.7"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding IsActive}" Opacity="0.7" VerticalAlignment="Top"/>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1" Grid.Column="1" Padding="12" CornerRadius="8" BorderThickness="1">
+      <StackPanel>
+        <TextBlock Text="Selected User" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <TextBox Watermark="Display name" Text="{Binding EditDisplayName}" Margin="0,0,0,8"/>
+        <ComboBox ItemsSource="{Binding RoleOptions}" SelectedItem="{Binding SelectedRole}" Margin="0,0,0,8"/>
+        <CheckBox Content="Active account" IsChecked="{Binding IsActive}" Margin="0,0,0,12"/>
+
+        <Button Content="Save Changes" Command="{Binding SaveChangesCommand}" Margin="0,0,0,16"/>
+
+        <TextBlock Text="Reset Password" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <TextBox Watermark="New password" Text="{Binding ResetPassword}" PasswordChar="*" Margin="0,0,0,8"/>
+        <Button Content="Set/Reset Password" Command="{Binding ResetPasswordCommand}" Margin="0,0,0,16"/>
+
+        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Opacity="0.8"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

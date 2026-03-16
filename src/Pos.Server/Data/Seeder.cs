@@ -16,17 +16,19 @@ public static class Seeder
         if (!db.Database.IsSqlite())
             return;
 
-        await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS \"Customers\" (
-            \"Id\" TEXT NOT NULL PRIMARY KEY,
-            \"Name\" TEXT NOT NULL DEFAULT '',
-            \"Phone\" TEXT NOT NULL DEFAULT '',
-            \"Email\" TEXT NOT NULL DEFAULT '',
-            \"Area\" TEXT NOT NULL DEFAULT '',
-            \"Balance\" TEXT NOT NULL DEFAULT 0,
-            \"IsActive\" INTEGER NOT NULL DEFAULT 1,
-            \"CreatedAtUtc\" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z',
-            \"UpdatedAtUtc\" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'
-        );");
+         await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "Customers" (
+                "Id" TEXT NOT NULL PRIMARY KEY,
+                "Name" TEXT NOT NULL DEFAULT '',
+                "Phone" TEXT NOT NULL DEFAULT '',
+                "Email" TEXT NOT NULL DEFAULT '',
+                "Area" TEXT NOT NULL DEFAULT '',
+                "Balance" TEXT NOT NULL DEFAULT 0,
+                "IsActive" INTEGER NOT NULL DEFAULT 1,
+                "CreatedAtUtc" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z',
+                "UpdatedAtUtc" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'
+            );
+            """);
 
         await EnsureColumnAsync(db, "Products", "Description", "ALTER TABLE \"Products\" ADD COLUMN \"Description\" TEXT NULL;");
         await EnsureColumnAsync(db, "Products", "CostPrice", "ALTER TABLE \"Products\" ADD COLUMN \"CostPrice\" TEXT NOT NULL DEFAULT 0;");

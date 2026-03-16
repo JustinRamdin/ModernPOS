@@ -481,7 +481,22 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
         DocumentType = documentType;
         _documentNumber = $"{prefix}-{DateTime.Now:yyyyMMddHHmm}";
 
-        Lines.CollectionChanged += (_, __) => RecalculateTotals();
+        Lines.CollectionChanged += (_, args) =>
+        {
+            if (args.NewItems != null)
+            {
+                foreach (var item in args.NewItems.OfType<FinancialLineItem>())
+                    item.PropertyChanged += OnLineItemPropertyChanged;
+            }
+
+            if (args.OldItems != null)
+            {
+                foreach (var item in args.OldItems.OfType<FinancialLineItem>())
+                    item.PropertyChanged -= OnLineItemPropertyChanged;
+            }
+
+            RecalculateTotals();
+        };
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -505,6 +520,24 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
         var taxableSubtotal = Math.Max(0m, Subtotal - DiscountAmount);
         TaxAmount = Math.Round(taxableSubtotal * (TaxRate / 100m), 2);
         Total = Math.Round(taxableSubtotal + TaxAmount, 2);
+
+        if (SelectedLine != null)
+        {
+            _lineQuantity = SelectedLine.Quantity;
+            _lineUnitPrice = SelectedLine.UnitPrice;
+            Raise(nameof(LineQuantity));
+            Raise(nameof(LineUnitPrice));
+        }
+    }
+
+    private void OnLineItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(FinancialLineItem.Quantity)
+            or nameof(FinancialLineItem.UnitPrice)
+            or nameof(FinancialLineItem.LineTotal))
+        {
+            RecalculateTotals();
+        }
     }
 
     private void Raise([CallerMemberName] string? n = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
@@ -512,8 +545,6 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
 
 public sealed class FinancialLineItem : INotifyPropertyChanged
 {
-    private readonly Action _notifyTotal;
-
     public Guid ProductId { get; }
 
     public string Description { get; }
@@ -524,10 +555,13 @@ public sealed class FinancialLineItem : INotifyPropertyChanged
         get => _quantity;
         set
         {
-            _quantity = value;
+            var normalized = value <= 0 ? 1m : value;
+            if (_quantity == normalized)
+                return;
+
+            _quantity = normalized;
             Raise();
             Raise(nameof(LineTotal));
-            _notifyTotal();
         }
     }
 
@@ -537,10 +571,12 @@ public sealed class FinancialLineItem : INotifyPropertyChanged
         get => _unitPrice;
         set
         {
+            if (_unitPrice == value)
+                return;
+
             _unitPrice = value;
             Raise();
             Raise(nameof(LineTotal));
-            _notifyTotal();
         }
     }
 
@@ -550,9 +586,14 @@ public sealed class FinancialLineItem : INotifyPropertyChanged
     {
         ProductId = productId;
         Description = description;
-        _quantity = quantity;
+        _quantity = quantity <= 0 ? 1m : quantity;
         _unitPrice = unitPrice;
-        _notifyTotal = notifyTotal;
+
+        PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(Quantity) or nameof(UnitPrice) or nameof(LineTotal))
+                notifyTotal();
+        };
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -53,7 +53,7 @@ public class LocalSaleService
         foreach (var l in lines)
         {
             if (!products.ContainsKey(l.ProductId))
-                throw new InvalidOperationException($"Product not found locally: {l.ProductId}");
+                throw new InvalidOperationException($"Product missing from offline catalog: {l.ProductId}");
 
             if (l.QuantityKind == LocalLineKind.Unit && l.Qty <= 0)
                 throw new InvalidOperationException("Invalid unit quantity.");

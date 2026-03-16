@@ -630,51 +630,37 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         if (!EnsureCustomerSelected())
             return;
 
-        try
+        var totalDue = TotalDue;
+        if (cashGiven < totalDue)
         {
-            Status = "Saving CASH sale locally...";
+            Toast("Insufficient cash");
+            Status = $"Checkout blocked: total due is {totalDue:0.00}";
+            return;
+        }
 
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-
-            var saleService = new LocalSaleService(db);
-
-            var result = await saleService.CreateCashSaleAsync(
-                terminalId: TerminalId,
-                lines: CartLines.Select(x => new LocalCartLine
-                {
-                    ProductId = x.ProductId,
-                    QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                    Qty = x.Qty,
-                    QtyInches = x.QtyInches
-                }).ToList(),
-                cashGiven: cashGiven,
-                discountAmount: DiscountAmount,
-                customerId: SelectedCustomerId,          // required now
-                allowNegativeStock: false
-            );
-
-            Status = $"Saved locally. Receipt {result.ReceiptNo} Total {result.Total:0.00} Change {result.Change:0.00}";
-            Toast($"Saved: {result.ReceiptNo}");
-
-            var totalDue = TotalDue;
-            var changeDue = Math.Round(
-                cashGiven - totalDue,
-                2,
-                MidpointRounding.AwayFromZero);
-
-            await PrintReceiptAsync(
-                receiptNo: result.ReceiptNo,
-                paymentMethod: "CASH",
-                subtotal: Subtotal,
-                discount: DiscountAmount,
-                vat: VatTotal,
-                totalDue: totalDue,
-                cashGiven: cashGiven,
-                change: changeDue);
+            try
+        {
+            var serverResult = await TryCheckoutServerAsync(paymentMethod: "CASH", paymentMethodCode: 1, paidAmount: cashGiven);
+            if (serverResult != null)
+            {
+                var changeDue = Math.Round(cashGiven - totalDue, 2, MidpointRounding.AwayFromZero);
+                await PrintReceiptAsync(
+                    receiptNo: $"SRV-{serverResult.SaleId.ToString("N")[..8]}",
+                    paymentMethod: "CASH",
+                    subtotal: Subtotal,
+                    discount: DiscountAmount,
+                    vat: VatTotal,
+                    totalDue: totalDue,
+                    cashGiven: cashGiven,
+                    change: changeDue);
 
              ClearCart();
-            ClearCustomer();
+                ClearCustomer();
+                return;
+            }
+
+            Status = "Server checkout unavailable; saving CASH sale locally...";
+            await SaveCashSaleLocallyAsync(cashGiven);
         }
         catch (Exception ex)
         {
@@ -696,45 +682,27 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            Status = $"Saving {method} sale locally...";
-
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-
-            var saleService = new LocalSaleService(db);
-
-            var result = await saleService.CreateCardSaleAsync(
-                terminalId: TerminalId,
-                lines: CartLines.Select(x => new LocalCartLine
-                {
-                    ProductId = x.ProductId,
-                    QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                    Qty = x.Qty,
-                    QtyInches = x.QtyInches
-                }).ToList(),
-                method: method,
-                discountAmount: DiscountAmount,
-                customerId: SelectedCustomerId,          // required now
-                allowNegativeStock: false
-            );
-
-            Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} ({method})";
-            Toast($"Saved: {result.ReceiptNo}");
-
             var totalDue = TotalDue;
+            var serverResult = await TryCheckoutServerAsync(paymentMethod: method, paymentMethodCode: 2, paidAmount: totalDue);
+            if (serverResult != null)
+            {
+                await PrintReceiptAsync(
+                    receiptNo: $"SRV-{serverResult.SaleId.ToString("N")[..8]}",
+                    paymentMethod: method,
+                    subtotal: Subtotal,
+                    discount: DiscountAmount,
+                    vat: VatTotal,
+                    totalDue: totalDue,
+                    cashGiven: totalDue,
+                    change: 0m);
 
-            await PrintReceiptAsync(
-                receiptNo: result.ReceiptNo,
-                paymentMethod: method,
-                subtotal: Subtotal,
-                discount: DiscountAmount,
-                vat: VatTotal,
-                totalDue: totalDue,
-                cashGiven: totalDue,
-                change: 0m);
+                ClearCart();
+                ClearCustomer();
+                return;
+            }
 
-            ClearCart();
-            ClearCustomer();
+            Status = $"Server checkout unavailable; saving {method} sale locally...";
+            await SaveCardSaleLocallyAsync(method);
         }
         catch (Exception ex)
         {
@@ -755,45 +723,11 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             return;
 
         try
-        {
+        {   
+            // Server checkout endpoint currently supports only Cash/Card payment methods.
             Status = "Saving ON ACCOUNT sale locally...";
 
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-
-            var saleService = new LocalSaleService(db);
-
-            var result = await saleService.CreateOnAccountSaleAsync(
-                terminalId: TerminalId,
-                lines: CartLines.Select(x => new LocalCartLine
-                {
-                    ProductId = x.ProductId,
-                    QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                    Qty = x.Qty,
-                    QtyInches = x.QtyInches
-                }).ToList(),
-                customerId: SelectedCustomerId!.Value,
-                discountAmount: DiscountAmount,
-                allowNegativeStock: false
-            );
-
-            Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} (ON ACCOUNT)";
-            Toast($"Saved: {result.ReceiptNo}");
-
-            var totalDue = TotalDue;
-
-            await PrintReceiptAsync(
-                receiptNo: result.ReceiptNo,
-                paymentMethod: "ON ACCOUNT",
-                subtotal: Subtotal,
-                discount: DiscountAmount,
-                vat: VatTotal,
-                totalDue: totalDue,
-                cashGiven: 0m,
-                change: 0m);
-
-            ClearCart();
-            ClearCustomer();
+            await SaveOnAccountSaleLocallyAsync();
         }
         catch (Exception ex)
         {
@@ -802,6 +736,156 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+     private async Task<RemoteServerApi.ServerCheckoutResponse?> TryCheckoutServerAsync(string paymentMethod, int paymentMethodCode, decimal paidAmount)
+    {
+        try
+        {
+            Status = $"Submitting {paymentMethod} checkout to server...";
+            var deploy = await _settingsStore.LoadDeploymentAsync();
+            using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+
+            var request = new Pos.Contracts.CheckoutRequest(
+                TerminalId,
+                CartLines.Select(x => new Pos.Contracts.CheckoutLineRequest(
+                    ProductId: x.ProductId,
+                    Qty: x.IsLength ? x.QtyInches : x.Qty)).ToList(),
+                [new Pos.Contracts.CheckoutPaymentRequest(paymentMethodCode, paidAmount)]);
+
+            var result = await api.CheckoutAsync(request);
+            Status = $"Checkout completed on server. Sale {result.SaleId}";
+            Toast("Checkout completed");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Status = BuildServerStatusMessage(ex, "submit checkout");
+            Toast("Server checkout unavailable; using local fallback.");
+            return null;
+        }
+    }
+
+    private async Task SaveCashSaleLocallyAsync(decimal cashGiven)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync();
+
+        var saleService = new LocalSaleService(db);
+
+        var result = await saleService.CreateCashSaleAsync(
+            terminalId: TerminalId,
+            lines: CartLines.Select(x => new LocalCartLine
+            {
+                ProductId = x.ProductId,
+                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
+                Qty = x.Qty,
+                QtyInches = x.QtyInches
+            }).ToList(),
+            cashGiven: cashGiven,
+            discountAmount: DiscountAmount,
+            customerId: SelectedCustomerId,
+            allowNegativeStock: false
+        );
+
+        Status = $"Saved locally. Receipt {result.ReceiptNo} Total {result.Total:0.00} Change {result.Change:0.00}";
+        Toast($"Saved: {result.ReceiptNo}");
+
+        var totalDue = TotalDue;
+        var changeDue = Math.Round(cashGiven - totalDue, 2, MidpointRounding.AwayFromZero);
+
+        await PrintReceiptAsync(
+            receiptNo: result.ReceiptNo,
+            paymentMethod: "CASH",
+            subtotal: Subtotal,
+            discount: DiscountAmount,
+            vat: VatTotal,
+            totalDue: totalDue,
+            cashGiven: cashGiven,
+            change: changeDue);
+
+        ClearCart();
+        ClearCustomer();
+    }
+
+    private async Task SaveCardSaleLocallyAsync(string method)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync();
+
+        var saleService = new LocalSaleService(db);
+
+        var result = await saleService.CreateCardSaleAsync(
+            terminalId: TerminalId,
+            lines: CartLines.Select(x => new LocalCartLine
+            {
+                ProductId = x.ProductId,
+                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
+                Qty = x.Qty,
+                QtyInches = x.QtyInches
+            }).ToList(),
+            method: method,
+            discountAmount: DiscountAmount,
+            customerId: SelectedCustomerId,
+            allowNegativeStock: false
+        );
+
+        Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} ({method})";
+        Toast($"Saved: {result.ReceiptNo}");
+
+        var totalDue = TotalDue;
+        await PrintReceiptAsync(
+            receiptNo: result.ReceiptNo,
+            paymentMethod: method,
+            subtotal: Subtotal,
+            discount: DiscountAmount,
+            vat: VatTotal,
+            totalDue: totalDue,
+            cashGiven: totalDue,
+            change: 0m);
+
+        ClearCart();
+        ClearCustomer();
+    }
+
+    private async Task SaveOnAccountSaleLocallyAsync()
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync();
+
+        var saleService = new LocalSaleService(db);
+
+        var result = await saleService.CreateOnAccountSaleAsync(
+            terminalId: TerminalId,
+            lines: CartLines.Select(x => new LocalCartLine
+            {
+                ProductId = x.ProductId,
+                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
+                Qty = x.Qty,
+                QtyInches = x.QtyInches
+            }).ToList(),
+            customerId: SelectedCustomerId!.Value,
+            discountAmount: DiscountAmount,
+            allowNegativeStock: false
+        );
+
+        Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} (ON ACCOUNT)";
+        Toast($"Saved: {result.ReceiptNo}");
+
+        var totalDue = TotalDue;
+
+        await PrintReceiptAsync(
+            receiptNo: result.ReceiptNo,
+            paymentMethod: "ON ACCOUNT",
+            subtotal: Subtotal,
+            discount: DiscountAmount,
+            vat: VatTotal,
+            totalDue: totalDue,
+            cashGiven: 0m,
+            change: 0m);
+
+        ClearCart();
+        ClearCustomer();
+    }
+    
     // -----------------------------
     // Helpers
     // -----------------------------

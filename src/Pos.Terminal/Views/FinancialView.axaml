@@ -162,6 +162,7 @@
               <StackPanel Grid.Column="1" Margin="4,0,0,0">
                 <TextBlock Text="Unit Price"/>
                 <TextBox Text="{Binding Invoice.LineUnitPrice, Mode=TwoWay}"/>
+                </StackPanel>
             </Grid>
 
             <Button Content="Add Item" Click="AddInvoiceItem_Click" HorizontalAlignment="Left"/>

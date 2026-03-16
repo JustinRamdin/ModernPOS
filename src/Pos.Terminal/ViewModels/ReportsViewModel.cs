@@ -1,17 +1,10 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Windows.Input;
-
-using DataLocalDb = Pos.Local.Data.LocalDb;
-
-using Microsoft.EntityFrameworkCore;
-
-using Pos.Local.Data;
-using Pos.Local.Services;
+using Pos.Contracts;
 using Pos.Terminal.Commands;
+using Pos.Terminal.Services;
 
 namespace Pos.Terminal.ViewModels;
 
@@ -19,96 +12,27 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
 {
     private string _status = "Ready";
     public string Status { get => _status; set { _status = value; OnPropertyChanged(); } }
+    public DateTime? FromDate { get; set; } = DateTime.Today.AddDays(-6);
+    public DateTime? ToDate { get; set; } = DateTime.Today;
+    public string DateRangeLabel => $"Apply {(FromDate ?? DateTime.Today):MMM d} – {(ToDate ?? DateTime.Today):MMM d}";
+    public string LocationCode { get; set; } = "DEFAULT";
+    public int LookbackDays { get; set; } = 14;
+    public int ReceiptCount { get; private set; }
+    public decimal NetTotal { get; private set; }
+    public decimal VatTotal { get; private set; }
+    public decimal GrossTotal { get; private set; }
+    public decimal AvgGross { get; private set; }
+    public decimal SalesGross { get; private set; }
+    public decimal Cogs { get; private set; }
+    public decimal GrossProfit { get; private set; }
+    public decimal GrossMarginPct { get; private set; }
+    public decimal CashTotal { get; private set; }
+    public decimal DebitTotal { get; private set; }
+    public decimal CreditTotal { get; private set; }
+    public decimal OnAccountTotal { get; private set; }
+    public decimal ChangeGiven { get; private set; }
+    public decimal ExpectedCash { get; private set; }
 
-     private DateTime? _fromDate;
-    public DateTime? FromDate
-    {
-        get => _fromDate;
-        set
-        {
-            _fromDate = value;
-            UpdateDateRangeLabel();
-            OnPropertyChanged();
-        }
-    }
-    private DateTime? _toDate;
-    public DateTime? ToDate
-    {
-        get => _toDate;
-        set
-        {
-            _toDate = value;
-            UpdateDateRangeLabel();
-            OnPropertyChanged();
-        }
-    }
-
-    private string _dateRangeLabel = "Apply Dates";
-    public string DateRangeLabel
-    {
-        get => _dateRangeLabel;
-        private set
-        {
-            _dateRangeLabel = value;
-            OnPropertyChanged();
-        }
-    }
-
-    private string _locationCode = "DEFAULT";
-    public string LocationCode { get => _locationCode; set { _locationCode = string.IsNullOrWhiteSpace(value) ? "DEFAULT" : value.Trim(); OnPropertyChanged(); } }
-
-    private int _lookbackDays = 14;
-    public int LookbackDays { get => _lookbackDays; set { _lookbackDays = Math.Clamp(value, 1, 90); OnPropertyChanged(); } }
-
-    // --- Z Report / Sales summary ---
-    private int _receiptCount;
-    public int ReceiptCount { get => _receiptCount; private set { _receiptCount = value; OnPropertyChanged(); } }
-
-    private decimal _netTotal;
-    public decimal NetTotal { get => _netTotal; private set { _netTotal = value; OnPropertyChanged(); } }
-
-    private decimal _vatTotal;
-    public decimal VatTotal { get => _vatTotal; private set { _vatTotal = value; OnPropertyChanged(); } }
-
-    private decimal _grossTotal;
-    public decimal GrossTotal { get => _grossTotal; private set { _grossTotal = value; OnPropertyChanged(); } }
-
-    private decimal _avgGross;
-    public decimal AvgGross { get => _avgGross; private set { _avgGross = value; OnPropertyChanged(); } }
-
-    // --- Profit ---
-    private decimal _salesGross;
-    public decimal SalesGross { get => _salesGross; private set { _salesGross = value; OnPropertyChanged(); } }
-
-    private decimal _cogs;
-    public decimal Cogs { get => _cogs; private set { _cogs = value; OnPropertyChanged(); } }
-
-    private decimal _grossProfit;
-    public decimal GrossProfit { get => _grossProfit; private set { _grossProfit = value; OnPropertyChanged(); } }
-
-    private decimal _grossMarginPct;
-    public decimal GrossMarginPct { get => _grossMarginPct; private set { _grossMarginPct = value; OnPropertyChanged(); } }
-
-    // --- Tenders ---
-    private decimal _cashTotal;
-    public decimal CashTotal { get => _cashTotal; private set { _cashTotal = value; OnPropertyChanged(); } }
-
-    private decimal _debitTotal;
-    public decimal DebitTotal { get => _debitTotal; private set { _debitTotal = value; OnPropertyChanged(); } }
-
-    private decimal _creditTotal;
-    public decimal CreditTotal { get => _creditTotal; private set { _creditTotal = value; OnPropertyChanged(); } }
-
-    private decimal _onAccountTotal;
-    public decimal OnAccountTotal { get => _onAccountTotal; private set { _onAccountTotal = value; OnPropertyChanged(); } }
-
-    private decimal _changeGiven;
-    public decimal ChangeGiven { get => _changeGiven; private set { _changeGiven = value; OnPropertyChanged(); } }
-
-    private decimal _expectedCash;
-    public decimal ExpectedCash { get => _expectedCash; private set { _expectedCash = value; OnPropertyChanged(); } }
-
-    // Collections
     public ObservableCollection<SalesByDayRowDto> SalesByDay { get; } = new();
     public ObservableCollection<TopProductRowDto> TopProducts { get; } = new();
     public ObservableCollection<ProfitByProductRowDto> ProfitByProduct { get; } = new();
@@ -116,9 +40,8 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public ObservableCollection<InventoryMovementRowDto> InventoryMovements { get; } = new();
     public ObservableCollection<LowStockRowDto> LowStock { get; } = new();
     public ObservableCollection<CustomerSalesRowDto> CustomerSales { get; } = new();
-     public ObservableCollection<ExportTemplateDefinition> ExportTemplates { get; } = new();
+    public ObservableCollection<ExportTemplateDefinition> ExportTemplates { get; } = new();
 
-    // Commands
     public ICommand RefreshAllCommand { get; }
     public ICommand ApplyDateRangeCommand { get; }
     public ICommand RefreshInventoryCommand { get; }
@@ -126,86 +49,12 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
 
     public ReportsViewModel()
     {
-        var today = DateTime.Today;
-        FromDate = today.AddDays(-6);
-        ToDate = today;
 
         RefreshAllCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         ApplyDateRangeCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         RefreshInventoryCommand = new AsyncRelayCommand(async _ => await LoadInventoryAsync());
         RefreshLowStockCommand = new AsyncRelayCommand(async _ => await LoadLowStockAsync());
-
-        UpdateDateRangeLabel();
-        
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Sales",
-            "Receipts with totals, customer, and status.",
-            ExportTemplateKind.Sales));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Purchases",
-            "Inventory purchase adjustments captured from the outbox.",
-            ExportTemplateKind.Purchases));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Customers",
-            "Sales totals by customer for the selected period.",
-            ExportTemplateKind.Customers));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Inventory",
-            "Current inventory valuation snapshot.",
-            ExportTemplateKind.Inventory));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Low Stock",
-            "Items with low days remaining based on usage in the period.",
-            ExportTemplateKind.LowStock));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Top Products",
-            "Best-selling products by gross for the period.",
-            ExportTemplateKind.TopProducts));
-        ExportTemplates.Add(new ExportTemplateDefinition(
-            "Profit",
-            "Profit and margin by product for the period.",
-            ExportTemplateKind.Profit));
-    }
-
-    private static TimeZoneInfo GetTz()
-    {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("America/Port_of_Spain"); }
-        catch { return TimeZoneInfo.Local; }
-    }
-
-    private void UpdateDateRangeLabel()
-    {
-        var fromDate = (FromDate ?? DateTime.Today).Date;
-        var toDate = (ToDate ?? DateTime.Today).Date;
-        if (toDate < fromDate)
-        {
-            (fromDate, toDate) = (toDate, fromDate);
-        }
-
-        DateRangeLabel = $"Apply {fromDate:MMM d} – {toDate:MMM d}";
-    }
-
-    private (DateTime fromUtc, DateTime toUtc) GetUtcRange()
-    {
-        var tz = GetTz();
-
-        var fromLocal = (FromDate ?? DateTime.Today).Date;
-        var toLocal = (ToDate ?? DateTime.Today).Date;
-
-        if (toLocal < fromLocal)
-        {
-            var tmp = fromLocal;
-            fromLocal = toLocal;
-            toLocal = tmp;
-        }
-
-        var startLocal = DateTime.SpecifyKind(fromLocal, DateTimeKind.Unspecified);
-        var endLocalExclusive = DateTime.SpecifyKind(toLocal.AddDays(1), DateTimeKind.Unspecified);
-
-        var fromUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, tz);
-        var toUtc = TimeZoneInfo.ConvertTimeToUtc(endLocalExclusive, tz);
-
-        return (fromUtc, toUtc);
+        ExportTemplates.Add(new ExportTemplateDefinition("Sales", "Receipts with totals, customer, and status.", ExportTemplateKind.Sales));
     }
 
     public async Task LoadAllAsync()
@@ -214,117 +63,45 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         {
             Status = "Loading reports...";
             var (fromUtc, toUtc) = GetUtcRange();
-            var tz = GetTz();
+using var api = await CreateApiAsync();
+            var report = await api.GetReportSummaryAsync(fromUtc, toUtc);
 
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
+            ReceiptCount = report.ReceiptCount; GrossTotal = report.GrossTotal; NetTotal = report.GrossTotal; VatTotal = 0m;
+            AvgGross = ReceiptCount == 0 ? 0m : GrossTotal / ReceiptCount;
+            SalesGross = report.SalesGross; Cogs = report.Cogs; GrossProfit = report.GrossProfit;
+            GrossMarginPct = SalesGross <= 0 ? 0 : GrossProfit / SalesGross * 100m;
 
-            var svc = new ReportingService(db);
+            SalesByDay.Clear(); foreach (var r in report.SalesByDay) SalesByDay.Add(r);
+            TopProducts.Clear(); foreach (var r in report.TopProducts) TopProducts.Add(r);
+            ProfitByProduct.Clear(); foreach (var r in report.ProfitByProduct) ProfitByProduct.Add(r);
+            CustomerSales.Clear(); foreach (var r in report.CustomerSales) CustomerSales.Add(r);
+            InventoryValuation.Clear(); foreach (var r in report.InventoryValuation) InventoryValuation.Add(r);
 
-            // Z / Sales
-            var summary = await svc.GetSalesSummaryAsync(fromUtc, toUtc);
-            ReceiptCount = summary.ReceiptCount;
-            NetTotal = summary.NetTotal;
-            VatTotal = summary.VatTotal;
-            GrossTotal = summary.GrossTotal;
-            AvgGross = summary.AverageGross;
-
-            var byDay = await svc.GetSalesByDayAsync(fromUtc, toUtc, tz);
-            SalesByDay.Clear();
-            foreach (var r in byDay) SalesByDay.Add(r);
-
-            var top = await svc.GetTopProductsAsync(fromUtc, toUtc, 15);
-            TopProducts.Clear();
-            foreach (var r in top) TopProducts.Add(r);
-
-            // Profit
-            var psum = await svc.GetProfitSummaryAsync(fromUtc, toUtc);
-            SalesGross = psum.SalesGross;
-            Cogs = psum.Cogs;
-            GrossProfit = psum.GrossProfit;
-            GrossMarginPct = psum.GrossMarginPct;
-
-            var pprod = await svc.GetProfitByProductAsync(fromUtc, toUtc, 50);
-            ProfitByProduct.Clear();
-            foreach (var r in pprod) ProfitByProduct.Add(r);
-
-            // VAT (reuse totals from sales, but if you want separate VAT view you already have VatTotal)
-            // Tenders
-            var tend = await svc.GetTenderSummaryAsync(fromUtc, toUtc);
-            CashTotal = tend.CashTotal;
-            DebitTotal = tend.DebitTotal;
-            CreditTotal = tend.CreditTotal;
-            OnAccountTotal = tend.OnAccountTotal;
-            ChangeGiven = tend.ChangeGivenTotal;
-            ExpectedCash = tend.ExpectedCashInDrawer;
-
-            // Inventory movement
-            var moves = await svc.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode);
-            InventoryMovements.Clear();
-            foreach (var r in moves) InventoryMovements.Add(r);
-
-            // Customers
-            var cust = await svc.GetCustomerSalesAsync(fromUtc, toUtc);
-            CustomerSales.Clear();
-            foreach (var r in cust) CustomerSales.Add(r);
-
-            Status = "Reports loaded.";
+            Status = report.ReceiptCount == 0 && report.InventoryValuation.Count == 0 && report.CustomerSales.Count == 0
+                ? "No data available from server."
+                : "Reports loaded.";
+            NotifyAll();
         }
-        catch (Exception ex)
-        {
-            Status = $"Reports failed: {ex.Message}";
-        }
+        catch (Exception ex) { Status = $"Reports failed: {ex.Message}"; }
     }
 
-    public async Task LoadInventoryAsync()
+    public Task LoadInventoryAsync() => LoadAllAsync();
+    public Task LoadLowStockAsync() { LowStock.Clear(); Status = "No data available."; return Task.CompletedTask; }
+
+    private (DateTime fromUtc, DateTime toUtc) GetUtcRange()
     {
-        try
-        {
-            Status = "Loading inventory valuation...";
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-            var svc = new ReportingService(db);
-
-            var rows = await svc.GetInventoryValuationAsync(LocationCode);
-            InventoryValuation.Clear();
-            foreach (var r in rows) InventoryValuation.Add(r);
-
-            Status = $"Inventory valuation loaded ({InventoryValuation.Count}).";
-        }
-        catch (Exception ex)
-        {
-            Status = $"Inventory valuation failed: {ex.Message}";
-        }
+        var fromDate = (FromDate ?? DateTime.Today).Date;
+        var toDate = (ToDate ?? DateTime.Today).Date;
+        if (toDate < fromDate) (fromDate, toDate) = (toDate, fromDate);
+        return (DateTime.SpecifyKind(fromDate, DateTimeKind.Utc), DateTime.SpecifyKind(toDate.AddDays(1), DateTimeKind.Utc));
     }
 
-    public async Task LoadLowStockAsync()
-    {
-        try
-        {
-            Status = "Loading low stock...";
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-            var svc = new ReportingService(db);
-
-            var rows = await svc.GetLowStockAsync(LocationCode, LookbackDays, suggestedReorderDays: 7m);
-            LowStock.Clear();
-            foreach (var r in rows) LowStock.Add(r);
-
-            Status = $"Low stock loaded ({LowStock.Count}).";
-        }
-        catch (Exception ex)
-        {
-            Status = $"Low stock failed: {ex.Message}";
-        }
-    }
-
-    // --- DB (same file as Terminal) ---
-    private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    => DataLocalDb.BuildOptions();
-
-    private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
+    private static async Task<RemoteServerApi> CreateApiAsync() { var d = await new SettingsStore().LoadDeploymentAsync(); return new RemoteServerApi(d.ServerHost, d.ServerPort, d.AuthToken); }
+    private void NotifyAll() { foreach (var n in new[] { nameof(ReceiptCount), nameof(NetTotal), nameof(VatTotal), nameof(GrossTotal), nameof(AvgGross), nameof(SalesGross), nameof(Cogs), nameof(GrossProfit), nameof(GrossMarginPct) }) OnPropertyChanged(n); }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
+
+public sealed record InventoryMovementRowDto(DateTime AtUtc, string Type, string Name, decimal Qty);
+public sealed record LowStockRowDto(string Name, string? Sku, decimal OnHand, int OnHandInches, decimal DaysRemaining, decimal SuggestedReorderQty);

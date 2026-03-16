@@ -12,6 +12,7 @@ public class PosDbContext : DbContext
     public DbSet<SaleLine> SaleLines => Set<SaleLine>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<OutboxEvent> OutboxEvents => Set<OutboxEvent>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
 
@@ -23,7 +24,20 @@ public class PosDbContext : DbContext
             e.HasIndex(x => x.Sku).IsUnique();
             e.Property(x => x.Sku).HasMaxLength(64);
             e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.Description).HasMaxLength(1000);
+            e.Property(x => x.CostPrice).HasColumnType("numeric(18,2)");
             e.Property(x => x.Price).HasColumnType("numeric(18,2)");
+            e.Property(x => x.OnHand).HasColumnType("numeric(18,3)");
+        });
+
+        b.Entity<Customer>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.Phone).HasMaxLength(64);
+            e.Property(x => x.Email).HasMaxLength(200);
+            e.Property(x => x.Area).HasMaxLength(120);
+            e.Property(x => x.Balance).HasColumnType("numeric(18,2)");
         });
 
         b.Entity<Sale>(e =>

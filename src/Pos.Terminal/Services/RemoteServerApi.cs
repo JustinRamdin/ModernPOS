@@ -64,5 +64,51 @@ public sealed class RemoteServerApi : IDisposable
     public async Task BootstrapAsync(BootstrapServerRequest request)
         => (await _http.PostAsJsonAsync("api/setup/bootstrap", request)).EnsureSuccessStatusCode();
 
+    public async Task<IReadOnlyList<InventoryItemDto>> GetInventoryAsync()
+        => await _http.GetFromJsonAsync<List<InventoryItemDto>>("api/products") ?? [];
+
+    public async Task<InventoryItemDto> CreateInventoryAsync(UpsertInventoryItemRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/products", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<InventoryItemDto>() ?? throw new InvalidOperationException("Empty inventory create response");
+    }
+
+    public async Task<InventoryItemDto> UpdateInventoryAsync(Guid id, UpsertInventoryItemRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/products/{id}", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<InventoryItemDto>() ?? throw new InvalidOperationException("Empty inventory update response");
+    }
+
+    public async Task DeleteInventoryAsync(Guid id)
+        => (await _http.DeleteAsync($"api/products/{id}")).EnsureSuccessStatusCode();
+
+    public async Task<IReadOnlyList<CustomerDto>> GetCustomersAsync()
+        => await _http.GetFromJsonAsync<List<CustomerDto>>("api/customers") ?? [];
+
+    public async Task<CustomerDto> CreateCustomerAsync(UpsertCustomerRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/customers", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CustomerDto>() ?? throw new InvalidOperationException("Empty customer create response");
+    }
+
+    public async Task<CustomerDto> UpdateCustomerAsync(Guid id, UpsertCustomerRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/customers/{id}", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CustomerDto>() ?? throw new InvalidOperationException("Empty customer update response");
+    }
+
+    public async Task DeleteCustomerAsync(Guid id)
+        => (await _http.DeleteAsync($"api/customers/{id}")).EnsureSuccessStatusCode();
+
+    public async Task<ReportSummaryDto> GetReportSummaryAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        var url = $"api/reports/summary?fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        return await _http.GetFromJsonAsync<ReportSummaryDto>(url) ?? throw new InvalidOperationException("Empty reports response");
+    }
+
     public void Dispose() => _http.Dispose();
 }

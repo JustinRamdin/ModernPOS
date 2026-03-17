@@ -58,7 +58,7 @@
       </Border>
     </Grid>
 
-     <<Grid Grid.Row="1" ColumnDefinitions="3.8*,2.2*">
+     <Grid Grid.Row="1" ColumnDefinitions="3.8*,2.2*">
       <Border Grid.Column="0" Classes="card">
         <Grid RowDefinitions="Auto,*">
           <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">

@@ -14,14 +14,18 @@ SolidCompression=yes
 Name: "server"; Description: "Install Server";
 Name: "client"; Description: "Install Client";
 
+[Components]
+Name: "server"; Description: "ModernPOS Server"; Types: server
+Name: "client"; Description: "ModernPOS Terminal"; Types: client
+
 [Files]
-Source: "..\publish\Pos.ServerApp\*"; DestDir: "{app}\ServerApp"; Flags: recursesubdirs createallsubdirs; Types: server
-Source: "..\publish\Pos.Terminal\*"; DestDir: "{app}\Terminal"; Flags: recursesubdirs createallsubdirs; Types: client
+Source: "..\publish\Pos.ServerApp\*"; DestDir: "{app}\ServerApp"; Flags: recursesubdirs createallsubdirs; Components: server
+Source: "..\publish\Pos.Terminal\*"; DestDir: "{app}\Terminal"; Flags: recursesubdirs createallsubdirs; Components: client
 
 [Icons]
-Name: "{group}\ModernPOS Server"; Filename: "{app}\ServerApp\Pos.ServerApp.exe"; Types: server
-Name: "{group}\ModernPOS Terminal"; Filename: "{app}\Terminal\Pos.Terminal.exe"; Types: client
+Name: "{group}\ModernPOS Server"; Filename: "{app}\ServerApp\Pos.ServerApp.exe"; Components: server
+Name: "{group}\ModernPOS Terminal"; Filename: "{app}\Terminal\Pos.Terminal.exe"; Components: client
 
 [Run]
-Filename: "{app}\ServerApp\Pos.ServerApp.exe"; Description: "Launch ModernPOS Server"; Flags: nowait postinstall skipifsilent; Types: server
-Filename: "{app}\Terminal\Pos.Terminal.exe"; Description: "Launch ModernPOS Terminal"; Flags: nowait postinstall skipifsilent; Types: client
+Filename: "{app}\ServerApp\Pos.ServerApp.exe"; Description: "Launch ModernPOS Server"; Flags: nowait postinstall skipifsilent; Components: server
+Filename: "{app}\Terminal\Pos.Terminal.exe"; Description: "Launch ModernPOS Terminal"; Flags: nowait postinstall skipifsilent; Components: client

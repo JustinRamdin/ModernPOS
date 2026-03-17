@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Pos.SyncAgent")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2045c69d58062e9a8614f91cc92e8e816bbe6e0c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aa19139ca9cd52d9ecbe0dd5f7db8ac06939f7b4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Pos.SyncAgent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Pos.SyncAgent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -58,7 +58,7 @@
       </Border>
     </Grid>
 
-     <Grid Grid.Row="1" ColumnDefinitions="3.8*,2.2*" ColumnSpacing="12">
+     <<Grid Grid.Row="1" ColumnDefinitions="3.8*,2.2*">
       <Border Grid.Column="0" Classes="card">
         <Grid RowDefinitions="Auto,*">
           <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">
@@ -93,7 +93,7 @@
         </Grid>
       </Border>
 
-        <Border Grid.Column="1" Classes="card">
+        <Border Grid.Column="1" Classes="card" Margin="12,0,0,0">
         <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
           <Border CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" Background="#FFE3E3E3">
             <Grid ColumnDefinitions="*,Auto,Auto">

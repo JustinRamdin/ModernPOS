@@ -439,7 +439,6 @@ public partial class TerminalView : UserControl
         {
             var raw = (box.Text ?? "").Trim().Replace("$", "");
             if (!decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out var val)) return;
-                return;
 
             result = Math.Round(val, 2, MidpointRounding.AwayFromZero);
             win.Close();

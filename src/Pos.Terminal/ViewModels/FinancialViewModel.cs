@@ -119,6 +119,20 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         Status = "Line removed.";
     }
 
+    public void RemoveLine(FinancialDocumentEditorViewModel editor, FinancialLineItem line)
+    {
+        if (!editor.Lines.Contains(line))
+        {
+            Status = "Select a line to remove.";
+            return;
+        }
+
+        editor.Lines.Remove(line);
+        editor.SelectedLine = editor.Lines.FirstOrDefault();
+        editor.RecalculateTotals();
+        Status = "Line removed.";
+    }
+
     public void ClearLines(FinancialDocumentEditorViewModel editor)
     {
         editor.Lines.Clear();

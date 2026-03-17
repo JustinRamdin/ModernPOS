@@ -15,7 +15,7 @@ public partial class FinancialItemsWindow : Window, INotifyPropertyChanged
     private Guid? _selectedProductId;
     public string SelectedProductDisplay => _vm.Products.FirstOrDefault(p => p.Id == _selectedProductId)?.DisplayName ?? "None";
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     public FinancialItemsWindow(FinancialViewModel vm, FinancialDocumentEditorViewModel editor)
     {

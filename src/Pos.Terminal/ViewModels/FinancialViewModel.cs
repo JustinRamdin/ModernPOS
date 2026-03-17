@@ -63,20 +63,32 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
     public void AddLine(FinancialDocumentEditorViewModel editor)
     {
-        var product = Products.FirstOrDefault(p => p.Id == editor.SelectedProductId);
+        if (editor.SelectedProductId == null)
+        {
+            Status = "Select an inventory item first.";
+            return;
+        }
+
+        AddLine(editor, editor.SelectedProductId.Value, editor.LineQuantity, editor.LineUnitPrice);
+    }
+
+    public void AddLine(FinancialDocumentEditorViewModel editor, Guid productId, decimal quantity, decimal unitPrice)
+    {
+        var product = Products.FirstOrDefault(p => p.Id == productId);
         if (product == null)
         {
             Status = "Select an inventory item first.";
             return;
         }
 
-        var qty = editor.LineQuantity <= 0 ? 1m : editor.LineQuantity;
-        var unitPrice = editor.LineUnitPrice <= 0 ? product.Price : editor.LineUnitPrice;
+        var qty = quantity <= 0 ? 1m : quantity;
+        var resolvedUnitPrice = unitPrice <= 0 ? product.Price : unitPrice;
 
         var existingLine = editor.Lines.FirstOrDefault(line => line.ProductId == product.Id);
         if (existingLine != null)
         {
             existingLine.Quantity += qty;
+            existingLine.UnitPrice = resolvedUnitPrice;
             editor.SelectedLine = existingLine;
             editor.LineQuantity = 1m;
             editor.LineUnitPrice = existingLine.UnitPrice;
@@ -85,7 +97,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             return;
         }
 
-        var line = new FinancialLineItem(product.Id, product.DisplayName, qty, unitPrice, editor.RecalculateTotals);
+        var line = new FinancialLineItem(product.Id, product.DisplayName, qty, resolvedUnitPrice, editor.RecalculateTotals);
         editor.Lines.Add(line);
         editor.SelectedLine = line;
         editor.LineQuantity = 1m;
@@ -102,8 +114,15 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             return;
         }
 
-        var removedLine = editor.SelectedLine;
-        editor.Lines.Remove(removedLine);
+    public void ClearLines(FinancialDocumentEditorViewModel editor)
+    {
+        editor.Lines.Clear();
+        editor.SelectedLine = null;
+        editor.RecalculateTotals();
+        Status = "All lines cleared.";
+    }
+
+        var line = new FinancialLineItem(product.Id, product.DisplayName, qty, resolvedUnitPrice, editor.RecalculateTotals);
         editor.SelectedLine = editor.Lines.FirstOrDefault();
         editor.RecalculateTotals();
         Status = "Line removed.";

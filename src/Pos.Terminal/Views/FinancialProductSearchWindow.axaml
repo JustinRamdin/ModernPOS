@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.Terminal.Views.FinancialProductSearchWindow"
+        Width="620" Height="450"
+        Title="Search Inventory"
+        WindowStartupLocation="CenterOwner">
+  <Grid Margin="16" RowDefinitions="Auto,Auto,*,Auto">
+    <TextBlock Text="Search Inventory Items" FontSize="20" FontWeight="Bold"/>
+    <TextBox Grid.Row="1" Margin="0,10,0,10" Watermark="Search by item name or SKU" Text="{Binding SearchText}"/>
+    <ListBox Grid.Row="2" ItemsSource="{Binding FilteredProducts}" SelectedItem="{Binding SelectedProduct, Mode=TwoWay}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="3*,Auto" Margin="0,2,0,2">
+            <TextBlock Text="{Binding DisplayName}"/>
+            <TextBlock Grid.Column="1" Text="{Binding Price, StringFormat={}{0:0.00}}"/>
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,12,0,0">
+      <TextBlock Text="Select an item and click Use Selected." VerticalAlignment="Center"/>
+      <Button Grid.Column="1" Content="Cancel" Click="Cancel_Click"/>
+      <Button Grid.Column="2" Content="Use Selected" Click="UseSelected_Click"/>
+    </Grid>
+  </Grid>
+</Window>

@@ -16,10 +16,21 @@ public partial class FinancialView : UserControl
         InitializeComponent();
     }
 
-    private void AddQuoteItem_Click(object? sender, RoutedEventArgs e) => VM.AddLine(VM.Quote);
-    private void RemoveQuoteItem_Click(object? sender, RoutedEventArgs e) => VM.RemoveSelectedLine(VM.Quote);
-    private void AddInvoiceItem_Click(object? sender, RoutedEventArgs e) => VM.AddLine(VM.Invoice);
-    private void RemoveInvoiceItem_Click(object? sender, RoutedEventArgs e) => VM.RemoveSelectedLine(VM.Invoice);
+    private async void OpenQuoteItemsWindow_Click(object? sender, RoutedEventArgs e)
+        => await OpenItemsWindowAsync(VM.Quote);
+
+    private async void OpenInvoiceItemsWindow_Click(object? sender, RoutedEventArgs e)
+        => await OpenItemsWindowAsync(VM.Invoice);
+
+    private async Task OpenItemsWindowAsync(FinancialDocumentEditorViewModel editor)
+    {
+        var topLevel = TopLevel.GetTopLevel(this) as Window;
+        if (topLevel == null)
+            return;
+
+        var window = new FinancialItemsWindow(VM, editor);
+        await window.ShowDialog<bool?>(topLevel);
+    }
 
     private async void SaveQuotePdf_Click(object? sender, RoutedEventArgs e)
     {

@@ -43,49 +43,20 @@
             <DatePicker SelectedDate="{Binding Quote.DueDate, Mode=TwoWay}"/>
           </StackPanel>
 
-          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
-            <TextBlock Text="Inventory Item"/>
-             <TextBox Text="{Binding Quote.ProductSearchText}" Watermark="Search inventory by item name or SKU"/>
-            <ComboBox ItemsSource="{Binding Quote.FilteredProducts}" SelectedValue="{Binding Quote.SelectedProductId}" SelectedValueBinding="{Binding Id}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding DisplayName}"/>
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <Grid ColumnDefinitions="*,*">
-              <StackPanel Margin="0,0,4,0">
-                <TextBlock Text="Quantity"/>
-                <TextBox Text="{Binding Quote.LineQuantity, Mode=TwoWay}"/>
-              </StackPanel>
-               <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                <TextBlock Text="Unit Price"/>
-                <TextBox Text="{Binding Quote.LineUnitPrice, Mode=TwoWay}"/>
-              </StackPanel>
-            </Grid>
-
-            <Button Content="Add Item" Click="AddQuoteItem_Click" HorizontalAlignment="Left"/>
-            <Button Content="Remove Selected Item" Click="RemoveQuoteItem_Click" HorizontalAlignment="Left"/>
-          </StackPanel>
+          <Border Grid.Row="1" Grid.Column="1" Margin="6,0,0,0" Padding="12" CornerRadius="8" BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Items" FontWeight="SemiBold"/>
+              <TextBlock Text="Use Add Items to manage cart preview and inventory search in a separate window." Opacity="0.7" TextWrapping="Wrap"/>
+              <Button Content="Add Items" Click="OpenQuoteItemsWindow_Click" HorizontalAlignment="Left"/>
+            </StackPanel>
+          </Border>
 
           <Border Grid.Row="2" Grid.Column="1" Margin="6,10,0,8" Padding="10" CornerRadius="8" BorderThickness="1"
                   BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <StackPanel Spacing="6">
-              <TextBlock Text="Cart Preview" FontWeight="SemiBold"/>
-              <TextBlock Text="Items you added" Opacity="0.65" FontSize="12"/>
-                <ListBox ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine, Mode=TwoWay}" MinHeight="80" BorderThickness="0" Background="Transparent">
-                <ListBox.ItemTemplate>
-                  <DataTemplate>
-                    <Border Padding="4" CornerRadius="4">
-                      <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
-                        <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
-                      </Grid>
-                    </Border>
-                  </DataTemplate>
-                 </ListBox.ItemTemplate>
-              </ListBox>
+              <TextBlock Text="Items Summary" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Quote.Subtotal, StringFormat=Current items total: {0:0.00}}"/>
             </StackPanel>
           </Border>
 
@@ -132,26 +103,14 @@
             <DatePicker SelectedDate="{Binding Invoice.DueDate, Mode=TwoWay}"/>
           </StackPanel>
 
-          <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="6,0,0,0">
-            <TextBlock Text="Inventory Item"/>
-            <TextBox Text="{Binding Invoice.ProductSearchText}" Watermark="Search inventory by item name or SKU"/>
-            <ComboBox ItemsSource="{Binding Invoice.FilteredProducts}" SelectedValue="{Binding Invoice.SelectedProductId}" SelectedValueBinding="{Binding Id}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding DisplayName}"/>
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <Grid ColumnDefinitions="*,*">
-              <StackPanel Margin="0,0,4,0">
-                <TextBlock Text="Quantity"/>
-                <TextBox Text="{Binding Invoice.LineQuantity, Mode=TwoWay}"/>
-              </StackPanel>
-              <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                <TextBlock Text="Unit Price"/>
-                <TextBox Text="{Binding Invoice.LineUnitPrice, Mode=TwoWay}"/>
-                </StackPanel>
+          <Border Grid.Row="1" Grid.Column="1" Margin="6,0,0,0" Padding="12" CornerRadius="8" BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Items" FontWeight="SemiBold"/>
+              <TextBlock Text="Use Add Items to manage cart preview and inventory search in a separate window." Opacity="0.7" TextWrapping="Wrap"/>
+              <Button Content="Add Items" Click="OpenInvoiceItemsWindow_Click" HorizontalAlignment="Left"/>
+            </StackPanel>
+          </Border>
             </Grid>
 
             <Button Content="Add Item" Click="AddInvoiceItem_Click" HorizontalAlignment="Left"/>
@@ -161,20 +120,8 @@
           <Border Grid.Row="2" Grid.Column="1" Margin="6,10,0,8" Padding="10" CornerRadius="8" BorderThickness="1"
                   BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <StackPanel Spacing="6">
-              <TextBlock Text="Cart Preview" FontWeight="SemiBold"/>
-              <TextBlock Text="Items you added" Opacity="0.65" FontSize="12"/>
-              <ListBox ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine, Mode=TwoWay}" MinHeight="80" BorderThickness="0" Background="Transparent">
-                <ListBox.ItemTemplate>
-                  <DataTemplate>
-                    <Border Padding="4" CornerRadius="4">
-                      <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
-                        <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat=x{0}}" Opacity="0.7" Margin="10,0,0,0"/>
-                      </Grid>
-                    </Border>
-                  </DataTemplate>
-                 </ListBox.ItemTemplate>
-              </ListBox>
+              <TextBlock Text="Items Summary" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Invoice.Subtotal, StringFormat=Current items total: {0:0.00}}"/>
             </StackPanel>
           </Border>
 

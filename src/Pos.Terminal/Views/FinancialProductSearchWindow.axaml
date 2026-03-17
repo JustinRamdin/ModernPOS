@@ -17,10 +17,10 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-    <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,12,0,0">
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
       <TextBlock Text="Select an item and click Use Selected." VerticalAlignment="Center"/>
-      <Button Grid.Column="1" Content="Cancel" Click="Cancel_Click"/>
-      <Button Grid.Column="2" Content="Use Selected" Click="UseSelected_Click"/>
+      <Button Grid.Column="1" Content="Cancel" Click="Cancel_Click" Margin="8,0,0,0"/>
+      <Button Grid.Column="2" Content="Use Selected" Click="UseSelected_Click" Margin="8,0,0,0"/>
     </Grid>
   </Grid>
 </Window>

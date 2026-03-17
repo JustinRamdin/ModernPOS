@@ -111,12 +111,6 @@
               <Button Content="Add Items" Click="OpenInvoiceItemsWindow_Click" HorizontalAlignment="Left"/>
             </StackPanel>
           </Border>
-            </Grid>
-
-            <Button Content="Add Item" Click="AddInvoiceItem_Click" HorizontalAlignment="Left"/>
-            <Button Content="Remove Selected Item" Click="RemoveInvoiceItem_Click" HorizontalAlignment="Left"/>
-          </StackPanel>
-
           <Border Grid.Row="2" Grid.Column="1" Margin="6,10,0,8" Padding="10" CornerRadius="8" BorderThickness="1"
                   BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <StackPanel Spacing="6">

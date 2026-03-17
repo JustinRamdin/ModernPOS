@@ -94,7 +94,7 @@
       </Border>
 
         <Border Grid.Column="1" Classes="card" Margin="12,0,0,0">
-        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
+        <Grid RowDefinitions="Auto,*,Auto">
           <Border CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" Background="#FFE3E3E3">
             <Grid ColumnDefinitions="*,Auto,Auto">
               <StackPanel>

@@ -27,6 +27,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
     public string EditSku { get; set; } = "";
     public string EditName { get; set; } = "";
     public string EditDescription { get; set; } = "";
+    public string EditLocation { get; set; } = "";
     public string EditCostPriceText { get; set; } = "0.00";
     public string EditSellingPriceText { get; set; } = "0.00";
     public bool EditVatInclusive { get; set; }
@@ -55,7 +56,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         catch (Exception ex) { ListStatus = "Load failed."; EditorStatus = BuildServerStatusMessage(ex, "load inventory"); }
     }
 
-    public void NewItem() { _editingId = null; Selected = null; EditSku = EditName = EditDescription = ""; EditCostPriceText = EditSellingPriceText = "0.00"; EditVatInclusive = EditIsLength = false; EditOnHandQtyText = EditFeetText = EditInchesText = "0"; NotifyEditor(); EditorStatus = "Creating new item."; }
+    public void NewItem() { _editingId = null; Selected = null; EditSku = EditName = EditDescription = EditLocation = ""; EditCostPriceText = EditSellingPriceText = "0.00"; EditVatInclusive = EditIsLength = false; EditOnHandQtyText = EditFeetText = EditInchesText = "0"; NotifyEditor(); EditorStatus = "Creating new item."; }
 
     public async Task SaveAsync()
     {
@@ -67,8 +68,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             var ft = int.TryParse(EditFeetText, out var f) ? Math.Max(0, f) : 0;
             var inch = int.TryParse(EditInchesText, out var i) ? Math.Max(0, i) : 0;
             var norm = LengthConverter.Normalize(ft, inch);
-            var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, LengthConverter.ToTotalInches(norm.Feet, norm.Inches), true);
-            using var api = await CreateApiAsync();
+            var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), string.IsNullOrWhiteSpace(EditLocation) ? null : EditLocation.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, LengthConverter.ToTotalInches(norm.Feet, norm.Inches), true);            using var api = await CreateApiAsync();
             if (_editingId is null) await api.CreateInventoryAsync(req); else await api.UpdateInventoryAsync(_editingId.Value, req);
             EditorStatus = "Saved to server.";
             await LoadAsync();
@@ -82,15 +82,12 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         try { using var api = await CreateApiAsync(); await api.DeleteInventoryAsync(_editingId.Value); NewItem(); await LoadAsync(); EditorStatus = "Deleted from server."; }
         catch (Exception ex) { EditorStatus = BuildServerStatusMessage(ex, "delete inventory item"); }
     }
-    private void ApplySearch() { var t = (Search ?? "").Trim(); var f = string.IsNullOrWhiteSpace(t) ? _all : _all.Where(p => p.Name.Contains(t, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(t, StringComparison.OrdinalIgnoreCase))); Products.Clear(); foreach (var p in f) Products.Add(p); }
-    private void LoadSelectedIntoEditor()
+    private void ApplySearch() { var t = (Search ?? "").Trim(); var f = string.IsNullOrWhiteSpace(t) ? _all : _all.Where(p => p.Name.Contains(t, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(t, StringComparison.OrdinalIgnoreCase)) || (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(t, StringComparison.OrdinalIgnoreCase))); Products.Clear(); foreach (var p in f) Products.Add(p); }    private void LoadSelectedIntoEditor()
     {
          if (Selected is null) { _editingId = null; return; }
-        _editingId = Selected.Id; EditSku = Selected.Sku ?? ""; EditName = Selected.Name; EditDescription = Selected.Description ?? ""; EditCostPriceText = Selected.CostPrice.ToString(CultureInfo.InvariantCulture); EditSellingPriceText = Selected.SellingPrice.ToString(CultureInfo.InvariantCulture); EditVatInclusive = Selected.VatInclusive; EditIsLength = Selected.IsLength; EditOnHandQtyText = Selected.OnHandQty.ToString(CultureInfo.InvariantCulture); var fi = LengthConverter.FromTotalInches(Selected.OnHandInches); EditFeetText = fi.Feet.ToString(); EditInchesText = fi.Inches.ToString(); NotifyEditor();
-    }
+        _editingId = Selected.Id; EditSku = Selected.Sku ?? ""; EditName = Selected.Name; EditDescription = Selected.Description ?? ""; EditLocation = Selected.Location ?? ""; EditCostPriceText = Selected.CostPrice.ToString(CultureInfo.InvariantCulture); EditSellingPriceText = Selected.SellingPrice.ToString(CultureInfo.InvariantCulture); EditVatInclusive = Selected.VatInclusive; EditIsLength = Selected.IsLength; EditOnHandQtyText = Selected.OnHandQty.ToString(CultureInfo.InvariantCulture); var fi = LengthConverter.FromTotalInches(Selected.OnHandInches); EditFeetText = fi.Feet.ToString(); EditInchesText = fi.Inches.ToString(); NotifyEditor();    }
 
-     private void NotifyEditor() { foreach (var n in new[]{ nameof(EditSku), nameof(EditName), nameof(EditDescription), nameof(EditCostPriceText), nameof(EditSellingPriceText), nameof(EditVatInclusive), nameof(EditIsLength), nameof(EditOnHandQtyText), nameof(EditFeetText), nameof(EditInchesText), nameof(IsLengthStock), nameof(IsUnitStock), nameof(LengthPreviewLine)}) OnPropertyChanged(n); }
-
+    private void NotifyEditor() { foreach (var n in new[]{ nameof(EditSku), nameof(EditName), nameof(EditDescription), nameof(EditLocation), nameof(EditCostPriceText), nameof(EditSellingPriceText), nameof(EditVatInclusive), nameof(EditIsLength), nameof(EditOnHandQtyText), nameof(EditFeetText), nameof(EditInchesText), nameof(IsLengthStock), nameof(IsUnitStock), nameof(LengthPreviewLine)}) OnPropertyChanged(n); }  
      private static async Task<RemoteServerApi> CreateApiAsync()
     {
        var deploy = await new SettingsStore().LoadDeploymentAsync();
@@ -120,6 +117,7 @@ public sealed class ProductListItemVm
     public string Name { get; init; } = "";
     public string? Sku { get; init; }
     public string? Description { get; init; }
+    public string? Location { get; init; }
     public decimal CostPrice { get; init; }
     public decimal SellingPrice { get; init; }
     public bool VatInclusive { get; init; }
@@ -129,7 +127,7 @@ public sealed class ProductListItemVm
     public string SkuLine => $"SKU: {Sku}";
     public string PriceLine => $"Price: {SellingPrice:0.00}";
     public string FlagsLine => $"VAT Incl: {VatInclusive} | Length: {IsLength}";
+    public string LocationLine => $"Location: {Location ?? "Main Store"}";
 
     public string StockLine => !IsLength ? $"Stock: {OnHandQty:0.###}" : $"Stock: {OnHandInches / 12} ft {OnHandInches % 12} in";
-    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches };
-}
+    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, Location = p.Location, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches };}

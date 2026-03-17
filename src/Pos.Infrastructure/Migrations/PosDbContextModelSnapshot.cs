@@ -87,6 +87,10 @@ namespace Pos.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,2)");
 

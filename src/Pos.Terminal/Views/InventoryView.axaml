@@ -61,6 +61,7 @@
                   <TextBlock Opacity="0.7" Text="{Binding SkuLine}" />
                   <TextBlock Opacity="0.7" Text="{Binding PriceLine}" />
                   <TextBlock Opacity="0.7" Text="{Binding FlagsLine}" />
+                  <TextBlock Opacity="0.7" Text="{Binding LocationLine}" />
                   <TextBlock Opacity="0.7" Text="{Binding StockLine}" />
                 </StackPanel>
               </Border>
@@ -91,7 +92,7 @@
 
           <!-- Fields -->
           <Grid ColumnDefinitions="140,*"
-                RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
 
             <TextBlock Grid.Row="0" Grid.Column="0"
                        VerticalAlignment="Center"
@@ -118,16 +119,24 @@
 
             <TextBlock Grid.Row="3" Grid.Column="0"
                        VerticalAlignment="Center"
-                       Text="Cost Price" />
+                       Text="Location" />
             <TextBox Grid.Row="3" Grid.Column="1"
-                     Text="{Binding EditCostPriceText}"
-                     Watermark="0.00"
+                     Text="{Binding EditLocation}"
+                     Watermark="Main Store"
                      Margin="10,0,0,8"/>
 
             <TextBlock Grid.Row="4" Grid.Column="0"
                        VerticalAlignment="Center"
-                       Text="Selling Price (entered)" />
+                       Text="Cost Price" />
             <TextBox Grid.Row="4" Grid.Column="1"
+                     Text="{Binding EditCostPriceText}"
+                     Watermark="0.00"
+                     Margin="10,0,0,8"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="Selling Price (entered)" />
+            <TextBox Grid.Row="5" Grid.Column="1"
                      Text="{Binding EditSellingPriceText}"
                      Watermark="0.00"
                      Margin="10,0,0,0"/>

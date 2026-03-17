@@ -122,24 +122,24 @@ public partial class TerminalView : UserControl
         var host = GetHostWindow();
         if (vm == null || host == null) return null;
 
-        var search = new TextBox { Watermark = "Search by item #, name, description", MinWidth = 360 };
+        var search = new TextBox { Watermark = "Search by item #, name, description, location", MinWidth = 360 };
         var list = new ListBox { Height = 380 };
         var source = new ObservableCollection<ProductDto>(vm.FindInventoryItems(""));
         list.ItemsSource = source;
 
         list.ItemTemplate = new FuncDataTemplate<ProductDto>((item, _) =>
-            new Grid
+            {
+            var row = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("140,*,Auto"),
                 Margin = new Thickness(4),
-                Children =
-                {
-                    new TextBlock { Text = item.Sku },
-                    new TextBlock { Text = item.Name, [Grid.ColumnProperty] = 1 },
-                    new TextBlock { Text = item.DisplayPrice, [Grid.ColumnProperty] = 2 }
-                }
-            });
-
+                [ToolTip.TipProperty] = string.IsNullOrWhiteSpace(item.Location) ? null : $"Location: {item.Location}"
+            };
+            row.Children.Add(new TextBlock { Text = item.Sku });
+            row.Children.Add(new TextBlock { Text = item.Name, [Grid.ColumnProperty] = 1 });
+            row.Children.Add(new TextBlock { Text = item.DisplayPrice, [Grid.ColumnProperty] = 2 });
+            return row;
+        });
         ProductDto? selected = null;
 
         void Refresh()

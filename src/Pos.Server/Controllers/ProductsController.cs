@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
          var items = await _db.Products.AsNoTracking()
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
-            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.IsActive))
+            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.Location, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.IsActive))
             .ToListAsync(ct);
 
         return items;
@@ -45,6 +45,7 @@ public class ProductsController : ControllerBase
             Sku = req.Sku.Trim(),
             Name = req.Name.Trim(),
             Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim(),
+            Location = string.IsNullOrWhiteSpace(req.Location) ? null : req.Location.Trim(),
             CostPrice = req.CostPrice,
             Price = req.Price,
             VatInclusive = req.VatInclusive,
@@ -68,7 +69,7 @@ public class ProductsController : ControllerBase
             return Problem(title: "Failed to save inventory item", detail: dbError, statusCode: StatusCodes.Status500InternalServerError);
         }
         
-        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive));
+        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive));
     }
 
     [HttpPut("{id:guid}")]
@@ -81,6 +82,7 @@ public class ProductsController : ControllerBase
         p.Sku = req.Sku.Trim();
         p.Name = req.Name.Trim();
         p.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
+        p.Location = string.IsNullOrWhiteSpace(req.Location) ? null : req.Location.Trim();
         p.CostPrice = req.CostPrice;
         p.Price = req.Price;
         p.VatInclusive = req.VatInclusive;
@@ -90,7 +92,7 @@ public class ProductsController : ControllerBase
         p.IsActive = req.IsActive;
 
         await _db.SaveChangesAsync(ct);
-        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive);
+        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive);
     }
 
     [HttpDelete("{id:guid}")]

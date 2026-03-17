@@ -8,6 +8,7 @@ public sealed class ProductDto
     public string Sku { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
+    public string? Location { get; set; }
 
     // entered selling price
     public decimal Price { get; set; }

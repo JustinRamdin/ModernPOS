@@ -440,6 +440,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     Name = p.Name,
                     Sku = p.Sku,
                     Description = p.Description ?? "",
+                    Location = p.Location,
                     Price = p.Price,
                     VatInclusive = p.VatInclusive,
                     IsLength = p.IsLength,
@@ -546,7 +547,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             source = source.Where(p =>
                 (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(query, StringComparison.OrdinalIgnoreCase)));
+                (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(query, StringComparison.OrdinalIgnoreCase)));
         }
 
         return source.OrderBy(p => p.Name).ToList();

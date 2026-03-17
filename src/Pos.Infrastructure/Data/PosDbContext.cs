@@ -25,6 +25,7 @@ public class PosDbContext : DbContext
             e.Property(x => x.Sku).HasMaxLength(64);
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.Description).HasMaxLength(1000);
+            e.Property(x => x.Location).HasMaxLength(200);
             e.Property(x => x.CostPrice).HasColumnType("numeric(18,2)");
             e.Property(x => x.Price).HasColumnType("numeric(18,2)");
             e.Property(x => x.OnHand).HasColumnType("numeric(18,3)");

@@ -7,7 +7,7 @@
   <Grid Margin="16" RowDefinitions="Auto,Auto,*,Auto">
     <TextBlock Text="Item Cart Editor" FontSize="20" FontWeight="Bold"/>
 
-    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="8" Margin="0,10,0,10">
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*" Margin="0,10,0,10">
       <Button Grid.Column="0" Content="Search" Click="Search_Click"/>
       <TextBlock Grid.Column="1" Text="Selected:" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="2" Text="{Binding SelectedProductDisplay}" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -45,7 +45,7 @@
       </Grid>
     </Border>
 
-    <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,12,0,0" ColumnSpacing="8">
+    <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,12,0,0">
       <Button Grid.Column="0" Content="Clear" Click="Clear_Click"/>
       <TextBlock Grid.Column="1" Text="Subtotal:" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="2" Text="{Binding Editor.Subtotal, StringFormat={}{0:0.00}}" VerticalAlignment="Center" FontWeight="SemiBold"/>

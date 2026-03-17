@@ -7,10 +7,32 @@ public static class Seeder
 {
     public static async Task SeedAsync(PosDbContext db)
     {
-        await db.Database.EnsureCreatedAsync();
+        if (await HasMigrationsHistoryTableAsync(db))
+        {
+            await db.Database.MigrateAsync();
+        }
+        else
+        {
+            await db.Database.EnsureCreatedAsync();
+        }
         await EnsureSqliteCompatibilityAsync(db);
     }
     
+    private static async Task<bool> HasMigrationsHistoryTableAsync(PosDbContext db)
+    {
+        if (!db.Database.IsSqlite())
+            return true;
+
+        var historyTableExists = await db.Database
+            .SqlQueryRaw<int>("""
+                SELECT COUNT(1) AS Value
+                FROM sqlite_master
+                WHERE type = 'table' AND name = '__EFMigrationsHistory'
+                """)
+            .SingleAsync();
+
+        return historyTableExists == 1;
+    }
     private static async Task EnsureSqliteCompatibilityAsync(PosDbContext db)
     {
         if (!db.Database.IsSqlite())
@@ -38,6 +60,7 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "OnHandInches", "ALTER TABLE \"Products\" ADD COLUMN \"OnHandInches\" INTEGER NOT NULL DEFAULT 0;");
 
         await EnsureColumnAsync(db, "UserAccounts", "DisplayName", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
         await EnsureColumnAsync(db, "UserAccounts", "UpdatedAtUtc", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"UpdatedAtUtc\" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'; ",
             "UPDATE \"UserAccounts\" SET \"UpdatedAtUtc\" = \"CreatedAtUtc\" WHERE \"UpdatedAtUtc\" = '0001-01-01T00:00:00.0000000Z';");
     }

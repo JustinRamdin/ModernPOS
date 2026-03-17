@@ -7,6 +7,7 @@ public sealed class ProductDto
     public Guid Id { get; set; }
     public string Sku { get; set; } = "";
     public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
 
     // entered selling price
     public decimal Price { get; set; }
@@ -16,6 +17,7 @@ public sealed class ProductDto
 
     public bool VatInclusive { get; set; }
     public bool IsLength { get; set; }
+    public string Unit => IsLength ? "in" : "ea";
 
     // optional stock info (for quick cashier feedback)
     public decimal OnHand { get; set; }

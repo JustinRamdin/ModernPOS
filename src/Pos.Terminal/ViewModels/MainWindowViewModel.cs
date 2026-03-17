@@ -204,6 +204,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     // Commands
     // -----------------------------
     public ICommand AddToCartCommand { get; }
+    public ICommand AddSearchItemCommand { get; }
     public ICommand RemoveLineCommand { get; }
     public ICommand ClearCartCommand { get; }
     public ICommand IncreaseQtyCommand { get; }
@@ -212,6 +213,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
     // View-bridge: TerminalView assigns this to show dialogs
     public Func<CartLine, Task>? EditQtyRequested { get; set; }
+    public Func<Task<ProductDto?>>? ItemLookupRequested { get; set; }
 
     // -----------------------------
     // Customer selection
@@ -270,6 +272,14 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         AddToCartCommand = new RelayCommand(p =>
         {
             if (p is ProductDto prod) AddToCart(prod);
+        });
+        
+        AddSearchItemCommand = new AsyncRelayCommand(async _ =>
+        {
+            if (ItemLookupRequested == null) return;
+            var selected = await ItemLookupRequested();
+            if (selected != null)
+                AddToCart(selected);
         });
 
         RemoveLineCommand = new RelayCommand(p =>
@@ -429,6 +439,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     Id = p.Id,
                     Name = p.Name,
                     Sku = p.Sku,
+                    Description = p.Description ?? "",
                     Price = p.Price,
                     VatInclusive = p.VatInclusive,
                     IsLength = p.IsLength,
@@ -526,6 +537,21 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             Products.Add(p);
     }
 
+    public IReadOnlyList<ProductDto> FindInventoryItems(string term)
+    {
+        var query = (term ?? "").Trim();
+        IEnumerable<ProductDto> source = _allProducts;
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            source = source.Where(p =>
+                (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(query, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return source.OrderBy(p => p.Name).ToList();
+    }
+
     // Enter in search box calls this
     public void TryAddFirstSearchMatch()
     {
@@ -568,7 +594,10 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         var line = new CartLine
         {
             ProductId = p.Id,
+            ItemNumber = p.Sku,
             Name = p.Name,
+            ItemDescription = p.Description,
+            Unit = p.Unit,
             UnitPrice = p.Price,
             VatInclusive = p.VatInclusive,
             IsLength = p.IsLength,
@@ -942,6 +971,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 qty: l.Qty,
                 qtyInches: l.QtyInches
             );
+
+            l.TaxAmount = calc.VatTotal;
 
             lineTotals.Add(new CheckoutLineTotals(
                 l.ProductId,

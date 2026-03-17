@@ -8,9 +8,25 @@ namespace Pos.Terminal.Models;
 public sealed class CartLine : INotifyPropertyChanged
 {
     public Guid ProductId { get; set; }
+     public string ItemNumber { get; set; } = "";
     public string Name { get; set; } = "";
 
-    // ✅ Needed to calculate VAT-inclusive/exclusive totals in Terminal UI
+    public string ItemName => Name;
+
+    public string ItemDescription { get; set; } = "";
+
+    private string _unit = "ea";
+    public string Unit
+    {
+        get => _unit;
+        set
+        {
+            if (_unit == value) return;
+            _unit = value;
+            OnPropertyChanged();
+        }
+    }
+
     private bool _vatInclusive;
     public bool VatInclusive
     {
@@ -23,8 +39,21 @@ public sealed class CartLine : INotifyPropertyChanged
         }
     }
 
-    // entered price (per unit, or per inch when IsLength=true)
     public decimal UnitPrice { get; set; }
+    public decimal SalePrice => UnitPrice;
+
+    private decimal _taxAmount;
+    public decimal TaxAmount
+    {
+        get => _taxAmount;
+        set
+        {
+            var rounded = Math.Round(value, 2, MidpointRounding.AwayFromZero);
+            if (_taxAmount == rounded) return;
+            _taxAmount = rounded;
+            OnPropertyChanged();
+        }
+    }
 
     private bool _isLength;
     public bool IsLength
@@ -36,14 +65,13 @@ public sealed class CartLine : INotifyPropertyChanged
             _isLength = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(LineTotal));
+            OnPropertyChanged(nameof(ExtendedPrice));
             OnPropertyChanged(nameof(DisplayQtyLine));
             OnPropertyChanged(nameof(LengthPreviewLine));
+            OnPropertyChanged(nameof(QuantityValue));
         }
     }
 
-    // -----------------------------
-    // Unit quantity
-    // -----------------------------
     private decimal _qty = 1m;
     public decimal Qty
     {
@@ -54,13 +82,12 @@ public sealed class CartLine : INotifyPropertyChanged
             _qty = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(LineTotal));
+            OnPropertyChanged(nameof(ExtendedPrice));
             OnPropertyChanged(nameof(DisplayQtyLine));
+            OnPropertyChanged(nameof(QuantityValue));
         }
     }
 
-    // -----------------------------
-    // Length quantity (inches)
-    // -----------------------------
     private int _qtyInches = 1;
     public int QtyInches
     {
@@ -72,13 +99,16 @@ public sealed class CartLine : INotifyPropertyChanged
             SyncFeetInchesTextFromQtyInches();
             OnPropertyChanged();
             OnPropertyChanged(nameof(LineTotal));
+            OnPropertyChanged(nameof(ExtendedPrice));
             OnPropertyChanged(nameof(DisplayQtyLine));
             OnPropertyChanged(nameof(LengthPreviewLine));
             OnPropertyChanged(nameof(InchesText));
+            OnPropertyChanged(nameof(QuantityValue));
         }
     }
 
-    // Editable textboxes for Feet & Inches (UI-friendly)
+    public decimal QuantityValue => IsLength ? QtyInches : Qty;
+    public decimal ExtendedPrice => LineTotal;
     private string _feetText = "0";
     public string FeetText
     {
@@ -105,7 +135,6 @@ public sealed class CartLine : INotifyPropertyChanged
         }
     }
 
-    // Optional: direct inches entry for fast sales
     private string _inchesOnlyText = "1";
     public string InchesOnlyText
     {
@@ -144,12 +173,11 @@ public sealed class CartLine : INotifyPropertyChanged
         get
         {
             if (!IsLength) return Money(UnitPrice * Qty);
-            return Money(UnitPrice * QtyInches); // price-per-inch assumption
+            return Money(UnitPrice * QtyInches);
         }
     }
 
-    private static decimal Money(decimal v) =>
-        Math.Round(v, 2, MidpointRounding.AwayFromZero);
+    private static decimal Money(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
     private static bool TryParseNonNegInt(string text, out int value)
     {
@@ -190,24 +218,23 @@ public sealed class CartLine : INotifyPropertyChanged
     private void TryUpdateQtyInchesFromFeetInches()
     {
         if (!IsLength) return;
-
         if (!TryParseNonNegInt(FeetText, out var ft)) return;
         if (!TryParseNonNegInt(InchesText, out var inch)) return;
 
         var norm = LengthConverter.Normalize(ft, inch);
         var total = LengthConverter.ToTotalInches(norm.Feet, norm.Inches);
 
-        // avoid recursion loops: only set if changed
         if (total != QtyInches)
         {
             _qtyInches = total;
             _inchesOnlyText = total.ToString(CultureInfo.InvariantCulture);
-
             OnPropertyChanged(nameof(QtyInches));
             OnPropertyChanged(nameof(LineTotal));
+            OnPropertyChanged(nameof(ExtendedPrice));
             OnPropertyChanged(nameof(DisplayQtyLine));
             OnPropertyChanged(nameof(LengthPreviewLine));
             OnPropertyChanged(nameof(InchesOnlyText));
+            OnPropertyChanged(nameof(QuantityValue));
         }
     }
 

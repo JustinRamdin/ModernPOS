@@ -1,11 +1,10 @@
 <UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
     x:Class="Pos.Terminal.Views.TerminalView">
 
   <UserControl.Styles>
-
-    <!-- Card -->
     <Style Selector="Border.card">
       <Setter Property="CornerRadius" Value="12" />
       <Setter Property="BorderThickness" Value="1" />
@@ -14,15 +13,6 @@
       <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
     </Style>
 
-    <Style Selector="Border.toast">
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="10,8" />
-      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-      <Setter Property="BorderThickness" Value="1" />
-    </Style>
-
-    <!-- Titles -->
     <Style Selector="TextBlock.h1">
       <Setter Property="FontSize" Value="24" />
       <Setter Property="FontWeight" Value="Bold" />
@@ -31,14 +21,12 @@
     <Style Selector="TextBlock.h2">
       <Setter Property="FontSize" Value="16" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
 
     <Style Selector="TextBlock.muted">
       <Setter Property="Opacity" Value="0.75" />
     </Style>
 
-    <!-- Buttons -->
     <Style Selector="Button.primary">
       <Setter Property="MinHeight" Value="44" />
       <Setter Property="Padding" Value="16,10" />
@@ -49,304 +37,94 @@
       <Setter Property="Padding" Value="12,6" />
     </Style>
 
-  <Style Selector="Button.productTile">
-      <Setter Property="Width" Value="220" />
-      <Setter Property="Height" Value="88" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="VerticalContentAlignment" Value="Stretch" />
-    </Style>
-
-    <Style Selector="Button.small">
-      <Setter Property="MinHeight" Value="30" />
-      <Setter Property="Padding" Value="10,4" />
-    </Style>
-
-    <Style Selector="ToggleButton.chip">
-      <Setter Property="MinHeight" Value="32" />
-      <Setter Property="Padding" Value="12,4" />
-      <Setter Property="CornerRadius" Value="999" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Margin" Value="0,0,8,0" />
-      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
-    </Style>
-
-    <Style Selector="ToggleButton.chip:checked">
-      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-    </Style>
-
-    <!-- Search -->
-    <Style Selector="TextBox.search">
-      <Setter Property="MinHeight" Value="40" />
-      <Setter Property="Padding" Value="10,6" />
-    </Style>
-
-    <!-- Cart list -->
-    <Style Selector="ListBox">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
-    <Style Selector="ListBoxItem">
-      <Setter Property="Padding" Value="10" />
-      <Setter Property="Margin" Value="0,0,0,8" />
+  <Style Selector="Border.toast">
       <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
     </Style>
-
-    <Style Selector="ListBoxItem /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
-    </Style>
-
-    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#14FF0000" />
-    </Style>
-
-    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-      <Setter Property="Background" Value="#1EFF0000" />
-    </Style>
-
-    <!-- Category chips: prevent cart list styling from affecting it -->
-    <Style Selector="ListBox#CategoryList">
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Background" Value="Transparent" />
-    </Style>
-
-    <Style Selector="ListBox#CategoryList ListBoxItem">
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0" />
-      <Setter Property="CornerRadius" Value="0" />
-    </Style>
-
-    <Style Selector="ListBox#CategoryList ListBoxItem /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-    </Style>
-
-    <Style Selector="ListBox#CategoryList ListBoxItem:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-    </Style>
-
-    <Style Selector="ListBox#CategoryList ListBoxItem:selected /template/ ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-    </Style>
-
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="2.2*,3.8*" RowDefinitions="Auto,*" Margin="16">
-
-    <!-- Header -->
-    <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+ <Grid RowDefinitions="Auto,*" Margin="16">
+    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
       <StackPanel>
         <TextBlock Classes="h1" Text="Terminal" />
-        <TextBlock Classes="muted" Text="Process sales, manage orders, and serve customers efficiently." />
+        <TextBlock Classes="muted" Text="Fast sales-entry checkout" />
       </StackPanel>
 
-      <!-- Toast -->
       <Border Grid.Column="1" Classes="toast" IsVisible="{Binding IsToastVisible}" Margin="12,2,0,0">
         <TextBlock Text="{Binding ToastMessage}" />
       </Border>
     </Grid>
 
-    <!-- LEFT: Products -->
-    <Border Grid.Row="1" Grid.Column="0" Classes="card" Margin="0,0,12,0">
-      <Grid RowDefinitions="Auto,Auto,Auto,*">
-
-        <TextBlock Classes="h2" Text="Products" />
-
-        <!-- Search / barcode -->
-        <TextBox
-            x:Name="ProductSearchBox"
-            Grid.Row="1"
-            Classes="search"
-            Watermark="Search"
-            Text="{Binding Search}"
-            Margin="0,0,0,10" />
-
-        <!-- Categories -->
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,10">
-          <ListBox
-              x:Name="CategoryList"
-              ItemsSource="{Binding Categories}"
-              SelectedItem="{Binding SelectedCategory}"
-              SelectionMode="Single">
-            <ListBox.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal" />
-              </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <ToggleButton Classes="chip" Content="{Binding .}" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </ScrollViewer>
-
-        <!-- Product grid -->
-        <ScrollViewer Grid.Row="3">
-          <ItemsControl ItemsSource="{Binding Products}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <WrapPanel ItemWidth="220" ItemHeight="88" />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Button Classes="ghost productTile" Click="Add_Click" Margin="0,0,10,10">
-                  <Button.Content>
-                    <Border CornerRadius="12" Padding="12" BorderThickness="1"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                            Background="#FFE3E3E3">
-                      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
-                        <StackPanel>
-                          <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                          <TextBlock Classes="muted" Text="{Binding DisplayStock}" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                          <TextBlock Text="{Binding DisplayPrice}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                          <TextBlock Classes="muted" Text="Tap to add" HorizontalAlignment="Right" />
-                        </StackPanel>
-                      </Grid>
-                    </Border>
-                  </Button.Content>
-                </Button>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
-
-      </Grid>
-    </Border>
-
-    <!-- RIGHT: Cart + Payment -->
-    <Border Grid.Row="1" Grid.Column="1" Classes="card">
-      <Grid RowDefinitions="Auto,Auto,*,Auto">
-
-        <!-- Customer card -->
-        <Border CornerRadius="12" Padding="12" BorderThickness="1"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                Background="#FFE3E3E3">
-          <Grid ColumnDefinitions="*,Auto,Auto">
-            <StackPanel>
-              <TextBlock Classes="muted" Text="Customer" />
-              <TextBlock Text="{Binding SelectedCustomerLabel}" FontWeight="SemiBold" />
-            </StackPanel>
-
-            <Button Grid.Column="1" Classes="ghost" Content="Select" Click="SelectCustomer_Click" Margin="0,0,10,0" />
-            <Button Grid.Column="2" Classes="ghost" Content="Clear" Click="ClearCustomer_Click" />
+     <Grid Grid.Row="1" ColumnDefinitions="3.8*,2.2*" ColumnSpacing="12">
+      <Border Grid.Column="0" Classes="card">
+        <Grid RowDefinitions="Auto,*">
+          <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <TextBlock Classes="h2" Text="Sales Entry" VerticalAlignment="Center"/>
+            <Button Grid.Column="1" Classes="ghost" Content="Search Item" Command="{Binding AddSearchItemCommand}" />
 
           </Grid>
-        </Border>
+        <Grid Grid.Row="1">
+            <TextBlock IsVisible="{Binding IsCartEmpty}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" Text="No items added" />
 
-        <!-- Cart title + shortcuts hint -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,8">
-          <TextBlock Classes="h2" Text="Cart" Margin="0" />
+            <dg:DataGrid
+                x:Name="CartGrid"
+                IsVisible="{Binding IsCartNotEmpty}"
+                ItemsSource="{Binding CartLines}"
+                SelectedItem="{Binding SelectedCartLine}"
+                AutoGenerateColumns="False"
+                GridLinesVisibility="All"
+                HeadersVisibility="Column"
+                IsReadOnly="True">
+              <dg:DataGrid.Columns>
+                <dg:DataGridTextColumn Header="Item #" Binding="{Binding ItemNumber}" Width="120" />
+                <dg:DataGridTextColumn Header="Item Name" Binding="{Binding ItemName}" Width="180" />
+                <dg:DataGridTextColumn Header="Item Description" Binding="{Binding ItemDescription}" Width="2*" />
+                <dg:DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="80" />
+                <dg:DataGridTextColumn Header="Qty" Binding="{Binding QuantityValue, StringFormat={}{0:0.###}}" Width="90" />
+                <dg:DataGridTextColumn Header="Sale Price" Binding="{Binding SalePrice, StringFormat={}{0:0.00}}" Width="110" />
+                <dg:DataGridTextColumn Header="Ext Price" Binding="{Binding ExtendedPrice, StringFormat={}{0:0.00}}" Width="110" />
+                <dg:DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, StringFormat={}{0:0.00}}" Width="90" />
+              </dg:DataGrid.Columns>
+            </dg:DataGrid>
+          </Grid>
         </Grid>
+      </Border>
 
-        <!-- Cart content -->
-        <Grid Grid.Row="2">
-          <TextBlock
-              IsVisible="{Binding IsCartEmpty}"
-              Classes="muted"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center"
-              TextAlignment="Center"
-              Text="Cart is empty" />
+        <Border Grid.Column="1" Classes="card">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
+          <Border CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" Background="#FFE3E3E3">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+              <StackPanel>
+                <TextBlock Classes="muted" Text="Customer" />
+                <TextBlock Text="{Binding SelectedCustomerLabel}" FontWeight="SemiBold" />
+              </StackPanel>
+              <Button Grid.Column="1" Classes="ghost" Content="Select" Click="SelectCustomer_Click" Margin="0,0,10,0" />
+              <Button Grid.Column="2" Classes="ghost" Content="Clear" Click="ClearCustomer_Click" />
+            </Grid>
+</Border>
 
-          <ListBox
-              x:Name="CartList"
-              ItemsSource="{Binding CartLines}"
-              SelectedItem="{Binding SelectedCartLine}"
-              IsVisible="{Binding IsCartNotEmpty}">
+          <Border Grid.Row="2" CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" Background="#FFE3E3E3">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto"><TextBlock Text="Subtotal" /><TextBlock Grid.Column="1" Text="{Binding Subtotal, StringFormat=$\{0:0.00\}}" /></Grid>
+              <Grid ColumnDefinitions="*,Auto"><TextBlock Text="Discount" /><TextBlock Grid.Column="1" Text="{Binding DiscountAmount, StringFormat=-$\{0:0.00\}}" /></Grid>
+              <Grid ColumnDefinitions="*,Auto"><TextBlock Text="VAT" /><TextBlock Grid.Column="1" Text="{Binding VatTotal, StringFormat=$\{0:0.00\}}" /></Grid>
+              <Grid ColumnDefinitions="*,Auto"><TextBlock FontWeight="Bold" Text="Total Due" /><TextBlock Grid.Column="1" FontWeight="Bold" Text="{Binding TotalDue, StringFormat=$\{0:0.00\}}" /></Grid>
 
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+              <Button Classes="primary" Content="Pay" IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" Click="Pay_Click" />
 
-
-                  <StackPanel>
-                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                    <TextBlock Classes="muted" Text="{Binding DisplayQtyLine}" />
-                  </StackPanel>
-
-                  <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding LineTotal, StringFormat=$\{0:0.00\}}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                    <TextBlock Classes="muted" Text="{Binding UnitPrice, StringFormat=Unit $\{0:0.00\}}" HorizontalAlignment="Right" />
-                  </StackPanel>
-
-                  <!-- Qty controls -->
-                  <Grid Grid.Row="1" Margin="0,6,0,0" ColumnDefinitions="Auto,Auto,Auto,Auto">
-                  <Button Classes="small" Content="−" Margin="0,0,8,0"
-                          Command="{Binding DataContext.DecreaseQtyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          CommandParameter="{Binding .}" />
-                  <Button Classes="small" Content="+" Margin="0,0,8,0"
-                          Command="{Binding DataContext.IncreaseQtyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          CommandParameter="{Binding .}" />
-                  <Button Classes="small" Content="Edit" Margin="0,0,8,0"
-                          Command="{Binding DataContext.EditQtyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          CommandParameter="{Binding .}" />
-                  <Button Classes="small" Content="Remove"
-                          Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          CommandParameter="{Binding .}" />
-                  </Grid>
-
-                </Grid>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
+              <Grid ColumnDefinitions="*,*,*">
+                <Button Classes="ghost" Content="Discount" Click="Discount_Click" Margin="0,0,10,0" />
+                <Button Classes="ghost" Grid.Column="1" Content="Clear" Click="Clear_Click" Margin="0,0,10,0" />
+                <Button Classes="ghost" Grid.Column="2" Content="Checkout (Cash)" Click="CashCheckout_Click" IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" />
+              </Grid>
+            </StackPanel>
+          </Border>
         </Grid>
-
-        <!-- Totals + actions -->
-        <Border Grid.Row="3" CornerRadius="12" Padding="12" BorderThickness="1"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                Background="#FFE3E3E3">
-
-          <StackPanel Spacing="10">
-
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="Subtotal" />
-              <TextBlock Grid.Column="1" Text="{Binding Subtotal, StringFormat=$\{0:0.00\}}" />
-            </Grid>
-
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="Discount" />
-              <TextBlock Grid.Column="1" Text="{Binding DiscountAmount, StringFormat=-$\{0:0.00\}}" />
-            </Grid>
-
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="VAT" />
-              <TextBlock Grid.Column="1" Text="{Binding VatTotal, StringFormat=$\{0:0.00\}}" />
-            </Grid>
-
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock FontWeight="Bold" Text="Total Due" />
-              <TextBlock Grid.Column="1" FontWeight="Bold" Text="{Binding TotalDue, StringFormat=$\{0:0.00\}}" />
-            </Grid>
-
-            <Button
-                Classes="primary"
-                Content="Pay"
-                IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}"
-                Click="Pay_Click" />
-
-            <Grid ColumnDefinitions="*,*,*">
-              <Button Classes="ghost" Content="Discount" Click="Discount_Click" Margin="0,0,10,0" />
-              <Button Classes="ghost" Grid.Column="1" Content="Clear" Click="Clear_Click" Margin="0,0,10,0" />
-              <Button Classes="ghost" Grid.Column="2" Content="Checkout (Cash)" Click="CashCheckout_Click"
-                      IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" />
-            </Grid>
-
-
-          </StackPanel>
-        </Border>
-
-      </Grid>
-    </Border>
+      </Border>
+    </Grid>
 
   </Grid>
 </UserControl>

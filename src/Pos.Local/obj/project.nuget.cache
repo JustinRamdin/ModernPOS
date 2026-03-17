@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "yGE4Mkia+Go=",
+  "dgSpecHash": "SFmxHInhELU=",
   "success": true,
   "projectFilePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
   "expectedPackageFiles": [
@@ -56,10 +56,7 @@
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.0\\system.security.cryptography.protecteddata.9.0.0.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.cryptography.xml\\9.0.0\\system.security.cryptography.xml.9.0.0.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.permissions\\9.0.0\\system.security.permissions.9.0.0.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.2\\microsoft.netcore.app.runtime.win-x64.10.0.2.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.2\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.2.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.2\\microsoft.aspnetcore.app.runtime.win-x64.10.0.2.nupkg.sha512"
+    "C:\\Users\\Justin\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512"
   ],
   "logs": []
 }

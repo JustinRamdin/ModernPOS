@@ -113,6 +113,11 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
             Status = "Select a line to remove.";
             return;
         }
+        editor.Lines.Remove(editor.SelectedLine);
+        editor.SelectedLine = editor.Lines.FirstOrDefault();
+        editor.RecalculateTotals();
+        Status = "Line removed.";
+    }
 
     public void ClearLines(FinancialDocumentEditorViewModel editor)
     {
@@ -120,12 +125,6 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         editor.SelectedLine = null;
         editor.RecalculateTotals();
         Status = "All lines cleared.";
-    }
-
-        var line = new FinancialLineItem(product.Id, product.DisplayName, qty, resolvedUnitPrice, editor.RecalculateTotals);
-        editor.SelectedLine = editor.Lines.FirstOrDefault();
-        editor.RecalculateTotals();
-        Status = "Line removed.";
     }
 
     public async Task SavePdfAsync(FinancialDocumentEditorViewModel editor, string filePath)

@@ -200,7 +200,7 @@
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
                             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+                            Background="#FFE3E3E3">
                       <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
                         <StackPanel>
                           <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />

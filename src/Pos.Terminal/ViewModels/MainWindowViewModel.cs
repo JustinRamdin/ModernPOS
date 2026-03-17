@@ -233,6 +233,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private string _selectedCustomerName = "None";
+    private string _selectedCustomerPhone = "N/A";
+    private string _selectedCustomerEmail = "N/A";
     public string SelectedCustomerLabel =>
         SelectedCustomerId == null ? "None" : _selectedCustomerName;
 
@@ -240,6 +242,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         SelectedCustomerId = null;
         _selectedCustomerName = "None";
+        _selectedCustomerPhone = "N/A";
+        _selectedCustomerEmail = "N/A";
 
         // SelectedCustomerId setter already raises most props,
         // but we also raise label to be safe.
@@ -370,17 +374,27 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         PageTitle = "Select Customer";
 
-        var vm = new CustomersViewModel(
+        CustomersViewModel? vm = null;
+        vm = new CustomersViewModel(
             isPicker: true,
             onPicked: async pickedId =>
             {
                 if (pickedId != null)
                 {
+                    var selected = vm?.Selected;
                     await using var db2 = CreateLocalDb();
                     var c = await db2.Customers.AsNoTracking()
                         .FirstOrDefaultAsync(x => x.Id == pickedId.Value);
 
-                    _selectedCustomerName = c?.Name ?? "Unknown";
+                     _selectedCustomerName = !string.IsNullOrWhiteSpace(selected?.Name)
+                        ? selected.Name
+                        : c?.Name ?? "Unknown";
+                    _selectedCustomerPhone = !string.IsNullOrWhiteSpace(selected?.Phone)
+                        ? selected.Phone
+                        : string.IsNullOrWhiteSpace(c?.Phone) ? "N/A" : c.Phone;
+                    _selectedCustomerEmail = !string.IsNullOrWhiteSpace(selected?.Email)
+                        ? selected.Email
+                        : string.IsNullOrWhiteSpace(c?.Email) ? "N/A" : c.Email;
                     SelectedCustomerId = pickedId.Value;
 
                     OnPropertyChanged(nameof(SelectedCustomerLabel));
@@ -1000,8 +1014,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         PhysicalReceiptRenderer.ReceiptCustomerInfo customerInfo;
         {
             var name = _selectedCustomerName;
-            var phone = "N/A";
-            var email = "N/A";
+            var phone = _selectedCustomerPhone;
+            var email = _selectedCustomerEmail;
 
             if (SelectedCustomerId is not null)
             {

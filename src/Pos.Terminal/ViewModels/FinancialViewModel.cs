@@ -430,8 +430,36 @@ public sealed class FinancialDocumentEditorViewModel : INotifyPropertyChanged
         }
     }
 
-    private decimal _taxRate = 0m;
-    public decimal TaxRate { get => _taxRate; set { _taxRate = value; Raise(); RecalculateTotals(); } }
+    private bool _isTaxEnabled;
+    public bool IsTaxEnabled
+    {
+        get => _isTaxEnabled;
+        set
+        {
+            if (_isTaxEnabled == value)
+                return;
+
+            _isTaxEnabled = value;
+            Raise();
+
+            TaxRate = value ? 12.5m : 0m;
+            RecalculateTotals();
+        }
+    }
+
+    private decimal _taxRate;
+    public decimal TaxRate
+    {
+        get => _taxRate;
+        private set
+        {
+            if (_taxRate == value)
+                return;
+
+            _taxRate = value;
+            Raise();
+        }
+    }
 
     private decimal _discountAmount;
     public decimal DiscountAmount

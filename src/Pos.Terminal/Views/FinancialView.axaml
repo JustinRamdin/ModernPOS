@@ -19,7 +19,7 @@
 
     <TabControl Grid.Row="1">
       <TabItem Header="Quotes">
-        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,Auto,*,Auto" ColumnDefinitions="*,*">
+        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
           <TextBlock Grid.ColumnSpan="2" Text="Quote Details" FontSize="16" FontWeight="SemiBold"/>
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
@@ -89,25 +89,14 @@
             </StackPanel>
           </Border>
 
-          <DataGrid Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
-                    ItemsSource="{Binding Quote.Lines}" SelectedItem="{Binding Quote.SelectedLine, Mode=TwoWay}">
-            <DataGrid.Columns>
-              <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
-              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
-              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
-              <DataGridTextColumn Header="Total" Binding="{Binding LineTotal}" IsReadOnly="True" Width="140"/>
-            </DataGrid.Columns>
-          </DataGrid>
-
-           <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+          <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
             <StackPanel>
               <TextBlock Text="Notes"/>
               <TextBox Text="{Binding Quote.Notes}" AcceptsReturn="True" Height="70" TextWrapping="Wrap"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
-              <TextBlock Text="Tax Rate (%)"/>
-              <TextBox Text="{Binding Quote.TaxRate}"/>
+             <CheckBox Content="Apply tax (12.5%)" IsChecked="{Binding Quote.IsTaxEnabled, Mode=TwoWay}"/>
               <TextBlock Text="{Binding Quote.Subtotal, StringFormat=Subtotal: {0:0.00}}"/>
               <TextBlock Text="{Binding Quote.TaxAmount, StringFormat=Tax: {0:0.00}}"/>
               <TextBlock Text="{Binding Quote.Total, StringFormat=Total: {0:0.00}}" FontWeight="Bold"/>
@@ -119,7 +108,7 @@
       </TabItem>
 
       <TabItem Header="Invoices">
-        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,Auto,*,Auto" ColumnDefinitions="*,*">
+        <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
           <TextBlock Grid.ColumnSpan="2" Text="Invoice Details" FontSize="16" FontWeight="SemiBold"/>
 
           <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,6,0">
@@ -189,24 +178,14 @@
             </StackPanel>
           </Border>
 
-          <DataGrid Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="260"
-                    ItemsSource="{Binding Invoice.Lines}" SelectedItem="{Binding Invoice.SelectedLine, Mode=TwoWay}">
-            <DataGrid.Columns>
-              <DataGridTextColumn Header="Description" Binding="{Binding Description}" IsReadOnly="True" Width="*"/>
-              <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="120"/>
-              <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay}" Width="140"/>
-            </DataGrid.Columns>
-          </DataGrid>
-
-          <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+          <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
             <StackPanel>
               <TextBlock Text="Notes"/>
               <TextBox Text="{Binding Invoice.Notes}" AcceptsReturn="True" Height="70" TextWrapping="Wrap"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="6" MinWidth="220">
-              <TextBlock Text="Tax Rate (%)"/>
-              <TextBox Text="{Binding Invoice.TaxRate}"/>
+              <CheckBox Content="Apply tax (12.5%)" IsChecked="{Binding Invoice.IsTaxEnabled, Mode=TwoWay}"/>
               <TextBlock Text="{Binding Invoice.Subtotal, StringFormat=Subtotal: {0:0.00}}"/>
               <TextBlock Text="{Binding Invoice.TaxAmount, StringFormat=Tax: {0:0.00}}"/>
               <TextBlock Text="{Binding Invoice.Total, StringFormat=Total: {0:0.00}}" FontWeight="Bold"/>

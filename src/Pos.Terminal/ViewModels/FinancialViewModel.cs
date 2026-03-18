@@ -148,8 +148,6 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
         var companyProfile = await new SharedCompanyProfileService().GetAsync();
         await Task.Run(() => BuildPdf(editor, customer!, companyProfile, filePath));
-        var settings = await new SettingsStore().LoadAsync();
-        await Task.Run(() => BuildPdf(editor, customer!, settings, filePath));
         Status = $"PDF saved: {filePath}";
     }
 
@@ -222,6 +220,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                                 var contactLine = string.Join(" | ", new[] { settings.Phone, settings.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
                                 if (!string.IsNullOrWhiteSpace(contactLine)) company.Item().Text(contactLine);
                                 if (!string.IsNullOrWhiteSpace(settings.TaxRegistrationNumber)) company.Item().Text($"Tax ID: {settings.TaxRegistrationNumber}");
+                            });
                         });
 
                         row.RelativeItem(4).AlignRight().Column(meta =>

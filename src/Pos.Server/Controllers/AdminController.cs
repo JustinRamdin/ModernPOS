@@ -47,7 +47,10 @@ public sealed class AdminController(
 
         CompanyProfileController.Apply(company, request);
         if (string.IsNullOrWhiteSpace(company.Name))
-            return ValidationProblem(new Dictionary<string, string[]> { [nameof(request.CompanyName)] = ["Company name is required."] });
+            {
+            ModelState.AddModelError(nameof(request.CompanyName), "Company name is required.");
+            return ValidationProblem(ModelState);
+        }
 
         await db.SaveChangesAsync(ct);
         lanAdvertiserOptions.CompanyName = company.Name;
@@ -74,7 +77,7 @@ public sealed class AdminController(
         scheduleStore.Save(settings);
         return Ok();
     }
-    
+
     [HttpGet("version")]
     public ActionResult<ServerVersionInfoDto> Version()
     {

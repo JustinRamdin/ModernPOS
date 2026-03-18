@@ -377,6 +377,14 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         await vm.LoadStatusAsync();
     }
 
+    public async void ShowUpdates()
+    {
+        PageTitle = "Updates";
+        var vm = new UpdatesViewModel();
+        CurrentView = new UpdatesView { DataContext = vm };
+        await vm.LoadAsync();
+    }
+
     // TerminalView expects this
     public void SelectCustomerFromTerminal() => ShowCustomerPicker();
 

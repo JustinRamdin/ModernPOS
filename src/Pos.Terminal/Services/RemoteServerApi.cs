@@ -69,8 +69,12 @@ public sealed class RemoteServerApi : IDisposable
         return await response.Content.ReadFromJsonAsync<BackupResponse>() ?? throw new InvalidOperationException("Empty backup response");
     }
 
-       public async Task<ServerDashboardDto> GetDashboardAsync()
+    public async Task<ServerDashboardDto> GetDashboardAsync()
         => await _http.GetFromJsonAsync<ServerDashboardDto>("api/admin/dashboard") ?? throw new InvalidOperationException("Empty dashboard response");
+    
+    public async Task<ServerVersionInfoDto> GetServerVersionInfoAsync()
+        => await _http.GetFromJsonAsync<ServerVersionInfoDto>("api/admin/version") ?? throw new InvalidOperationException("Empty server version response");
+
     public async Task BootstrapAsync(BootstrapServerRequest request)
         => (await _http.PostAsJsonAsync("api/setup/bootstrap", request)).EnsureSuccessStatusCode();
 

@@ -5,7 +5,7 @@ namespace Pos.Server.Services;
 
 public sealed class ScheduledBackupOptionsStore
 {
-    private static readonly string FilePath = Path.Combine(AppContext.BaseDirectory, "scheduled-backup.json");
+    private static readonly string FilePath = ServerStoragePaths.ScheduledBackupSettingsPath;
 
     public ScheduledBackupSettings Load()
         => File.Exists(FilePath)
@@ -15,5 +15,5 @@ public sealed class ScheduledBackupOptionsStore
     public void Save(ScheduledBackupSettings settings)
         => File.WriteAllText(FilePath, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
 
-    private static ScheduledBackupSettings Defaults() => new(false, Path.Combine(AppContext.BaseDirectory, "backups"), new TimeOnly(2, 0), 14);
+    private static ScheduledBackupSettings Defaults() => new(false, ServerStoragePaths.DefaultBackupFolder, new TimeOnly(2, 0), 14);
 }

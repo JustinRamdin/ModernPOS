@@ -17,3 +17,9 @@ public sealed record ServerDashboardDto(
     DateTimeOffset? LastBackupAtUtc,
     ScheduledBackupSettings Schedule,
     bool Initialized);
+
+public sealed record ServerVersionInfoDto(
+    string Version,
+    string DatabasePath,
+    bool DatabasePathIsProtected,
+    bool ManualServerUpdatesRequired);

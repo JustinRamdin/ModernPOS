@@ -27,6 +27,7 @@ public sealed class SettingsStore
     private const string DeployAuthTokenKey = "deploy.auth.token";
     private const string DeployUsernameKey = "deploy.username";
     private const string DeployRoleKey = "deploy.role";
+    private const string DeployUpdateSourceFolderKey = "deploy.update.source.folder";
 
 
     public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
@@ -69,7 +70,8 @@ public sealed class SettingsStore
             CompanyName = GetValue(lookup, DeployCompanyNameKey),
             AuthToken = GetValue(lookup, DeployAuthTokenKey),
             Username = GetValue(lookup, DeployUsernameKey),
-            Role = GetValue(lookup, DeployRoleKey)
+            Role = GetValue(lookup, DeployRoleKey),
+            UpdateSourceFolder = GetValue(lookup, DeployUpdateSourceFolderKey)
         };
     }
 
@@ -86,6 +88,7 @@ public sealed class SettingsStore
         await UpsertAsync(db, DeployAuthTokenKey, deployment.AuthToken, ct);
         await UpsertAsync(db, DeployUsernameKey, deployment.Username, ct);
         await UpsertAsync(db, DeployRoleKey, deployment.Role, ct);
+        await UpsertAsync(db, DeployUpdateSourceFolderKey, deployment.UpdateSourceFolder, ct);
         await db.SaveChangesAsync(ct);
     }
 

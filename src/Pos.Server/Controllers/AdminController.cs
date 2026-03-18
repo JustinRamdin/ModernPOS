@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using Pos.Contracts;
 using Pos.Infrastructure.Data;
 using Pos.Server.Services;
@@ -44,5 +45,22 @@ public sealed class AdminController(
     {
         scheduleStore.Save(settings);
         return Ok();
+    }
+      [HttpGet("version")]
+    public ActionResult<ServerVersionInfoDto> Version()
+    {
+        var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3)
+            ?? typeof(AdminController).Assembly.GetName().Version?.ToString(3)
+            ?? "0.0.0";
+
+        var conn = db.Database.GetConnectionString() ?? $"Data Source={ServerStoragePaths.DefaultDatabasePath}";
+        var path = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(conn).DataSource;
+        var fullPath = Path.GetFullPath(path);
+
+        return Ok(new ServerVersionInfoDto(
+            version,
+            fullPath,
+            ServerStoragePaths.IsProtectedDataPath(fullPath),
+            ManualServerUpdatesRequired: true));
     }
 }

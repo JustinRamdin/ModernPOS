@@ -10,7 +10,7 @@ public sealed class BackupOrchestrator(PosDbContext db, ILogger<BackupOrchestrat
 
     public async Task<string> CreateBackupAsync(string? folder, CancellationToken ct = default)
     {
-        folder = string.IsNullOrWhiteSpace(folder) ? Path.Combine(AppContext.BaseDirectory, "backups") : folder;
+        folder = string.IsNullOrWhiteSpace(folder) ? ServerStoragePaths.DefaultBackupFolder : folder;
         Directory.CreateDirectory(folder);
 
         var dbPath = ResolveDbPath();

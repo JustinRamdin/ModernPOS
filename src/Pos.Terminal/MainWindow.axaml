@@ -57,6 +57,7 @@
         <Button Classes="nav-button" x:Name="SettingsButton" Content="Settings" Click="NavSettings_Click" Margin="0,0,0,8"/>
         <Button Classes="nav-button" x:Name="UserAdminButton" Content="User Management" Click="UserAdmin_Click" Margin="0,0,0,8"/>
         <Button Classes="nav-button" x:Name="BackupButton" Content="Request Backup" Click="Backup_Click" Margin="0,0,0,8"/>
+        <Button Classes="nav-button" x:Name="UpdatesButton" Content="Updates" Click="Updates_Click" Margin="0,0,0,8"/>
         
         <Border Height="1"
                 Background="{StaticResource BorderBrushLight}"

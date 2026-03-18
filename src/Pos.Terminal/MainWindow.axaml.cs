@@ -79,6 +79,7 @@ public partial class MainWindow : Window
         SettingsButton.IsVisible = role is "SuperUser";
         UserAdminButton.IsVisible = role is "SuperUser";
         BackupButton.IsVisible = role is "SuperUser" or "Manager";
+        UpdatesButton.IsVisible = role is "SuperUser" or "Manager";
         FinancialButton.IsVisible = role is "SuperUser" or "Accountant";
         InventoryButton.IsVisible = role is not "Cashier";
     }
@@ -116,6 +117,8 @@ public partial class MainWindow : Window
 
     private void Backup_Click(object? sender, RoutedEventArgs e)
         => VM.ShowBackup();
+    private void Updates_Click(object? sender, RoutedEventArgs e)
+        => VM.ShowUpdates();
     public void AddCommand(object? param)
 
     {

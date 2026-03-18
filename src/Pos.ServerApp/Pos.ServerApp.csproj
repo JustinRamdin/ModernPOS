@@ -5,13 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-  <ItemGroup>
-  
+
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <SelfContained>true</SelfContained>
     <PublishAot>false</PublishAot>
     <CetCompat>false</CetCompat>
   </PropertyGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Pos.Server\Pos.Server.csproj" />
     <ProjectReference Include="..\Pos.Contracts\Pos.Contracts.csproj" />
   </ItemGroup>

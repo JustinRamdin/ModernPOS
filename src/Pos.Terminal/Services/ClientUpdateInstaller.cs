@@ -30,7 +30,7 @@ public sealed class ClientUpdateInstaller
             });
         }
 
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.Shutdown();
 
         return Task.CompletedTask;

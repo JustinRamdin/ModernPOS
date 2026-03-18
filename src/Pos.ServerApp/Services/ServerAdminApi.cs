@@ -25,6 +25,8 @@ public sealed class ServerAdminApi
     }
 
     public Task<ServerDashboardDto?> GetDashboardAsync() => _http.GetFromJsonAsync<ServerDashboardDto>("api/admin/dashboard");
+    public Task<CompanyProfileDto?> GetCompanyProfileAsync() => _http.GetFromJsonAsync<CompanyProfileDto>("api/admin/company-profile");
+    public async Task SaveCompanyProfileAsync(UpdateCompanyProfileRequest request) => (await _http.PutAsJsonAsync("api/admin/company-profile", request)).EnsureSuccessStatusCode();
     public async Task TriggerBackupAsync(string? folder = null) => (await _http.PostAsJsonAsync("api/admin/backup", new BackupRequest(folder))).EnsureSuccessStatusCode();
     public async Task RestoreAsync(string file) => (await _http.PostAsJsonAsync("api/admin/restore", new RestoreBackupRequest(file))).EnsureSuccessStatusCode();
     public async Task SaveScheduleAsync(ScheduledBackupSettings s) => (await _http.PostAsJsonAsync("api/admin/schedule", s)).EnsureSuccessStatusCode();

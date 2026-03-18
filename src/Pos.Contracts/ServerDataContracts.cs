@@ -44,6 +44,33 @@ public sealed record UpsertCustomerRequest(
     decimal Balance,
     bool IsActive = true);
 
+public sealed record CompanyProfileDto(
+    Guid CompanyId,
+    string CompanyName,
+    string AddressLine1,
+    string AddressLine2,
+    string Phone,
+    string Email,
+    string TaxRegistrationNumber,
+    string ReceiptFooter,
+    string HeaderTitle,
+    byte[]? HeaderImage,
+    byte[]? LogoImage,
+    int LogoScaleMultiplier);
+
+public sealed record UpdateCompanyProfileRequest(
+    string CompanyName,
+    string AddressLine1,
+    string AddressLine2,
+    string Phone,
+    string Email,
+    string TaxRegistrationNumber,
+    string ReceiptFooter,
+    string HeaderTitle,
+    byte[]? HeaderImage,
+    byte[]? LogoImage,
+    int LogoScaleMultiplier);
+
 public sealed record ReportSummaryDto(
     int ReceiptCount,
     decimal GrossTotal,

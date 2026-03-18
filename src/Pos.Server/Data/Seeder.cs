@@ -17,7 +17,6 @@ public static class Seeder
         }
         await EnsureSqliteCompatibilityAsync(db);
     }
-    
     private static async Task<bool> HasMigrationsHistoryTableAsync(PosDbContext db)
     {
         if (!db.Database.IsSqlite())
@@ -38,7 +37,7 @@ public static class Seeder
         if (!db.Database.IsSqlite())
             return;
 
-         await db.Database.ExecuteSqlRawAsync("""
+        await db.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "Customers" (
                 "Id" TEXT NOT NULL PRIMARY KEY,
                 "Name" TEXT NOT NULL DEFAULT '',
@@ -58,11 +57,23 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "IsLength", "ALTER TABLE \"Products\" ADD COLUMN \"IsLength\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHand", "ALTER TABLE \"Products\" ADD COLUMN \"OnHand\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHandInches", "ALTER TABLE \"Products\" ADD COLUMN \"OnHandInches\" INTEGER NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
 
         await EnsureColumnAsync(db, "UserAccounts", "DisplayName", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
         await EnsureColumnAsync(db, "UserAccounts", "UpdatedAtUtc", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"UpdatedAtUtc\" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'; ",
             "UPDATE \"UserAccounts\" SET \"UpdatedAtUtc\" = \"CreatedAtUtc\" WHERE \"UpdatedAtUtc\" = '0001-01-01T00:00:00.0000000Z';");
+
+        await EnsureColumnAsync(db, "Companies", "ReceiptAddressLine1", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptAddressLine1\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "ReceiptAddressLine2", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptAddressLine2\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "ReceiptPhone", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptPhone\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "ReceiptEmail", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptEmail\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "TaxRegistrationNumber", "ALTER TABLE \"Companies\" ADD COLUMN \"TaxRegistrationNumber\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "ReceiptFooter", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptFooter\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "ReceiptHeaderTitle", "ALTER TABLE \"Companies\" ADD COLUMN \"ReceiptHeaderTitle\" TEXT NOT NULL DEFAULT ''; ");
+        await EnsureColumnAsync(db, "Companies", "HeaderImage", "ALTER TABLE \"Companies\" ADD COLUMN \"HeaderImage\" BLOB NULL;");
+        await EnsureColumnAsync(db, "Companies", "LogoImage", "ALTER TABLE \"Companies\" ADD COLUMN \"LogoImage\" BLOB NULL;");
+        await EnsureColumnAsync(db, "Companies", "LogoScaleMultiplier", "ALTER TABLE \"Companies\" ADD COLUMN \"LogoScaleMultiplier\" INTEGER NOT NULL DEFAULT 1;");
     }
 
     private static async Task EnsureColumnAsync(PosDbContext db, string tableName, string columnName, string alterSql, string? afterAddedSql = null)

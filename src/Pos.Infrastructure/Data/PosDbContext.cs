@@ -76,6 +76,14 @@ public class PosDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);
             e.HasIndex(x => x.Name).IsUnique();
+            e.Property(x => x.ReceiptAddressLine1).HasMaxLength(200);
+            e.Property(x => x.ReceiptAddressLine2).HasMaxLength(200);
+            e.Property(x => x.ReceiptPhone).HasMaxLength(64);
+            e.Property(x => x.ReceiptEmail).HasMaxLength(200);
+            e.Property(x => x.TaxRegistrationNumber).HasMaxLength(128);
+            e.Property(x => x.ReceiptFooter).HasMaxLength(1000);
+            e.Property(x => x.ReceiptHeaderTitle).HasMaxLength(200);
+            e.Property(x => x.LogoScaleMultiplier).HasDefaultValue(1);
         });
 
         b.Entity<UserAccount>(e =>

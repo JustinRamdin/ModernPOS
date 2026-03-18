@@ -29,7 +29,6 @@ public sealed class SettingsStore
     private const string DeployRoleKey = "deploy.role";
     private const string DeployUpdateSourceFolderKey = "deploy.update.source.folder";
 
-
     public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
     {
         await using var db = CreateLocalDb();
@@ -40,21 +39,13 @@ public sealed class SettingsStore
 
         return new AppSettings
         {
-            CompanyName = GetValue(lookup, CompanyNameKey),
-            CompanyAddress = GetValue(lookup, CompanyAddressKey),
-            CompanyContact = GetValue(lookup, CompanyContactKey),
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
-            HeaderTitle = GetValue(lookup, HeaderTitleKey),
-            HeaderImagePath = GetValue(lookup, HeaderImagePathKey),
-            LogoImagePath = GetValue(lookup, LogoImagePathKey),
-            LogoScaleMultiplier = GetIntValue(lookup, LogoScaleMultiplierKey, 1, 1, 4),
-            ReceiptRemarks = GetValue(lookup, ReceiptRemarksKey),
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
             VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m)
         };
     }
 
-     public async Task<DeploymentSettings> LoadDeploymentAsync(CancellationToken ct = default)
+    public async Task<DeploymentSettings> LoadDeploymentAsync(CancellationToken ct = default)
     {
         await using var db = CreateLocalDb();
         await db.Database.EnsureCreatedAsync(ct);
@@ -98,22 +89,38 @@ public sealed class SettingsStore
         await using var db = CreateLocalDb();
         await db.Database.EnsureCreatedAsync(ct);
 
-        await UpsertAsync(db, CompanyNameKey, settings.CompanyName, ct);
-        await UpsertAsync(db, CompanyAddressKey, settings.CompanyAddress, ct);
-        await UpsertAsync(db, CompanyContactKey, settings.CompanyContact, ct);
         await UpsertAsync(db, ReceiptPrinterKey, settings.ReceiptPrinterName, ct);
-        await UpsertAsync(db, HeaderTitleKey, settings.HeaderTitle, ct);
-        await UpsertAsync(db, HeaderImagePathKey, settings.HeaderImagePath, ct);
-        await UpsertAsync(db, LogoImagePathKey, settings.LogoImagePath, ct);
-        await UpsertAsync(db, LogoScaleMultiplierKey, settings.LogoScaleMultiplier.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
-        await UpsertAsync(db, ReceiptRemarksKey, settings.ReceiptRemarks, ct);
         await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
 
         await db.SaveChangesAsync(ct);
     }
+   public async Task ClearLegacyReceiptIdentityAsync(CancellationToken ct = default)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync(ct);
 
-   private static string GetValue(Dictionary<string, string> lookup, string key, string defaultValue = "")
+        var legacyKeys = new[]
+        {
+            CompanyNameKey,
+            CompanyAddressKey,
+            CompanyContactKey,
+            HeaderTitleKey,
+            HeaderImagePathKey,
+            LogoImagePathKey,
+            LogoScaleMultiplierKey,
+            ReceiptRemarksKey
+        };
+
+        var legacyEntries = await db.DeviceConfig.Where(x => legacyKeys.Contains(x.Key)).ToListAsync(ct);
+        if (legacyEntries.Count == 0)
+            return;
+
+        db.DeviceConfig.RemoveRange(legacyEntries);
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static string GetValue(Dictionary<string, string> lookup, string key, string defaultValue = "")
         => lookup.TryGetValue(key, out var value) ? value : defaultValue;
 
     private static bool GetBoolValue(Dictionary<string, string> lookup, string key, bool defaultValue)

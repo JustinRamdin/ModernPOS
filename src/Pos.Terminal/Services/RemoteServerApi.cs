@@ -32,7 +32,8 @@ public sealed class RemoteServerApi : IDisposable
 
     public async Task<IReadOnlyList<ProductDto>> GetProductsAsync()
         => await _http.GetFromJsonAsync<List<ProductDto>>("api/products") ?? [];
-    
+    public async Task<CompanyProfileDto> GetCompanyProfileAsync()
+        => await _http.GetFromJsonAsync<CompanyProfileDto>("api/company-profile") ?? throw new InvalidOperationException("Empty company profile response");
     public sealed record ServerCheckoutResponse(Guid SaleId, decimal Total, decimal Paid, decimal Change);
 
     public async Task<ServerCheckoutResponse> CheckoutAsync(Pos.Contracts.CheckoutRequest request)

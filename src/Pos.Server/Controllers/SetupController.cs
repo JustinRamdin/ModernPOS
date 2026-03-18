@@ -20,7 +20,12 @@ public sealed class SetupController(PosDbContext db, IPasswordHasher hasher, ILo
             return Conflict("Server is already initialized.");
         }
 
-        var company = new Company { Name = request.CompanyName.Trim() };
+        var companyName = request.CompanyName.Trim();
+        var company = new Company
+        {
+            Name = companyName,
+            ReceiptHeaderTitle = companyName
+        };
         var user = new UserAccount
         {
             Company = company,

@@ -44,6 +44,12 @@ public static class ModernPosServerHost
         {
             var db = scope.ServiceProvider.GetRequiredService<PosDbContext>();
             await Seeder.SeedAsync(db);
+
+             var lanOptions = scope.ServiceProvider.GetRequiredService<LanAdvertiserOptions>();
+            lanOptions.CompanyName = await db.Companies
+                .Select(x => x.Name)
+                .FirstOrDefaultAsync(ct)
+                ?? options.CompanyName;
         }
 
         app.UseMiddleware<SessionAuthMiddleware>();

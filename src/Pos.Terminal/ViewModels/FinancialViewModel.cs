@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Pos.Contracts;
 using Pos.Terminal.Models;
 using Pos.Terminal.Services;
 using QuestPDF.Fluent;
@@ -145,6 +146,8 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
     {
         if (!ValidateDocument(editor, out var customer)) return;
 
+        var companyProfile = await new SharedCompanyProfileService().GetAsync();
+        await Task.Run(() => BuildPdf(editor, customer!, companyProfile, filePath));
         var settings = await new SettingsStore().LoadAsync();
         await Task.Run(() => BuildPdf(editor, customer!, settings, filePath));
         Status = $"PDF saved: {filePath}";
@@ -174,8 +177,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
 
         return true;
     }
-
-    private static void BuildPdf(FinancialDocumentEditorViewModel editor, CustomerChoice customer, AppSettings settings, string filePath)
+    private static void BuildPdf(FinancialDocumentEditorViewModel editor, CustomerChoice customer, CompanyProfileDto settings, string filePath)
     {
         static Container CellStyle(Container c)
             => c.Border(1).BorderColor(Colors.White).PaddingVertical(5).PaddingHorizontal(6);
@@ -205,7 +207,7 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                         {
                             left.ConstantItem(68).Height(68).AlignMiddle().AlignCenter().Element(box =>
                             {
-                                if (TryLoadImageBytes(settings.LogoImagePath, out var logoBytes))
+                                if (TryLoadImageBytes(settings.LogoImage, out var logoBytes))
                                     box.Image(logoBytes).FitArea();
                                 else
                                     box.Border(1).BorderColor(Colors.Grey.Lighten1).AlignCenter().AlignMiddle().Text("LOGO").FontSize(9);
@@ -215,9 +217,11 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
                             {
                                 company.Spacing(3);
                                 company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyName) ? "<Your Company Name>" : settings.CompanyName).Bold();
-                                company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyAddress) ? "<Your address>" : settings.CompanyAddress);
-                                company.Item().Text(string.IsNullOrWhiteSpace(settings.CompanyContact) ? "<Your contact details>" : settings.CompanyContact);
-                            });
+                                if (!string.IsNullOrWhiteSpace(settings.AddressLine1)) company.Item().Text(settings.AddressLine1);
+                                if (!string.IsNullOrWhiteSpace(settings.AddressLine2)) company.Item().Text(settings.AddressLine2);
+                                var contactLine = string.Join(" | ", new[] { settings.Phone, settings.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                                if (!string.IsNullOrWhiteSpace(contactLine)) company.Item().Text(contactLine);
+                                if (!string.IsNullOrWhiteSpace(settings.TaxRegistrationNumber)) company.Item().Text($"Tax ID: {settings.TaxRegistrationNumber}");
                         });
 
                         row.RelativeItem(4).AlignRight().Column(meta =>
@@ -320,21 +324,10 @@ public sealed class FinancialViewModel : INotifyPropertyChanged
         }).GeneratePdf(filePath);
     }
 
-    private static bool TryLoadImageBytes(string? imagePath, out byte[] imageBytes)
+     private static bool TryLoadImageBytes(byte[]? rawBytes, out byte[] imageBytes)
     {
-        imageBytes = Array.Empty<byte>();
-        if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
-            return false;
-
-        try
-        {
-            imageBytes = File.ReadAllBytes(imagePath);
-            return imageBytes.Length > 0;
-        }
-        catch
-        {
-            return false;
-        }
+        imageBytes = rawBytes ?? Array.Empty<byte>();
+        return imageBytes.Length > 0;
     }
 
      private static async Task<RemoteServerApi> CreateApiAsync()

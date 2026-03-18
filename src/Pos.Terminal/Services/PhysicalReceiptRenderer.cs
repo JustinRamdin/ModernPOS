@@ -5,8 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-
-using Pos.Terminal.Models;
+using Pos.Contracts;
 
 namespace Pos.Terminal.Services;
 
@@ -39,7 +38,7 @@ public static class PhysicalReceiptRenderer
     public static bool DrawInvoiceLetterPage(
         Graphics g,
         Rectangle marginBounds,
-        AppSettings settings,
+        CompanyProfileDto companyProfile,
         string receiptNo,
         DateTime invoiceDate,
         ReceiptCustomerInfo customer,
@@ -50,7 +49,6 @@ public static class PhysicalReceiptRenderer
         decimal totalDue,
         decimal totalTendered,
         decimal change,
-        string remarks,
         InvoicePrintState state)
     {
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -63,8 +61,6 @@ public static class PhysicalReceiptRenderer
             height: marginBounds.Height
         );
 
-        // Keep the receipt content proportional to A4/letter printables so printers with
-        // larger hard-margins still fit all sections on a single page.
         const float baselineWidth = 807f;
         const float baselineHeight = 1149f;
         var pageScale = Math.Min(content.Width / baselineWidth, content.Height / baselineHeight);
@@ -102,14 +98,13 @@ public static class PhysicalReceiptRenderer
         g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, y, content.Width, stripeH));
         y += stripeH + 30f;
 
-        g.DrawString("RECEIPT", fontTitle, Brushes.DimGray, new RectangleF(content.Left + S(2f), y, content.Width * 0.45f, S(40f)));
+        var documentTitle = string.IsNullOrWhiteSpace(companyProfile.HeaderTitle) ? companyProfile.CompanyName : companyProfile.HeaderTitle;
+        g.DrawString(documentTitle, fontTitle, Brushes.DimGray, new RectangleF(content.Left + S(2f), y, content.Width * 0.45f, S(40f)));
 
-        // --- LOGO + META (logo larger, meta moved below logo) ---
         float metaW = S(95f);
-        float rightPad = S(16f);    // safe on printers with larger hard-margins
+        float rightPad = S(16f);
         float topPad = S(6f);
         float gapBelowLogo = S(10f);
-
         float metaX = content.Right - metaW - rightPad;
 
         static RectangleF FitToBoxPreserveAspect(SizeF img, RectangleF box)
@@ -119,20 +114,14 @@ public static class PhysicalReceiptRenderer
             float scale = Math.Min(box.Width / img.Width, box.Height / img.Height);
             float w = img.Width * scale;
             float h = img.Height * scale;
-
             float x = box.X + (box.Width - w) / 2f;
             float y = box.Y + (box.Height - h) / 2f;
-
             return new RectangleF(x, y, w, h);
         }
 
-        var logoMultiplier = Math.Clamp(settings.LogoScaleMultiplier, 1, 4);
-
-        // Bigger logo box (especially for wide logos like SGLTT)
-         float desiredLogoW = S(240f) * logoMultiplier;
+       var logoMultiplier = Math.Clamp(companyProfile.LogoScaleMultiplier, 1, 4);
+        float desiredLogoW = S(240f) * logoMultiplier;
         float desiredLogoH = S(120f) * logoMultiplier;
-
-        // Place logo under the red stripe, right-aligned
         float logoTop = content.Top + stripeH + topPad;
         float boxW = Math.Min(desiredLogoW, content.Width * 0.50f);
         float boxH = Math.Min(desiredLogoH, 140f * logoMultiplier);
@@ -144,7 +133,7 @@ public static class PhysicalReceiptRenderer
             height: boxH
         );
 
-        if (TryLoadLogoImage(settings.LogoImagePath, out var logoImage) && logoImage is not null)
+        if (TryLoadLogoImage(companyProfile.LogoImage, out var logoImage) && logoImage is not null)
         {
             using (logoImage)
             {
@@ -161,7 +150,6 @@ public static class PhysicalReceiptRenderer
             g.DrawString("LOGO", fontLogo, Brushes.White, logoBox, sfCenter);
         }
 
-        // Meta goes BELOW the logo now
         float metaY = logoBox.Bottom + gapBelowLogo;
 
         g.DrawString("PAYMENT DATE", fontSmallBold, Brushes.MidnightBlue,
@@ -176,11 +164,22 @@ public static class PhysicalReceiptRenderer
         g.DrawString(receiptNo, fontSmall, Brushes.Black,
             new RectangleF(metaX, metaY + S(60f), metaW, S(14f)), sfFarCenter);
 
-        var companyText =
-            $"{Safe(settings.CompanyName)}\n" +
-            $"{Safe(settings.CompanyAddress)}\n" +
-            $"{Safe(settings.CompanyContact)}";
-         g.DrawString(companyText, fontBody, Brushes.Black, new RectangleF(content.Left + S(2f), y + S(55f), content.Width * 0.5f, S(84f)));
+        var companyLines = new List<string>
+        {
+            Safe(companyProfile.CompanyName),
+            Safe(companyProfile.AddressLine1),
+            Safe(companyProfile.AddressLine2)
+        };
+
+        var contactLine = string.Join(" | ", new[] { companyProfile.Phone, companyProfile.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        if (!string.IsNullOrWhiteSpace(contactLine))
+            companyLines.Add(contactLine);
+
+        if (!string.IsNullOrWhiteSpace(companyProfile.TaxRegistrationNumber))
+            companyLines.Add($"Tax ID: {companyProfile.TaxRegistrationNumber.Trim()}");
+
+        var companyText = string.Join("\n", companyLines.Where(x => !string.IsNullOrWhiteSpace(x)));
+        g.DrawString(companyText, fontBody, Brushes.Black, new RectangleF(content.Left + S(2f), y + S(55f), content.Width * 0.5f, S(96f)));
 
         y += S(165f);
 
@@ -205,15 +204,13 @@ public static class PhysicalReceiptRenderer
             $"{Safe(customer.Email)}";
         g.DrawString(shipText, fontBody, Brushes.Black, new RectangleF(rightColX, y + S(22f), leftColW, infoH));
 
-         y += infoH + S(22f);
+        y += infoH + S(22f);
 
         float tableX = content.Left;
         float tableW = content.Width;
         float tableTop = y;
-
         float rowHeight = S(17f);
         float headerHeight = S(18f);
-
         float descW = tableW * 0.51f;
         float qtyW = tableW * 0.14f;
         float unitW = tableW * 0.23f;
@@ -226,33 +223,10 @@ public static class PhysicalReceiptRenderer
         g.DrawLine(penLight, tableX + descW + qtyW, tableTop, tableX + descW + qtyW, tableTop + headerHeight);
         g.DrawLine(penLight, tableX + descW + qtyW + unitW, tableTop, tableX + descW + qtyW + unitW, tableTop + headerHeight);
 
-        g.DrawString(
-            "DESCRIPTION",
-            fontTableHeader,
-            Brushes.White,
-            new RectangleF(tableX + S(6f), tableTop, descW - S(12f), headerHeight),
-            sfCenter);
-
-        g.DrawString(
-            "QTY",
-            fontTableHeader,
-            Brushes.White,
-             new RectangleF(tableX + descW + S(6f), tableTop, qtyW - S(12f), headerHeight),
-            sfCenter);
-
-        g.DrawString(
-            "UNIT PRICE",
-            fontTableHeader,
-            Brushes.White,
-            new RectangleF(tableX + descW + qtyW + S(6f), tableTop, unitW - S(12f), headerHeight),
-            sfCenter);
-
-        g.DrawString(
-            "TOTAL",
-            fontTableHeader,
-            Brushes.White,
-            new RectangleF(tableX + descW + qtyW + unitW + S(6f), tableTop, amtW - S(12f), headerHeight),
-            sfCenter);
+        g.DrawString("DESCRIPTION", fontTableHeader, Brushes.White, new RectangleF(tableX + S(6f), tableTop, descW - S(12f), headerHeight), sfCenter);
+        g.DrawString("QTY", fontTableHeader, Brushes.White, new RectangleF(tableX + descW + S(6f), tableTop, qtyW - S(12f), headerHeight), sfCenter);
+        g.DrawString("UNIT PRICE", fontTableHeader, Brushes.White, new RectangleF(tableX + descW + qtyW + S(6f), tableTop, unitW - S(12f), headerHeight), sfCenter);
+        g.DrawString("TOTAL", fontTableHeader, Brushes.White, new RectangleF(tableX + descW + qtyW + unitW + S(6f), tableTop, amtW - S(12f), headerHeight), sfCenter);
 
         float bodyTop = tableTop + headerHeight;
         float bodyH = content.Bottom - bodyTop - S(186f);
@@ -265,7 +239,6 @@ public static class PhysicalReceiptRenderer
         while (state.ItemIndex < state.Items.Count)
         {
             var (description, qtyText, unitPrice, amount) = state.Items[state.ItemIndex];
-
             float thisRowH = rowHeight;
 
             if (curY + thisRowH > bodyRect.Bottom - S(4f))
@@ -317,10 +290,10 @@ public static class PhysicalReceiptRenderer
             g.DrawString(summaryRows[i].Value, fontSmall, Brushes.Black, new RectangleF(summaryX + (summaryW * 0.62f), rowY, summaryW * 0.38f, summaryRowH), sfFarCenter);
         }
 
-        var remarksText = Safe(remarks);
+        var remarksText = Safe(companyProfile.ReceiptFooter);
         if (!string.IsNullOrWhiteSpace(remarksText))
         {
-           g.DrawString(remarksText, fontRemarks, Brushes.Black, new RectangleF(content.Left + S(2f), summaryTop + S(44f), content.Width * 0.6f, S(90f)), sfCenter);
+        g.DrawString(remarksText, fontRemarks, Brushes.Black, new RectangleF(content.Left + S(2f), summaryTop + S(44f), content.Width * 0.6f, S(90f)), sfCenter);
         }
 
         float paidY = summaryTop + (summaryRows.Count * summaryRowH) + S(8f);
@@ -335,29 +308,26 @@ public static class PhysicalReceiptRenderer
         g.FillRectangle(brushHeaderFill, new RectangleF(content.Left, content.Bottom - stripeH - S(4f), content.Width, stripeH));
 
         bool hasMore = state.ItemIndex < state.Items.Count;
-
         if (hasMore && state.ItemIndex == startIndex)
             state.ItemIndex = Math.Min(state.Items.Count, startIndex + 1);
 
         return hasMore;
     }
 
-    private static bool TryLoadLogoImage(string logoPath, out Image? logoImage)
+    private static bool TryLoadLogoImage(byte[]? logoBytes, out Image? logoImage)
     {
         logoImage = null;
 
-        if (string.IsNullOrWhiteSpace(logoPath) || !File.Exists(logoPath))
+        if (logoBytes is not { Length: > 0 })
             return false;
 
         try
         {
-            // Load without locking the file (lets user replace logo while app is running)
-            using var fs = new FileStream(logoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var ms = new MemoryStream();
-            fs.CopyTo(ms);
-            ms.Position = 0;
-
-            logoImage = Image.FromStream(ms);
+            using var source = new MemoryStream(logoBytes, writable: false);
+            using var copy = new MemoryStream();
+            source.CopyTo(copy);
+            copy.Position = 0;
+            logoImage = Image.FromStream(copy);
             return true;
         }
         catch

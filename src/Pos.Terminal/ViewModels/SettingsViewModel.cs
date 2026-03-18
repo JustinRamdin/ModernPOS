@@ -2,10 +2,10 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing.Printing;
-using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Avalonia.Media.Imaging;
+using Pos.Contracts;
 using Pos.Terminal.Models;
 using Pos.Terminal.Services;
 
@@ -14,23 +14,10 @@ namespace Pos.Terminal.ViewModels;
 public sealed class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly SettingsStore _store;
+    private readonly SharedCompanyProfileService _companyProfileService;
     private readonly Action<AppSettings>? _onSaved;
 
     public ObservableCollection<string> Printers { get; } = new();
-
-    private string _companyName = "";
-    public string CompanyName
-    {
-        get => _companyName;
-        set { _companyName = value ?? ""; OnPropertyChanged(); }
-    }
-
-    private string _companyAddress = "";
-    public string CompanyAddress
-    {
-        get => _companyAddress;
-        set { _companyAddress = value ?? ""; OnPropertyChanged(); }
-    }
 
     private string _companyContact = "";
     public string CompanyContact
@@ -46,78 +33,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set { _selectedPrinter = value ?? ""; OnPropertyChanged(); }
     }
 
-    private string _headerTitle = "";
-    public string HeaderTitle
-    {
-        get => _headerTitle;
-        set { _headerTitle = value ?? ""; OnPropertyChanged(); }
-    }
-
-    private string _receiptRemarks = "";
-    public string ReceiptRemarks
-    {
-        get => _receiptRemarks;
-        set { _receiptRemarks = value ?? ""; OnPropertyChanged(); }
-    }
-
-    private string _headerImagePath = "";
-    public string HeaderImagePath
-    {
-        get => _headerImagePath;
-        private set { _headerImagePath = value ?? ""; OnPropertyChanged(); }
-    }
-
-    private Bitmap? _headerImage;
-    public Bitmap? HeaderImage
-    {
-        get => _headerImage;
-        private set { _headerImage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasHeaderImage)); }
-    }
-
-    public bool HasHeaderImage => HeaderImage != null;
-
-    private string _logoImagePath = "";
-    public string LogoImagePath
-    {
-        get => _logoImagePath;
-        private set { _logoImagePath = value ?? ""; OnPropertyChanged(); }
-    }
-
-    private Bitmap? _logoImage;
-    public Bitmap? LogoImage
-    {
-        get => _logoImage;
-        private set { _logoImage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasLogoImage)); }
-    }
-
-    public bool HasLogoImage => LogoImage != null;
-
-    private int _logoScaleMultiplier = 1;
-    public int LogoScaleMultiplier
-    {
-        get => _logoScaleMultiplier;
-        private set
-        {
-            var clamped = Math.Clamp(value, 1, 4);
-            if (_logoScaleMultiplier == clamped)
-                return;
-
-            _logoScaleMultiplier = clamped;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsLogoScale1xSelected));
-            OnPropertyChanged(nameof(IsLogoScale2xSelected));
-            OnPropertyChanged(nameof(IsLogoScale3xSelected));
-            OnPropertyChanged(nameof(IsLogoScale4xSelected));
-        }
-    }
-
-    public bool IsLogoScale1xSelected => LogoScaleMultiplier == 1;
-    public bool IsLogoScale2xSelected => LogoScaleMultiplier == 2;
-    public bool IsLogoScale3xSelected => LogoScaleMultiplier == 3;
-    public bool IsLogoScale4xSelected => LogoScaleMultiplier == 4;
-
-
-     private bool _isVatEnabled = true;
+    private bool _isVatEnabled = true;
     public bool IsVatEnabled
     {
         get => _isVatEnabled;
@@ -137,6 +53,35 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         private set { _statusMessage = value; OnPropertyChanged(); }
     }
 
+
+    private CompanyProfileDto? _sharedProfile;
+    public CompanyProfileDto? SharedProfile
+    {
+        get => _sharedProfile;
+        private set
+        {
+            _sharedProfile = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SharedCompanyName));
+            OnPropertyChanged(nameof(SharedAddress));
+            OnPropertyChanged(nameof(SharedContact));
+            OnPropertyChanged(nameof(SharedTaxRegistrationNumber));
+            OnPropertyChanged(nameof(SharedReceiptFooter));
+            OnPropertyChanged(nameof(SharedHeaderTitle));
+            OnPropertyChanged(nameof(CompanyProfileStatus));
+        }
+    }
+
+    public string SharedCompanyName => SharedProfile?.CompanyName ?? "Not available";
+    public string SharedAddress => string.Join(Environment.NewLine, new[] { SharedProfile?.AddressLine1, SharedProfile?.AddressLine2 }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    public string SharedContact => string.Join(" | ", new[] { SharedProfile?.Phone, SharedProfile?.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    public string SharedTaxRegistrationNumber => SharedProfile?.TaxRegistrationNumber ?? string.Empty;
+    public string SharedReceiptFooter => SharedProfile?.ReceiptFooter ?? string.Empty;
+    public string SharedHeaderTitle => SharedProfile?.HeaderTitle ?? string.Empty;
+    public string CompanyProfileStatus => SharedProfile == null
+        ? "Shared company profile could not be loaded."
+        : "Business identity is managed centrally on the server and used by all connected clients.";
+
     private string _printerStatus = "";
     public string PrinterStatus
     {
@@ -148,26 +93,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         _store = store;
         _onSaved = onSaved;
+        _companyProfileService = new SharedCompanyProfileService(store);
     }
 
     public async Task LoadAsync()
     {
         var settings = await _store.LoadAsync();
-        CompanyName = settings.CompanyName;
-        CompanyAddress = settings.CompanyAddress;
-        CompanyContact = settings.CompanyContact;
         SelectedPrinter = settings.ReceiptPrinterName;
-        HeaderTitle = settings.HeaderTitle;
-        ReceiptRemarks = settings.ReceiptRemarks;
-        HeaderImagePath = settings.HeaderImagePath;
-        LogoImagePath = settings.LogoImagePath;
-        LogoImage = LoadBitmap(settings.LogoImagePath);
-        LogoScaleMultiplier = settings.LogoScaleMultiplier;
-        HeaderImage = LoadBitmap(settings.HeaderImagePath);
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
 
+        await _store.ClearLegacyReceiptIdentityAsync();
         LoadPrinters();
+        await RefreshSharedProfileAsync();
         StatusMessage = "Settings loaded.";
     }
 
@@ -183,9 +121,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         }
 
         foreach (string printer in PrinterSettings.InstalledPrinters)
-        {
             Printers.Add(printer);
-        }
 
         if (Printers.Count == 0)
         {
@@ -194,8 +130,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         }
 
         if (!string.IsNullOrWhiteSpace(SelectedPrinter) && !Printers.Contains(SelectedPrinter))
-        {
             Printers.Insert(0, SelectedPrinter);
+            }
+
+    public async Task RefreshSharedProfileAsync()
+    {
+        try
+        {
+            SharedProfile = await _companyProfileService.GetAsync();
+        }
+        catch (Exception ex)
+        {
+            SharedProfile = null;
+            StatusMessage = $"Unable to load shared company profile: {ex.Message}";
         }
     }
 
@@ -203,98 +150,24 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         var settings = new AppSettings
         {
-            CompanyName = CompanyName.Trim(),
-            CompanyAddress = CompanyAddress.Trim(),
-            CompanyContact = CompanyContact.Trim(),
             ReceiptPrinterName = SelectedPrinter.Trim(),
-            HeaderTitle = HeaderTitle.Trim(),
-            ReceiptRemarks = ReceiptRemarks,
-            LogoImagePath = LogoImagePath.Trim(),
-            LogoScaleMultiplier = LogoScaleMultiplier,
-            HeaderImagePath = HeaderImagePath.Trim(),
             IsVatEnabled = IsVatEnabled,
             VatRatePercent = ParseVatRatePercent()
         };
 
         await _store.SaveAsync(settings);
         _onSaved?.Invoke(settings);
-        StatusMessage = "Settings saved.";
+        StatusMessage = "Terminal preferences saved.";
     }
 
-     private decimal ParseVatRatePercent()
+    private decimal ParseVatRatePercent()
     {
         if (decimal.TryParse(VatRatePercent, out var parsed))
-        {
             return Math.Round(Math.Clamp(parsed, 0m, 100m), 2);
-        }
 
         return 12.5m;
     }
-
-     public async Task SetLogoImageAsync(string sourcePath)
-    {
-        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
-        {
-            StatusMessage = "Image not found.";
-            return;
-        }
-
-        var destPath = CopyBrandingImage(sourcePath, "receipt-logo");
-        LogoImagePath = destPath;
-        LogoImage = LoadBitmap(destPath);
-        StatusMessage = "Logo image updated.";
-        await Task.CompletedTask;
-    }
-
-    public void SetLogoScaleMultiplier(int multiplier)
-    {
-        LogoScaleMultiplier = multiplier;
-        StatusMessage = $"Logo size set to {LogoScaleMultiplier}x.";
-    }
-
-    public async Task SetHeaderImageAsync(string sourcePath)
-    {
-        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
-        {
-            StatusMessage = "Image not found.";
-            return;
-        }
-
-        var destPath = CopyBrandingImage(sourcePath, "header-logo");
-        HeaderImagePath = destPath;
-        HeaderImage = LoadBitmap(destPath);
-        StatusMessage = "Header image updated.";
-        await Task.CompletedTask;
-    }
-
-    private static string CopyBrandingImage(string sourcePath, string filePrefix)
-    {
-        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var folder = Path.Combine(root, "ModernPOS", "branding");
-        Directory.CreateDirectory(folder);
-
-        var extension = Path.GetExtension(sourcePath);
-        var destPath = Path.Combine(folder, $"{filePrefix}{extension}");
-        File.Copy(sourcePath, destPath, true);
-        return destPath;
-    }
-
-    private static Bitmap? LoadBitmap(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            return null;
-
-        try
-        {
-            return new Bitmap(path);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

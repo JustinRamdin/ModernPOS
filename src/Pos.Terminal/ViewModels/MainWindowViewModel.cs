@@ -46,6 +46,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 {
      private CheckoutCalculator _checkout = new(new VatCalculator());
     private readonly SettingsStore _settingsStore = new();
+    private readonly SharedCompanyProfileService _companyProfileService = new();
     private AppSettings _settings = new();
 
     // -----------------------------
@@ -1005,6 +1006,21 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
      private async Task LoadHeaderAsync()
     {
+        _settings = await _settingsStore.LoadAsync();
+
+        try
+        {
+            var profile = await _companyProfileService.GetAsync();
+            HeaderTitle = string.IsNullOrWhiteSpace(profile.HeaderTitle) ? profile.CompanyName : profile.HeaderTitle;
+            HeaderImage = LoadBitmap(profile.HeaderImage);
+        }
+        catch
+        {
+            HeaderTitle = "ModernPOS";
+            HeaderImage = null;
+        }
+
+        RaiseTotalsChanged();
         var settings = await _settingsStore.LoadAsync();
         ApplyHeaderSettings(settings);
     }
@@ -1012,19 +1028,17 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     private void ApplyHeaderSettings(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();
-        HeaderTitle = string.IsNullOrWhiteSpace(_settings.HeaderTitle) ? "ModernPOS" : _settings.HeaderTitle;
-        HeaderImage = LoadBitmap(_settings.HeaderImagePath);
         RaiseTotalsChanged();
     }
 
-    private static AvaloniaBitmap? LoadBitmap(string path)
+    private static AvaloniaBitmap? LoadBitmap(byte[]? imageBytes)
     {
-        if (string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path))
+        if (imageBytes is not { Length: > 0 })
             return null;
 
         try
         {
-            return new AvaloniaBitmap(path);
+            return new AvaloniaBitmap(new MemoryStream(imageBytes, writable: false));
         }
         catch
         {
@@ -1089,6 +1103,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
+             var companyProfile = await _companyProfileService.GetAsync();
+
             var printerSettings = new PrinterSettings
             {
                 PrinterName = settings.ReceiptPrinterName
@@ -1122,7 +1138,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
                     g: e.Graphics,
                     marginBounds: e.MarginBounds,
-                    settings: settings,
+                    companyProfile: companyProfile,
                     receiptNo: receiptNo,
                     invoiceDate: DateTime.Now,
                     customer: customerInfo,
@@ -1133,7 +1149,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     totalDue: totalDue,
                     totalTendered: cashGiven,
                     change: change,
-                    remarks: settings.ReceiptRemarks,
                     state: state
                 );
             };

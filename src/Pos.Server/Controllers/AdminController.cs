@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using Pos.Contracts;
 using Pos.Infrastructure.Data;
+using Pos.Server.Discovery;
 using Pos.Server.Services;
 
 namespace Pos.Server.Controllers;
@@ -13,7 +14,8 @@ public sealed class AdminController(
     PosDbContext db,
     BackupOrchestrator backups,
     ScheduledBackupOptionsStore scheduleStore,
-     ServerRuntimeState runtime) : ControllerBase
+    ServerRuntimeState runtime,
+    LanAdvertiserOptions lanAdvertiserOptions) : ControllerBase
 {
     [HttpGet("dashboard")]
     public async Task<ActionResult<ServerDashboardDto>> Dashboard()
@@ -24,6 +26,32 @@ public sealed class AdminController(
         var path = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(conn).DataSource;
         var port = HttpContext.Connection.LocalPort;
         return Ok(new ServerDashboardDto(company, port, Path.GetFullPath(path), runtime.LastBackupAtUtc, schedule, await db.Companies.AnyAsync()));
+    }
+
+    [HttpGet("company-profile")]
+    public async Task<ActionResult<CompanyProfileDto>> GetCompanyProfile(CancellationToken ct)
+    {
+        var company = await db.Companies.FirstOrDefaultAsync(ct);
+        if (company is null)
+            return NotFound();
+
+        return Ok(CompanyProfileController.ToDto(company));
+    }
+
+    [HttpPut("company-profile")]
+    public async Task<ActionResult<CompanyProfileDto>> UpdateCompanyProfile([FromBody] UpdateCompanyProfileRequest request, CancellationToken ct)
+    {
+        var company = await db.Companies.FirstOrDefaultAsync(ct);
+        if (company is null)
+            return NotFound();
+
+        CompanyProfileController.Apply(company, request);
+        if (string.IsNullOrWhiteSpace(company.Name))
+            return ValidationProblem(new Dictionary<string, string[]> { [nameof(request.CompanyName)] = ["Company name is required."] });
+
+        await db.SaveChangesAsync(ct);
+        lanAdvertiserOptions.CompanyName = company.Name;
+        return Ok(CompanyProfileController.ToDto(company));
     }
 
     [HttpPost("backup")]
@@ -46,7 +74,8 @@ public sealed class AdminController(
         scheduleStore.Save(settings);
         return Ok();
     }
-      [HttpGet("version")]
+    
+    [HttpGet("version")]
     public ActionResult<ServerVersionInfoDto> Version()
     {
         var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3)

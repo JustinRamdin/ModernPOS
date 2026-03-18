@@ -15,47 +15,36 @@
           </StackPanel>
         </TabItem>
 
-        <TabItem Header="Receipt">
+        <TabItem Header="Company Profile">
           <StackPanel Spacing="8" Margin="0,12,0,0">
-            <TextBlock Text="Company Name"/>
-            <TextBox Text="{Binding CompanyName}" Watermark="ModernPOS Ltd."/>
+            <TextBlock Text="Shared business identity" FontWeight="Bold"/>
+            <TextBlock Text="{Binding CompanyProfileStatus}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-            <TextBlock Text="Company Address"/>
-            <TextBox Text="{Binding CompanyAddress}" Watermark="123 Main St, City" AcceptsReturn="True" Height="80"/>
+            <TextBlock Text="Company Name" Margin="0,8,0,0"/>
+            <TextBox Text="{Binding SharedCompanyName}" IsReadOnly="True"/>
 
-            <TextBlock Text="Contact Information"/>
-            <TextBox Text="{Binding CompanyContact}" Watermark="Phone, email, website"/>
+            <TextBlock Text="Address"/>
+            <TextBox Text="{Binding SharedAddress}" IsReadOnly="True" AcceptsReturn="True" Height="70"/>
 
-            <TextBlock Text="Receipt Remarks" Margin="0,8,0,0"/>
-            <TextBox Text="{Binding ReceiptRemarks}" Watermark="Type remarks shown on the printed receipt" AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
-            
-            <TextBlock Text="Header Title" Margin="0,8,0,0"/>
-            <TextBox Text="{Binding HeaderTitle}" Watermark="Receipt Header Title"/>
+            <TextBlock Text="Contact"/>
+            <TextBox Text="{Binding SharedContact}" IsReadOnly="True"/>
 
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-              <Button Content="Upload Header Image" Click="UploadHeaderImage_Click"/>
-              <TextBlock Text="{Binding HeaderImagePath}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-            </StackPanel>
+            <TextBlock Text="Tax / Registration"/>
+            <TextBox Text="{Binding SharedTaxRegistrationNumber}" IsReadOnly="True"/>
 
-            <Image Source="{Binding HeaderImage}" Width="180" Height="80" Stretch="Uniform" IsVisible="{Binding HasHeaderImage}"/>
+            <TextBlock Text="Header Title"/>
+            <TextBox Text="{Binding SharedHeaderTitle}" IsReadOnly="True"/>
 
-            
-            <TextBlock Text="Receipt Logo" Margin="0,10,0,0"/>
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <Button Content="Upload Logo" Click="UploadLogoImage_Click"/>
-              <Button Content="1x" Click="SetLogoScale1x_Click"/>
-              <Button Content="2x" Click="SetLogoScale2x_Click"/>
-              <Button Content="3x" Click="SetLogoScale3x_Click"/>
-              <Button Content="4x" Click="SetLogoScale4x_Click"/>
-            </StackPanel>
-            <TextBlock Text="{Binding LogoImagePath}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <Image Source="{Binding LogoImage}" Width="120" Height="120" Stretch="Uniform" IsVisible="{Binding HasLogoImage}"/>
+            <TextBlock Text="Receipt Footer"/>
+            <TextBox Text="{Binding SharedReceiptFooter}" IsReadOnly="True" AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
+
+            <Button Content="Refresh from Server" Click="RefreshSharedProfile_Click" HorizontalAlignment="Left" Margin="0,8,0,0"/>
           </StackPanel>
         </TabItem>
 
         <TabItem Header="Finance">
           <StackPanel Spacing="10" Margin="0,12,0,0">
-            <TextBlock Text="Finance options for the terminal." Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="Finance options for this terminal only." Foreground="{DynamicResource SecondaryTextBrush}"/>
 
             <CheckBox Content="Enable VAT in terminal"
                       IsChecked="{Binding IsVatEnabled}"/>
@@ -66,10 +55,9 @@
         </TabItem>
       </TabControl>
 
-
       <StackPanel Orientation="Horizontal" Spacing="12">
         <Button Content="Save Settings" Click="Save_Click"/>
-        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
       </StackPanel>
     </StackPanel>
   </ScrollViewer>

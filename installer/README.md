@@ -36,7 +36,10 @@ From the repository root:
 
 The generated installer is named `ModernPOS-Setup.exe` (from `OutputBaseFilename`) and is produced by Inno Setup in its output folder.
 
+The Windows publish settings are now defined in the project files so `win-x64` publishes stay self-contained while explicitly disabling CET compatibility and Native AOT.
+
 ### Notes
+
 
 - The `.iss` file expects these exact publish folders:
   - `publish/Pos.ServerApp`

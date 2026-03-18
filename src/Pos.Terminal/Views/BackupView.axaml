@@ -1,26 +1,126 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pos.Terminal.Views.BackupView">
-  <Border Margin="16" Padding="16" CornerRadius="8" BorderThickness="1">
-    <StackPanel Spacing="10">
-      <TextBlock Text="Request Backup" FontSize="20" FontWeight="Bold"/>
-      <TextBlock Text="Trigger a manual backup and monitor backup status." Opacity="0.75"/>
+ <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="16" Spacing="16">
+      <Border Padding="18" CornerRadius="10" BorderThickness="1">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Server Backup Center" FontSize="24" FontWeight="Bold"/>
+          <TextBlock Text="Save backups, set an automatic schedule, and restore from a backup without digging through server settings." Opacity="0.75" TextWrapping="Wrap"/>
+          <TextBlock Text="If the server is on another machine, you can still type the server path manually even when the browse buttons cannot see that machine's folders." Opacity="0.65" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
 
-      <TextBlock Text="Backup folder" Margin="0,8,0,0"/>
-      <TextBox Text="{Binding BackupFolder}" Watermark="Optional backup folder path"/>
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
+        <Border Grid.Row="0" Grid.Column="0" Padding="16" CornerRadius="10" BorderThickness="1">
+          <StackPanel Spacing="10">
+            <TextBlock Text="1. Save a backup now" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="Pick where the backup should be stored on the server, then create a backup immediately." Opacity="0.75" TextWrapping="Wrap"/>
 
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Refresh Status" Command="{Binding RefreshStatusCommand}"/>
-        <Button Content="Run Backup Now" Command="{Binding RunBackupCommand}"/>
-      </StackPanel>
+      <TextBlock Text="Backup destination folder" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding BackupFolder}" Watermark="Type the server backup folder path"/>
+            <WrapPanel ItemWidth="160" Orientation="Horizontal">
+              <Button Content="Browse folder" Click="BrowseBackupFolder_Click"/>
+              <Button Content="Use server default" Click="UseDefaultBackupFolder_Click" Margin="8,0,0,0"/>
+            </WrapPanel>
 
-      <TextBlock Text="Last backup time:" FontWeight="SemiBold" Margin="0,8,0,0"/>
-      <TextBlock Text="{Binding LastBackup}"/>
 
-      <TextBlock Text="Last backup file:" FontWeight="SemiBold" Margin="0,8,0,0"/>
-      <TextBlock Text="{Binding LastBackupPath}" TextWrapping="Wrap"/>
+      <Border Padding="10" CornerRadius="8" BorderThickness="1">
+              <TextBlock Text="{Binding BackupFolderSummary}" TextWrapping="Wrap"/>
+            </Border>
 
-      <TextBlock Text="{Binding StatusMessage}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+      <WrapPanel Orientation="Horizontal">
+              <Button Content="Refresh status" Command="{Binding RefreshStatusCommand}"/>
+              <Button Content="Run backup now" Command="{Binding RunBackupCommand}" Margin="8,0,0,0"/>
+            </WrapPanel>
+
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Last backup time:" FontWeight="SemiBold"/>
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LastBackup}" TextWrapping="Wrap"/>
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Last backup file:" FontWeight="SemiBold"/>
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupPath}" TextWrapping="Wrap"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Row="0" Grid.Column="1" Padding="16" CornerRadius="10" BorderThickness="1">
+          <StackPanel Spacing="10">
+            <TextBlock Text="2. Schedule automatic backups" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="Use simple scheduling choices instead of editing raw backup settings." Opacity="0.75" TextWrapping="Wrap"/>
+
+            <CheckBox Content="Turn on automatic daily backups" IsChecked="{Binding ScheduledBackupsEnabled}"/>
+
+            <TextBlock Text="When should the backup run?" FontWeight="SemiBold"/>
+            <ComboBox ItemsSource="{Binding ScheduleOptions}" SelectedItem="{Binding SelectedScheduleOption}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Description}" Opacity="0.7" FontSize="12" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <StackPanel IsVisible="{Binding IsCustomTimeVisible}" Spacing="4">
+              <TextBlock Text="Custom daily time (24-hour HH:mm)" FontWeight="SemiBold"/>
+              <TextBox Text="{Binding CustomScheduleTime}" Watermark="18:30"/>
+            </StackPanel>
+
+            <Border Padding="10" CornerRadius="8" BorderThickness="1">
+              <TextBlock Text="{Binding SelectedScheduleDescription}" TextWrapping="Wrap"/>
+            </Border>
+
+            <TextBlock Text="How many scheduled backups should be kept?" FontWeight="SemiBold"/>
+            <ComboBox ItemsSource="{Binding RetentionOptions}" SelectedItem="{Binding SelectedRetentionOption}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Description}" Opacity="0.7" FontSize="12" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Border Padding="10" CornerRadius="8" BorderThickness="1">
+              <StackPanel Spacing="4">
+                <TextBlock Text="{Binding SelectedRetentionDescription}" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding ScheduleSummary}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+
+            <Button Content="Save schedule" Command="{Binding SaveScheduleCommand}" HorizontalAlignment="Left"/>
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Padding="16" CornerRadius="10" BorderThickness="1">
+          <StackPanel Spacing="10">
+            <TextBlock Text="3. Restore from a backup" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="Choose the folder that contains your backups, then select the exact backup file you want to restore." Opacity="0.75" TextWrapping="Wrap"/>
+
+            <TextBlock Text="Backup folder to restore from" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding RestoreFolder}" Watermark="Select or type the folder that contains backup files"/>
+            <WrapPanel Orientation="Horizontal">
+              <Button Content="Browse restore folder" Click="BrowseRestoreFolder_Click"/>
+              <Button Content="Browse backup file" Click="BrowseRestoreFile_Click" Margin="8,0,0,0"/>
+            </WrapPanel>
+
+            <TextBlock Text="Backup file to restore" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding RestoreFilePath}" Watermark="Select the backup file to restore"/>
+
+            <Border Padding="10" CornerRadius="8" BorderThickness="1">
+              <TextBlock Text="Restoring replaces the current server database with the selected backup file. Make sure everyone has stopped using the system first." TextWrapping="Wrap"/>
+            </Border>
+
+            <Button Content="Restore selected backup" Command="{Binding RestoreBackupCommand}" HorizontalAlignment="Left"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Padding="12" CornerRadius="8" BorderThickness="1">
+        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+      </Border>
     </StackPanel>
-  </Border>
+  </ScrollViewer>
 </UserControl>

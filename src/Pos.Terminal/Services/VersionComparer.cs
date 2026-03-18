@@ -8,7 +8,11 @@ public static class VersionComparer
         if (string.IsNullOrWhiteSpace(value))
             return false;
 
-        return Version.TryParse(Normalize(value), out version);
+        if (!Version.TryParse(Normalize(value), out var parsedVersion))
+            return false;
+
+        version = parsedVersion;
+        return true;
     }
 
     public static int Compare(string? left, string? right)

@@ -11,8 +11,8 @@
         </StackPanel>
       </Border>
 
-      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
-        <Border Grid.Row="0" Grid.Column="0" Padding="16" CornerRadius="10" BorderThickness="1">
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+        <Border Grid.Row="0" Grid.Column="0" Padding="16" CornerRadius="10" BorderThickness="1" Margin="0,0,8,8">
           <StackPanel Spacing="10">
             <TextBlock Text="1. Save a backup now" FontSize="18" FontWeight="SemiBold"/>
             <TextBlock Text="Pick where the backup should be stored on the server, then create a backup immediately." Opacity="0.75" TextWrapping="Wrap"/>
@@ -34,16 +34,17 @@
               <Button Content="Run backup now" Command="{Binding RunBackupCommand}" Margin="8,0,0,0"/>
             </WrapPanel>
 
-      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Last backup time:" FontWeight="SemiBold"/>
-              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LastBackup}" TextWrapping="Wrap"/>
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Last backup file:" FontWeight="SemiBold"/>
+       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Last backup time:" FontWeight="SemiBold" Margin="0,0,8,6"/>
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LastBackup}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Last backup file:" FontWeight="SemiBold" Margin="0,0,8,0"/>
               <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupPath}" TextWrapping="Wrap"/>
             </Grid>
           </StackPanel>
         </Border>
 
-        <Border Grid.Row="0" Grid.Column="1" Padding="16" CornerRadius="10" BorderThickness="1">
+        <<Border Grid.Row="0" Grid.Column="1" Padding="16" CornerRadius="10" BorderThickness="1" Margin="8,0,0,8">
           <StackPanel Spacing="10">
             <TextBlock Text="2. Schedule automatic backups" FontSize="18" FontWeight="SemiBold"/>
             <TextBlock Text="Use simple scheduling choices instead of editing raw backup settings." Opacity="0.75" TextWrapping="Wrap"/>
@@ -94,7 +95,7 @@
           </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Padding="16" CornerRadius="10" BorderThickness="1">
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Padding="16" CornerRadius="10" BorderThickness="1" Margin="0,8,0,0">
           <StackPanel Spacing="10">
             <TextBlock Text="3. Restore from a backup" FontSize="18" FontWeight="SemiBold"/>
             <TextBlock Text="Choose the folder that contains your backups, then select the exact backup file you want to restore." Opacity="0.75" TextWrapping="Wrap"/>

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "0X2BclnHMeI=",
+  "dgSpecHash": "8g6+U7nv4j0=",
   "success": true,
   "projectFilePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
   "expectedPackageFiles": [
@@ -67,7 +67,24 @@
     "C:\\Users\\Justin\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\system.reactive\\5.0.0\\system.reactive.5.0.0.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\tmds.dbus.protocol\\0.15.0\\tmds.dbus.protocol.0.15.0.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\xlparser\\1.5.2\\xlparser.1.5.2.nupkg.sha512"
+    "C:\\Users\\Justin\\.nuget\\packages\\xlparser\\1.5.2\\xlparser.1.5.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.2\\microsoft.netcore.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.2\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.2\\microsoft.aspnetcore.app.runtime.win-x64.10.0.2.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'Tmds.DBus.Protocol' 0.15.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-xrw6-gwf8-vvr9",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Terminal\\Pos.Terminal.csproj",
+      "libraryId": "Tmds.DBus.Protocol",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    }
+  ]
 }

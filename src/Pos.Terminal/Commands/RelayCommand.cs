@@ -26,16 +26,30 @@ public sealed class AsyncRelayCommand : ICommand
 {
     private readonly Func<object?, Task> _execute;
     private readonly Func<object?, bool>? _canExecute;
+    private readonly Action<Exception>? _onError;
 
-    public AsyncRelayCommand(Func<object?, Task> execute, Func<object?, bool>? canExecute = null)
+    public AsyncRelayCommand(
+        Func<object?, Task> execute,
+        Func<object?, bool>? canExecute = null,
+        Action<Exception>? onError = null)
     {
         _execute = execute;
         _canExecute = canExecute;
+        _onError = onError;
     }
 
     public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
-    public async void Execute(object? parameter) => await _execute(parameter);
-
+     public async void Execute(object? parameter)
+    {
+        try
+        {
+            await _execute(parameter);
+        }
+        catch (Exception ex)
+        {
+            _onError?.Invoke(ex);
+        }
+    }
     public event EventHandler? CanExecuteChanged;
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }

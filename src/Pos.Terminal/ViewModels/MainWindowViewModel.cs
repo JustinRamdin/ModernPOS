@@ -281,6 +281,11 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             var selected = await ItemLookupRequested();
             if (selected != null)
                 AddToCart(selected);
+                },
+        onError: ex =>
+        {
+            Status = $"Unable to open item search. {ex.Message}";
+            Toast("Item search failed.");
         });
 
         RemoveLineCommand = new RelayCommand(p =>

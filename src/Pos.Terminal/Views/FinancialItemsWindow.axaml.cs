@@ -28,14 +28,21 @@ public partial class FinancialItemsWindow : Window, INotifyPropertyChanged
 
     private async void Search_Click(object? sender, RoutedEventArgs e)
     {
-        var searchWindow = new FinancialProductSearchWindow(_vm.Products);
-        var result = await searchWindow.ShowDialog<Guid?>(this);
-        if (result == null)
-            return;
+        try
+        {
+            var searchWindow = new FinancialProductSearchWindow(_vm.Products);
+            var result = await searchWindow.ShowDialog<Guid?>(this);
+            if (result == null)
+                return;
 
-        _selectedProductId = result;
-        Editor.SelectedProductId = result;
-        Raise(nameof(SelectedProductDisplay));
+            _selectedProductId = result;
+            Editor.SelectedProductId = result;
+            Raise(nameof(SelectedProductDisplay));
+        }
+        catch (Exception ex)
+        {
+            _vm.Status = $"Unable to open product search. {ex.Message}";
+        }
     }
 
     private void AddItem_Click(object? sender, RoutedEventArgs e)

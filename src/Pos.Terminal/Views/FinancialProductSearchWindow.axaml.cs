@@ -55,15 +55,25 @@ public partial class FinancialProductSearchWindow : Window
 
         public IEnumerable<ProductChoice> FilteredProducts => string.IsNullOrWhiteSpace(SearchText)
             ? _products
-            : _products.Where(p =>
-                p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                || p.Sku.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+            : _products.Where(MatchesSearch);
 
         public SearchState(IEnumerable<ProductChoice> products)
         {
             _products = products.ToList();
         }
 
+        private bool MatchesSearch(ProductChoice product)
+        {
+            var term = SearchText;
+            if (string.IsNullOrWhiteSpace(term))
+                return true;
+
+            return ContainsIgnoreCase(product.Name, term) || ContainsIgnoreCase(product.Sku, term);
+        }
+
+        private static bool ContainsIgnoreCase(string? value, string term)
+            => !string.IsNullOrWhiteSpace(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+            
         public event PropertyChangedEventHandler? PropertyChanged;
         private void Raise([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }

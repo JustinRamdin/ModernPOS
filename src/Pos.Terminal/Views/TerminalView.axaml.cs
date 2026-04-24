@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -124,11 +123,12 @@ public partial class TerminalView : UserControl
 
         var search = new TextBox { Watermark = "Search by item #, name, description, location", MinWidth = 360 };
         var list = new ListBox { Height = 380 };
-        var source = new ObservableCollection<ProductDto>(vm.FindInventoryItems(""));
-        list.ItemsSource = source;
+        list.ItemsSource = vm.FindInventoryItems("").ToList();
 
         list.ItemTemplate = new FuncDataTemplate<ProductDto>((item, _) =>
-            {
+           {
+            if (item is null)
+                return new TextBlock { Text = string.Empty };
             var row = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("140,*,Auto"),
@@ -144,10 +144,9 @@ public partial class TerminalView : UserControl
 
         void Refresh()
         {
-             source.Clear();
-            foreach (var p in vm.FindInventoryItems(search.Text ?? "")) source.Add(p);
+              list.ItemsSource = vm.FindInventoryItems(search.Text ?? "").ToList();
         }
-         search.GetObservable(TextBox.TextProperty).Subscribe(_ => Refresh());
+          var searchSubscription = search.GetObservable(TextBox.TextProperty).Subscribe(_ => Refresh());
 
         var ok = new Button { Content = "Add", IsDefault = true };
         var cancel = new Button { Content = "Cancel", IsCancel = true };
@@ -198,7 +197,14 @@ public partial class TerminalView : UserControl
 
         cancel.Click += (_, __) => win.Close();
 
-        await win.ShowDialog(host);
+        try
+        {
+            await win.ShowDialog(host);
+        }
+        finally
+        {
+            searchSubscription.Dispose();
+        }
         return selected;
     }
 

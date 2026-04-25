@@ -31,14 +31,60 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
     public string EditCostPriceText { get; set; } = "0.00";
     public string EditSellingPriceText { get; set; } = "0.00";
     public bool EditVatInclusive { get; set; }
-    public bool EditIsLength { get; set; }
+    private bool _editIsLength;
+    public bool EditIsLength
+    {
+        get => _editIsLength;
+        set
+        {
+            if (_editIsLength == value) return;
+            _editIsLength = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsLengthStock));
+            OnPropertyChanged(nameof(IsUnitStock));
+            OnPropertyChanged(nameof(LengthPreviewLine));
+        }
+    }
     public string EditOnHandQtyText { get; set; } = "0";
-    public string EditFeetText { get; set; } = "0";
-    public string EditInchesText { get; set; } = "0";
+    private string _editFeetText = "0";
+    public string EditFeetText
+    {
+        get => _editFeetText;
+        set
+        {
+            if (_editFeetText == value) return;
+            _editFeetText = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(LengthPreviewLine));
+        }
+    }
+    private string _editInchesText = "0";
+    public string EditInchesText
+    {
+        get => _editInchesText;
+        set
+        {
+            if (_editInchesText == value) return;
+            _editInchesText = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(LengthPreviewLine));
+        }
+    }
 
     public bool IsLengthStock => EditIsLength;
     public bool IsUnitStock => !EditIsLength;
-    public string LengthPreviewLine => !EditIsLength ? "" : $"Normalized: {LengthConverter.Normalize(int.TryParse(EditFeetText, out var f) ? f : 0, int.TryParse(EditInchesText, out var i) ? i : 0).Feet} ft {LengthConverter.Normalize(int.TryParse(EditFeetText, out f) ? f : 0, int.TryParse(EditInchesText, out i) ? i : 0).Inches} in";
+    public string LengthPreviewLine
+    {
+        get
+        {
+            if (!EditIsLength) return "";
+            var ft = int.TryParse(EditFeetText, out var f) ? Math.Max(0, f) : 0;
+            var inch = int.TryParse(EditInchesText, out var i) ? Math.Max(0, i) : 0;
+            var norm = LengthConverter.Normalize(ft, inch);
+            var totalInches = LengthConverter.ToTotalInches(norm.Feet, norm.Inches);
+            return $"Normalized: {norm.Feet} ft {norm.Inches} in ({totalInches} in)";
+        }
+    }
     public async Task LoadAsync()
     {
         try

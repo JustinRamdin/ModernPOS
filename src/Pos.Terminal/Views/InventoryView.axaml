@@ -185,12 +185,12 @@
                 <Grid ColumnDefinitions="*,*">
                   <StackPanel Margin="0,0,10,0">
                     <TextBlock Text="Feet" Opacity="0.8"/>
-                    <TextBox Text="{Binding EditFeetText}" Watermark="0"/>
+                    <TextBox Text="{Binding EditFeetText, UpdateSourceTrigger=PropertyChanged}" Watermark="0"/>
                   </StackPanel>
 
                   <StackPanel>
                     <TextBlock Text="Inches" Opacity="0.8"/>
-                    <TextBox Text="{Binding EditInchesText}" Watermark="0"/>
+                    <TextBox Text="{Binding EditInchesText, UpdateSourceTrigger=PropertyChanged}" Watermark="0"/>
                   </StackPanel>
                 </Grid>
 

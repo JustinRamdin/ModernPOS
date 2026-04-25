@@ -83,8 +83,35 @@ public sealed record ReportSummaryDto(
     IReadOnlyList<InventoryValuationRowDto> InventoryValuation,
     IReadOnlyList<CustomerSalesRowDto> CustomerSales);
 
-public sealed record SalesByDayRowDto(DateOnly Day, int ReceiptCount, decimal GrossTotal);
-public sealed record TopProductRowDto(string Name, string? Sku, decimal Qty, decimal Gross);
-public sealed record ProfitByProductRowDto(string Name, string? Sku, decimal Qty, decimal Revenue, decimal Cogs, decimal Profit);
-public sealed record InventoryValuationRowDto(string Name, string? Sku, decimal OnHand, int OnHandInches, decimal CostPrice, decimal Value);
-public sealed record CustomerSalesRowDto(string Name, decimal SalesGross);
+public sealed record SalesByDayRowDto(DateOnly Day, int ReceiptCount, decimal GrossTotal)
+{
+    public decimal NetTotal => GrossTotal;
+    public decimal VatTotal => 0m;
+}
+
+public sealed record TopProductRowDto(string Name, string? Sku, decimal Qty, decimal Gross)
+{
+    public string QuantityDisplay => Qty.ToString("0.##");
+    public decimal GrossTotal => Gross;
+}
+
+public sealed record ProfitByProductRowDto(string Name, string? Sku, decimal Qty, decimal Revenue, decimal Cogs, decimal Profit)
+{
+    public string QuantityDisplay => Qty.ToString("0.##");
+    public decimal GrossProfit => Profit;
+    public decimal GrossMarginPct => Revenue <= 0m ? 0m : Profit / Revenue * 100m;
+}
+
+public sealed record InventoryValuationRowDto(string Name, string? Sku, decimal OnHand, int OnHandInches, decimal CostPrice, decimal SellingPrice, decimal CostValue)
+{
+    public string OnHandDisplay => OnHandInches > 0 ? $"{OnHandInches} in" : OnHand.ToString("0.##");
+    public decimal SellingValue => SellingPrice * (OnHandInches > 0 ? OnHandInches : OnHand);
+    public decimal Value => CostValue;
+    public decimal EstimatedGrossMargin => SellingValue - CostValue;
+}
+
+public sealed record CustomerSalesRowDto(string Name, int ReceiptCount, decimal SalesGross, decimal CurrentBalance)
+{
+    public string CustomerName => Name;
+    public decimal GrossTotal => SalesGross;
+}

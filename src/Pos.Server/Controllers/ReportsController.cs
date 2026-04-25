@@ -46,12 +46,41 @@ public class ReportsController : ControllerBase
             .Select(x => new ProfitByProductRowDto(x.p?.Name ?? "Unknown", x.p?.Sku, x.qty, x.revenue, x.cogs, x.revenue - x.cogs)).ToList();
 
         var inventory = (await _db.Products.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(ct))
-            .Select(p => new InventoryValuationRowDto(p.Name, p.Sku, p.OnHand, p.OnHandInches, p.CostPrice, p.CostPrice * (p.IsLength ? p.OnHandInches : p.OnHand)))
+           .Select(p =>
+            {
+                var quantity = p.IsLength ? p.OnHandInches : p.OnHand;
+                var costValue = p.CostPrice * quantity;
+                return new InventoryValuationRowDto(p.Name, p.Sku, p.OnHand, p.OnHandInches, p.CostPrice, p.Price, costValue);
+            })
             .ToList();
 
-        var customers = await _db.Customers.AsNoTracking().Where(c => c.IsActive).OrderBy(c => c.Name)
-            .Select(c => new CustomerSalesRowDto(c.Name, 0m)).ToListAsync(ct);
+        var salesByCustomerId = sales
+            .Where(s => s.CustomerId.HasValue)
+            .GroupBy(s => s.CustomerId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => new
+                {
+                    ReceiptCount = g.Count(),
+                    SalesGross = g.Sum(s => s.Total)
+                });
 
+        var customerEntities = await _db.Customers.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.Name)
+            .ToListAsync(ct);
+
+        var customers = customerEntities
+            .Select(c =>
+            {
+                salesByCustomerId.TryGetValue(c.Id, out var customerSales);
+                return new CustomerSalesRowDto(
+                    c.Name,
+                    customerSales?.ReceiptCount ?? 0,
+                    customerSales?.SalesGross ?? 0m,
+                    c.Balance);
+            })
+            .ToList();
         var gross = sales.Sum(x => x.Total);
         var salesGross = lines.Sum(x => x.LineTotal);
         var cogsTotal = lineGroups.Sum(x => x.cogs);

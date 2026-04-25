@@ -115,3 +115,13 @@ public sealed record CustomerSalesRowDto(string Name, int ReceiptCount, decimal 
     public string CustomerName => Name;
     public decimal GrossTotal => SalesGross;
 }
+
+public sealed record ServerSalesExportRowDto(
+    DateTime OccurredAtUtc,
+    string ReceiptNo,
+    string Status,
+    string? PaymentType,
+    string CustomerName,
+    decimal NetTotal,
+    decimal VatTotal,
+    decimal GrossTotal);

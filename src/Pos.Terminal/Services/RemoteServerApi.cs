@@ -130,5 +130,11 @@ public sealed class RemoteServerApi : IDisposable
         return await _http.GetFromJsonAsync<ReportSummaryDto>(url) ?? throw new InvalidOperationException("Empty reports response");
     }
 
+    public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        var url = $"api/reports/sales-export?fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        return await _http.GetFromJsonAsync<List<ServerSalesExportRowDto>>(url) ?? [];
+    }
+
     public void Dispose() => _http.Dispose();
 }

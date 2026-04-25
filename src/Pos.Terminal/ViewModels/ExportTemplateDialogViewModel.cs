@@ -15,9 +15,11 @@ using ClosedXML.Excel;
 
 using Microsoft.EntityFrameworkCore;
 
+using Pos.Contracts;
 using Pos.Local.Data;
 using Pos.Local.Services;
 using Pos.Terminal.Commands;
+using Pos.Terminal.Services;
 
 namespace Pos.Terminal.ViewModels;
 
@@ -243,7 +245,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     var vatTotal = 0m;
                     var grossTotal = 0m;
 
-                     var results = await svc.GetSalesExportAsync(fromUtc, toUtc);
+                    using var api = await CreateApiAsync();
+                    var serverRows = await api.GetSalesExportAsync(fromUtc, toUtc);
+                    var results = serverRows.Select(MapServerSalesRow).ToList();
                     var filtered = ApplySalesFilters(results);
 
                     foreach (var row in filtered)
@@ -463,26 +467,26 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
     {
         try
         {
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-            var svc = new ReportingService(db);
-
-            // Only populate filters for Sales-like templates (safe to do for all; service can return empty)
             var (fromUtc, toUtc) = GetUtcRange();
-            var paymentTypes = (await svc.GetSalesExportAsync(fromUtc, toUtc))
+            using var api = await CreateApiAsync();
+            var paymentTypes = (await api.GetSalesExportAsync(fromUtc, toUtc))
+                .Select(MapServerSalesRow)
                 .Select(TryGetPaymentType)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .Select(value => value!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            var customers = (await svc.GetCustomerSalesAsync(fromUtc, toUtc))
-                .Select(row => row.CustomerName)
+            var customers = (await api.GetReportSummaryAsync(fromUtc, toUtc)).CustomerSales
+                .Select(row => row.Name)
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Select(name => name!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+
+                await using var db = CreateLocalDb();
+                await db.Database.EnsureCreatedAsync();
             var items = await LoadItemOrSkuListAsync(db, CancellationToken.None);
 
             PaymentTypes.Clear(); PaymentTypes.Add("All");
@@ -587,6 +591,22 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
    => DataLocalDb.BuildOptions();
 
     private static PosLocalDbContext CreateLocalDb() => new(BuildDbOptions());
+    private static async Task<RemoteServerApi> CreateApiAsync()
+    {
+        var deployment = await new SettingsStore().LoadDeploymentAsync();
+        return new RemoteServerApi(deployment.ServerHost, deployment.ServerPort, deployment.AuthToken);
+    }
+
+    private static SalesExportRowDto MapServerSalesRow(ServerSalesExportRowDto row)
+        => new(
+            row.OccurredAtUtc,
+            row.ReceiptNo,
+            row.Status,
+            row.PaymentType,
+            row.CustomerName,
+            row.NetTotal,
+            row.VatTotal,
+            row.GrossTotal);
 
     private IEnumerable<SalesExportRowDto> ApplySalesFilters(IEnumerable<SalesExportRowDto> rows)
     {

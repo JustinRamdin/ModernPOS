@@ -25,12 +25,12 @@
 
         <StackPanel Width="160" Margin="0,0,10,10">
           <TextBlock Text="From" />
-          <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+          <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
         </StackPanel>
 
         <StackPanel Width="160" Margin="0,0,10,10">
           <TextBlock Text="To" />
-          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
         </StackPanel>
 
         <StackPanel Width="200" Margin="0,0,10,10">

@@ -68,7 +68,9 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
             "QuestPDF": "2024.3.0",
             "System.IO.Packaging": "8.0.1",
-            "System.Net.Http.Json": "10.0.2"
+            "System.Net.Http.Json": "10.0.2",
+            "System.Security.Cryptography.Xml": "10.0.6",
+            "Tmds.DBus.Protocol": "0.21.3"
           },
           "imports": [
             "net461",
@@ -424,7 +426,9 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
             "QuestPDF": "2024.3.0",
             "System.IO.Packaging": "8.0.1",
-            "System.Net.Http.Json": "10.0.2"
+            "System.Net.Http.Json": "10.0.2",
+            "System.Security.Cryptography.Xml": "10.0.6",
+            "Tmds.DBus.Protocol": "0.21.3"
           },
           "imports": [
             "net461",
@@ -803,7 +807,9 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
             "QuestPDF": "2024.3.0",
             "System.IO.Packaging": "8.0.1",
-            "System.Net.Http.Json": "10.0.2"
+            "System.Net.Http.Json": "10.0.2",
+            "System.Security.Cryptography.Xml": "10.0.6",
+            "Tmds.DBus.Protocol": "0.21.3"
           },
           "imports": [
             "net461",

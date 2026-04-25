@@ -2,6 +2,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pos.Terminal.Views.ExportTemplateDialog">
 
+ <UserControl.Styles>
+    <Style Selector="DatePicker.export-date">
+      <Setter Property="MinWidth" Value="250" />
+    </Style>
+
+    <Style Selector="DatePicker.export-date /template/ ComboBox#PART_MonthPicker">
+      <Setter Property="Width" Value="130" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <Style Selector="DatePicker.export-date /template/ ComboBox#PART_DayPicker">
+      <Setter Property="Width" Value="70" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <Style Selector="DatePicker.export-date /template/ ComboBox#PART_YearPicker">
+      <Setter Property="Width" Value="90" />
+    </Style>
+  </UserControl.Styles>
+
   <Grid RowDefinitions="Auto,Auto,*" Margin="12">
 
     <!-- Header -->
@@ -23,14 +43,16 @@
     <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1" Margin="0,0,0,10">
       <WrapPanel>
 
-        <StackPanel Width="160" Margin="0,0,10,10">
+        <StackPanel Width="270" Margin="0,0,12,10">
           <TextBlock Text="From" />
-          <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+          <DatePicker Classes="export-date"
+                      SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
         </StackPanel>
 
-        <StackPanel Width="160" Margin="0,0,10,10">
+        <StackPanel Width="270" Margin="0,0,12,10">
           <TextBlock Text="To" />
-          <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+          <DatePicker Classes="export-date"
+                      SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
         </StackPanel>
 
         <StackPanel Width="200" Margin="0,0,10,10">

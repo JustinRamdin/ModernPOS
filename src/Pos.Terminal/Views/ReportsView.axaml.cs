@@ -39,6 +39,9 @@ public partial class ReportsView : UserControl
 
     public async void OpenExportLast7Days_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        if (sender is not Control control || control.Tag is not ExportTemplateDefinition template || DataContext is not ReportsViewModel vm)
+            return;
+
         vm.FromDate = DateTime.Today.AddDays(-6);
         vm.ToDate = DateTime.Today;
 
@@ -61,18 +64,15 @@ public partial class ReportsView : UserControl
         if (DataContext is not ReportsViewModel vm)
             return;
 
-        if (sender is not Control control || control.DataContext is not ExportTemplateDefinition template)
-            return;
-
         var host = TopLevel.GetTopLevel(this) as Window;
         if (host == null)
             return;
 
-      var dialogVm = new ExportTemplateDialogViewModel(
-        template: template,
-        locationCode: vm.LocationCode,
-        fromDate: vm.FromDate,
-        toDate: vm.ToDate);
+        var dialogVm = new ExportTemplateDialogViewModel(
+            template: template,
+            locationCode: vm.LocationCode,
+            fromDate: vm.FromDate,
+            toDate: vm.ToDate);
 
 
         var dialog = new ExportTemplateDialog
@@ -81,5 +81,5 @@ public partial class ReportsView : UserControl
         };
 
         await dialog.ShowDialog(host);
-        }
+    }
 }

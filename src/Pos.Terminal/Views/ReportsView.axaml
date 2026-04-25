@@ -539,7 +539,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                  <Border Classes="export-card" Margin="0,0,0,10">
-                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
                       <TextBlock Grid.Column="0"
                                  Grid.Row="0"
                                  FontWeight="SemiBold"

@@ -183,12 +183,13 @@
                            Margin="0,0,0,6"/>
 
                 <Grid ColumnDefinitions="*,*">
-                  <StackPanel Margin="0,0,10,0">
+                  <StackPanel Grid.Column="0"
+                              Margin="0,0,10,0">
                     <TextBlock Text="Feet" Opacity="0.8"/>
                     <TextBox Text="{Binding EditFeetText}" Watermark="0"/>
                   </StackPanel>
 
-                  <StackPanel>
+                  <StackPanel Grid.Column="1">
                     <TextBlock Text="Inches" Opacity="0.8"/>
                     <TextBox Text="{Binding EditInchesText}" Watermark="0"/>
                   </StackPanel>

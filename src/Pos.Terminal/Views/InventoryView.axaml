@@ -200,8 +200,7 @@
               </StackPanel>
 
             </StackPanel>
-          </Border>
-
+          </Border> 
           <!-- VAT note -->
           <Border Padding="10"
                   CornerRadius="8"

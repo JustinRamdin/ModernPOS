@@ -15,6 +15,41 @@ public class SalesController : ControllerBase
     private readonly PosDbContext _db;
     public SalesController(PosDbContext db) => _db = db;
 
+     [HttpGet("export")]
+    public async Task<ActionResult<IReadOnlyList<ServerSalesExportRowDto>>> Export([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
+
+        var sales = await _db.Sales
+            .AsNoTracking()
+            .Include(s => s.Payments)
+            .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .OrderByDescending(s => s.SoldAtUtc)
+            .ToListAsync(ct);
+
+        var rows = sales.Select(sale =>
+        {
+            var paymentType = sale.Payments.Count == 0
+                ? null
+                : string.Join(", ", sale.Payments
+                    .Select(payment => payment.Method.ToString())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+
+            return new ServerSalesExportRowDto(
+                sale.SoldAtUtc,
+                sale.Id.ToString("N")[..8].ToUpperInvariant(),
+                "Completed",
+                paymentType,
+                string.Empty,
+                sale.Subtotal,
+                0m,
+                sale.Total);
+        }).ToList();
+
+        return rows;
+    }
+    
     [HttpPost("checkout")]
     public async Task<ActionResult<object>> Checkout([FromBody] CheckoutRequest req)
     {

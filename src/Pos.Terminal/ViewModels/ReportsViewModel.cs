@@ -90,10 +90,18 @@ using var api = await CreateApiAsync();
 
     private (DateTime fromUtc, DateTime toUtc) GetUtcRange()
     {
+        var tz = TimeZoneInfo.Local;
         var fromDate = (FromDate ?? DateTime.Today).Date;
         var toDate = (ToDate ?? DateTime.Today).Date;
-        if (toDate < fromDate) (fromDate, toDate) = (toDate, fromDate);
-        return (DateTime.SpecifyKind(fromDate, DateTimeKind.Utc), DateTime.SpecifyKind(toDate.AddDays(1), DateTimeKind.Utc));
+         if (toDate < fromDate)
+            (fromDate, toDate) = (toDate, fromDate);
+
+        var startLocal = DateTime.SpecifyKind(fromDate, DateTimeKind.Unspecified);
+        var endLocalExclusive = DateTime.SpecifyKind(toDate.AddDays(1), DateTimeKind.Unspecified);
+
+        return (
+            TimeZoneInfo.ConvertTimeToUtc(startLocal, tz),
+            TimeZoneInfo.ConvertTimeToUtc(endLocalExclusive, tz));
     }
 
     private static async Task<RemoteServerApi> CreateApiAsync() { var d = await new SettingsStore().LoadDeploymentAsync(); return new RemoteServerApi(d.ServerHost, d.ServerPort, d.AuthToken); }

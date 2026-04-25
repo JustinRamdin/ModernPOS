@@ -172,8 +172,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
     private static TimeZoneInfo GetTz()
     {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("America/Port_of_Spain"); }
-        catch { return TimeZoneInfo.Local; }
+       // Use the terminal's configured OS timezone so selected calendar dates map
+        // to the operator's local business day boundaries.
+        return TimeZoneInfo.Local;
     }
 
     private (DateTime fromUtc, DateTime toUtc) GetUtcRange()

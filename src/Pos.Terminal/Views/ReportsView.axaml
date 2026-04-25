@@ -36,6 +36,38 @@
       <Setter Property="Padding" Value="12,6" />
     </Style>
 
+    <Style Selector="Border.export-card">
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="16" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+    </Style>
+
+    <Style Selector="Button.export-trigger">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Border.export-flyout">
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Padding" Value="14" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+      <Setter Property="MinWidth" Value="320" />
+    </Style>
+
+    <Style Selector="Button.export-flyout-action">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+
         <Style Selector="Border.date-range-bar">
       <Setter Property="CornerRadius" Value="10" />
       <Setter Property="BorderThickness" Value="1" />
@@ -506,17 +538,72 @@
             <ItemsControl ItemsSource="{Binding ExportTemplates}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <Border Classes="card" Margin="0,0,0,10">
-                    <DockPanel LastChildFill="True">
-                      <StackPanel DockPanel.Dock="Left" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                        <TextBlock Classes="muted" Text="{Binding Description}" />
+                 <Border Classes="export-card" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="12">
+                      <TextBlock Grid.Column="0"
+                                 Grid.Row="0"
+                                 FontWeight="SemiBold"
+                                 FontSize="15"
+                                 Text="{Binding Name}" />
+
+                      <Border Grid.Column="1"
+                              Grid.Row="0"
+                              CornerRadius="999"
+                              Padding="10,2"
+                              BorderThickness="1"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                              Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                        <TextBlock Classes="muted" Text="Template" />
+                      </Border>
+
+                      <TextBlock Grid.ColumnSpan="2"
+                                 Grid.Row="1"
+                                 Classes="muted"
+                                 Text="{Binding Description}" />
+
+                      <StackPanel Grid.ColumnSpan="2"
+                                  Grid.Row="2"
+                                  Orientation="Horizontal"
+                                  Spacing="10">
+                        <Button Classes="export-trigger"
+                                Content="Open Actions ▾"
+                                Tag="{Binding}"
+                                Click="OpenExportTemplate_Click">
+                          <FlyoutBase.AttachedFlyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                              <Border Classes="export-flyout">
+                                <StackPanel Spacing="2">
+                                  <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                  <TextBlock Classes="muted"
+                                             Margin="0,0,0,8"
+                                             Text="Choose how you want to open this report." />
+
+                                  <Button Classes="primary export-flyout-action"
+                                          Content="Open full export workspace"
+                                          Tag="{Binding}"
+                                          Click="OpenExportWorkspace_Click" />
+
+                                  <TextBlock Classes="section-label" Margin="0,8,0,6" Text="Quick period actions" />
+
+                                  <Button Classes="export-flyout-action"
+                                          Content="Open with Last 7 Days"
+                                          Tag="{Binding}"
+                                          Click="OpenExportLast7Days_Click" />
+
+                                  <Button Classes="export-flyout-action"
+                                          Content="Open with This Month"
+                                          Tag="{Binding}"
+                                          Click="OpenExportThisMonth_Click" />
+
+                                  <Separator Margin="0,8,0,8" />
+                                  <TextBlock Classes="muted" Text="Tip: quick actions update the report date range before opening." />
+                                </StackPanel>
+                              </Border>
+                            </Flyout>
+                          </FlyoutBase.AttachedFlyout>
+                        </Button>
                       </StackPanel>
-                      <Button DockPanel.Dock="Right"
-                              Classes="primary"
-                              Content="Open"
-                              Click="OpenExportTemplate_Click" />
-                    </DockPanel>
+                       </Grid>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

@@ -126,15 +126,56 @@ public sealed class RemoteServerApi : IDisposable
 
     public async Task<ReportSummaryDto> GetReportSummaryAsync(DateTime fromUtc, DateTime toUtc)
     {
-        var url = $"api/reports/summary?fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
-        return await _http.GetFromJsonAsync<ReportSummaryDto>(url) ?? throw new InvalidOperationException("Empty reports response");
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        var candidates = new[]
+        {
+            $"api/reports/summary?{query}",
+            $"api/sales/summary?{query}"
+        };
+
+        return await GetFromJsonWithFallbackAsync<ReportSummaryDto>(
+                candidates,
+                "Your server does not expose a reports summary endpoint. Update the server to use financial reports.")
+            ?? throw new InvalidOperationException("Empty reports response");
     }
 
     public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
     {
-        var url = $"api/reports/sales-export?fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
-        return await _http.GetFromJsonAsync<List<ServerSalesExportRowDto>>(url) ?? [];
+         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        var candidates = new[]
+        {
+            $"api/reports/sales-export?{query}",
+            $"api/sales/export?{query}"
+        };
+
+        return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
+            candidates,
+            "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
     }
 
     public void Dispose() => _http.Dispose();
+    private async Task<T?> GetFromJsonWithFallbackAsync<T>(IReadOnlyList<string> urls, string allNotFoundMessage)
+    {
+        HttpRequestException? lastHttpError = null;
+        for (var i = 0; i < urls.Count; i++)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<T>(urls[i]);
+            }
+            catch (HttpRequestException ex) when ((int?)ex.StatusCode == 404 && i < urls.Count - 1)
+            {
+                lastHttpError = ex;
+            }
+            catch (HttpRequestException ex) when ((int?)ex.StatusCode == 404)
+            {
+                throw new HttpRequestException(allNotFoundMessage, ex, ex.StatusCode);
+            }
+        }
+
+        if (lastHttpError != null)
+            throw lastHttpError;
+
+        return default;
+    }
 }

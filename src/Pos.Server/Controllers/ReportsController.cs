@@ -54,32 +54,19 @@ public class ReportsController : ControllerBase
             })
             .ToList();
 
-        var salesByCustomerId = sales
-            .Where(s => s.CustomerId.HasValue)
-            .GroupBy(s => s.CustomerId!.Value)
-            .ToDictionary(
-                g => g.Key,
-                g => new
-                {
-                    ReceiptCount = g.Count(),
-                    SalesGross = g.Sum(s => s.Total)
-                });
-
         var customerEntities = await _db.Customers.AsNoTracking()
             .Where(c => c.IsActive)
             .OrderBy(c => c.Name)
             .ToListAsync(ct);
 
+        // Note: sales currently do not store a customer reference, so report customer rows
+        // expose account balance and default sales metrics to zero until that linkage exists.
         var customers = customerEntities
-            .Select(c =>
-            {
-                salesByCustomerId.TryGetValue(c.Id, out var customerSales);
-                return new CustomerSalesRowDto(
-                    c.Name,
-                    customerSales?.ReceiptCount ?? 0,
-                    customerSales?.SalesGross ?? 0m,
-                    c.Balance);
-            })
+           .Select(c => new CustomerSalesRowDto(
+                c.Name,
+                0,
+                0m,
+                c.Balance))
             .ToList();
         var gross = sales.Sum(x => x.Total);
         var salesGross = lines.Sum(x => x.LineTotal);

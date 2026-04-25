@@ -1,8 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Pos.Server.Services;
 
-public sealed class ScheduledBackupHostedService(BackupOrchestrator backups, ScheduledBackupOptionsStore store, ILogger<ScheduledBackupHostedService> logger) : BackgroundService
+public sealed class ScheduledBackupHostedService(IServiceScopeFactory scopeFactory, ScheduledBackupOptionsStore store, ILogger<ScheduledBackupHostedService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -19,6 +20,8 @@ public sealed class ScheduledBackupHostedService(BackupOrchestrator backups, Sch
                 schedule = store.Load();
                 if (!schedule.Enabled) continue;
 
+                using var scope = scopeFactory.CreateScope();
+                var backups = scope.ServiceProvider.GetRequiredService<BackupOrchestrator>();
                 var file = await backups.CreateBackupAsync(schedule.BackupFolder, stoppingToken);
                 ApplyRetention(schedule.BackupFolder, schedule.RetentionCount);
                 logger.LogInformation("Scheduled backup created: {File}", file);

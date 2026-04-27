@@ -1,0 +1,115 @@
+using System;
+using System.Runtime.InteropServices;
+
+namespace Pos.Terminal.Services;
+
+internal static class CashDrawerService
+{
+    public static bool TryOpen(string printerName, out string? error)
+    {
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(printerName))
+        {
+            error = "No receipt printer selected.";
+            return false;
+        }
+
+        IntPtr printerHandle = IntPtr.Zero;
+        IntPtr documentHandle = IntPtr.Zero;
+        IntPtr pageHandle = IntPtr.Zero;
+        IntPtr dataHandle = IntPtr.Zero;
+
+        try
+        {
+            if (!OpenPrinter(printerName, out printerHandle, IntPtr.Zero))
+            {
+                error = $"Unable to access printer '{printerName}'.";
+                return false;
+            }
+
+            var documentInfo = new DOCINFOA
+            {
+                pDocName = "ModernPOS Cash Drawer Kick",
+                pDataType = "RAW"
+            };
+
+            documentHandle = StartDocPrinter(printerHandle, 1, documentInfo);
+            if (documentHandle == IntPtr.Zero)
+            {
+                error = "Failed to start raw printer document.";
+                return false;
+            }
+
+            if (!StartPagePrinter(printerHandle))
+            {
+                error = "Failed to start raw printer page.";
+                return false;
+            }
+
+            pageHandle = new IntPtr(1);
+            var command = new byte[] { 0x1B, 0x70, 0x00, 0x19, 0xFA };
+            dataHandle = Marshal.AllocCoTaskMem(command.Length);
+            Marshal.Copy(command, 0, dataHandle, command.Length);
+
+            if (!WritePrinter(printerHandle, dataHandle, command.Length, out var written) || written != command.Length)
+            {
+                error = "Failed to write cash drawer command to printer.";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = $"Cash drawer signal failed: {ex.Message}";
+            return false;
+        }
+        finally
+        {
+            if (pageHandle != IntPtr.Zero)
+                EndPagePrinter(printerHandle);
+
+            if (documentHandle != IntPtr.Zero)
+                EndDocPrinter(printerHandle);
+
+            if (printerHandle != IntPtr.Zero)
+                ClosePrinter(printerHandle);
+
+            if (dataHandle != IntPtr.Zero)
+                Marshal.FreeCoTaskMem(dataHandle);
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    private struct DOCINFOA
+    {
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string pDocName;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string? pOutputFile;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string pDataType;
+    }
+
+    [DllImport("winspool.drv", SetLastError = true, CharSet = CharSet.Ansi)]
+    private static extern bool OpenPrinter(string szPrinter, out IntPtr hPrinter, IntPtr pd);
+
+    [DllImport("winspool.drv", SetLastError = true, CharSet = CharSet.Ansi)]
+    private static extern IntPtr StartDocPrinter(IntPtr hPrinter, int level, [In] DOCINFOA di);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool EndDocPrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool StartPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool EndPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool ClosePrinter(IntPtr hPrinter);
+}

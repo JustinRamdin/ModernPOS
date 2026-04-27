@@ -1129,7 +1129,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
              // Use wider print margins so content stays inside printable bounds on
             // printers with larger hardware non-printable areas.
-            doc.DefaultPageSettings.Margins = new Margins(18, 25, 25, 25);
+            doc.DefaultPageSettings.Margins = new Margins(24, 42, 25, 25);
 
  #pragma warning disable CA1416
             doc.PrintPage += (_, e) =>
@@ -1182,6 +1182,12 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     #pragma warning restore CA1416
             doc.Print();
             Status = $"Invoice sent to {settings.ReceiptPrinterName}";
+
+            if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!CashDrawerService.TryOpen(settings.ReceiptPrinterName, out var drawerError))
+                    Status = $"Invoice printed. Cash drawer signal failed: {drawerError}";
+            }
         }
         catch (Exception ex)
         {

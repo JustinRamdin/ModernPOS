@@ -101,8 +101,8 @@ public static class PhysicalReceiptRenderer
         var documentTitle = string.IsNullOrWhiteSpace(companyProfile.HeaderTitle) ? companyProfile.CompanyName : companyProfile.HeaderTitle;
         g.DrawString(documentTitle, fontTitle, Brushes.DimGray, new RectangleF(content.Left + S(2f), y, content.Width * 0.45f, S(40f)));
 
-        float metaW = S(95f);
-        float rightPad = S(16f);
+        float metaW = S(120f);
+        float rightPad = S(34f);
         float topPad = S(6f);
         float gapBelowLogo = S(10f);
         float metaX = content.Right - metaW - rightPad;
@@ -153,16 +153,16 @@ public static class PhysicalReceiptRenderer
         float metaY = logoBox.Bottom + gapBelowLogo;
 
         g.DrawString("PAYMENT DATE", fontSmallBold, Brushes.MidnightBlue,
-            new RectangleF(metaX, metaY, metaW, S(16f)), sfFarCenter);
+            new RectangleF(metaX, metaY, metaW, S(16f)), sfNearTop);
         g.DrawLine(penLight, metaX, metaY + S(18f), metaX + metaW, metaY + S(18f));
         g.DrawString(invoiceDate.ToString("yyyy-MM-dd"), fontSmall, Brushes.Black,
-           new RectangleF(metaX, metaY + S(20f), metaW, S(14f)), sfFarCenter);
+           new RectangleF(metaX, metaY + S(20f), metaW, S(14f)), sfNearTop);
 
         g.DrawString("RECEIPT NO.", fontSmallBold, Brushes.MidnightBlue,
-            new RectangleF(metaX, metaY + S(40f), metaW, S(16f)), sfFarCenter);
+            new RectangleF(metaX, metaY + S(40f), metaW, S(16f)), sfNearTop);
         g.DrawLine(penLight, metaX, metaY + S(58f), metaX + metaW, metaY + S(58f));
         g.DrawString(receiptNo, fontSmall, Brushes.Black,
-            new RectangleF(metaX, metaY + S(60f), metaW, S(14f)), sfFarCenter);
+            new RectangleF(metaX, metaY + S(60f), metaW, S(14f)), sfNearTop);
 
         var companyLines = new List<string>
         {

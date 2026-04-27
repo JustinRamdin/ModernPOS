@@ -14,6 +14,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -892,13 +893,20 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             Toast("Checkout completed");
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex) when (ex.StatusCode is null or HttpStatusCode.RequestTimeout or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout)
         {
             Status = BuildServerStatusMessage(ex, "submit checkout");
             Toast("Server checkout unavailable; using local fallback.");
             return null;
         }
+         catch (HttpRequestException ex)
+        {
+            Status = BuildServerStatusMessage(ex, "submit checkout");
+            Toast("Server rejected checkout; sale not saved locally.");
+            throw;
+        }
     }
+    
 
     private async Task SaveCashSaleLocallyAsync(decimal cashGiven)
     {
@@ -1294,7 +1302,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         Status = "Cash drawer opened.";
         Toast("Cash drawer opened.");
     }
-    
+
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
     => DataLocalDb.BuildOptions();

@@ -10,6 +10,8 @@
           <StackPanel Spacing="12" Margin="0,12,0,0">
             <TextBlock Text="Receipt Printer"/>
             <ComboBox ItemsSource="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
+            <CheckBox Content="Print all receipts in TSP style"
+                      IsChecked="{Binding UseTspReceiptStyle}"/>
             <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
           </StackPanel>

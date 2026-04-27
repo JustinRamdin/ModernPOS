@@ -46,7 +46,7 @@ public partial class SettingsView : UserControl
             Process.Start(path, string.Join(" ", args));
         }
 
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.Shutdown();
     }
 }

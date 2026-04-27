@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace Pos.Terminal.Services;
@@ -48,13 +49,49 @@ internal static class CashDrawerService
             }
 
             pageHandle = new IntPtr(1);
-            var command = new byte[] { 0x1B, 0x70, 0x00, 0x19, 0xFA };
-            dataHandle = Marshal.AllocCoTaskMem(command.Length);
-            Marshal.Copy(command, 0, dataHandle, command.Length);
-
-            if (!WritePrinter(printerHandle, dataHandle, command.Length, out var written) || written != command.Length)
+            // Most receipt printers wire drawers to pin 2 (m=0) or pin 5 (m=1).
+            // Send both pulse variants so either wiring opens the drawer.
+            var commands = new[]
             {
-                error = "Failed to write cash drawer command to printer.";
+                new byte[] { 0x1B, 0x70, 0x00, 0x19, 0xFA }, // ESC p m=0 t1 t2 (pin 2)
+                new byte[] { 0x1B, 0x70, 0x01, 0x19, 0xFA }  // ESC p m=1 t1 t2 (pin 5)
+            };
+
+            Exception? lastWriteFailure = null;
+            var wroteAnyCommand = false;
+
+            foreach (var command in commands)
+            {
+                if (dataHandle != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(dataHandle);
+                    dataHandle = IntPtr.Zero;
+                }
+
+                dataHandle = Marshal.AllocCoTaskMem(command.Length);
+                Marshal.Copy(command, 0, dataHandle, command.Length);
+
+                try
+                {
+                    if (WritePrinter(printerHandle, dataHandle, command.Length, out var written) && written == command.Length)
+                        wroteAnyCommand = true;
+                }
+                catch (Exception ex)
+                {
+                    lastWriteFailure = ex;
+                }
+            }
+
+            if (!wroteAnyCommand)
+            {
+                var win32 = Marshal.GetLastWin32Error();
+                var win32Message = win32 != 0
+                    ? $" (Win32 {win32}: {new Win32Exception(win32).Message})"
+                    : string.Empty;
+
+                error = lastWriteFailure is not null
+                    ? $"Failed to write cash drawer command to printer: {lastWriteFailure.Message}{win32Message}"
+                    : $"Failed to write cash drawer command to printer.{win32Message}";
                 return false;
             }
 

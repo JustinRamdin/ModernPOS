@@ -1140,6 +1140,28 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     return;
                 }
 
+                if (settings.UseTspReceiptStyle)
+                {
+                    PhysicalReceiptRenderer.DrawInvoiceTspPage(
+                        g: e.Graphics,
+                        marginBounds: e.MarginBounds,
+                        companyProfile: companyProfile,
+                        receiptNo: receiptNo,
+                        invoiceDate: DateTime.Now,
+                        customer: customerInfo,
+                        paymentMethod: paymentMethod,
+                        subtotal: subtotal,
+                        discount: discount,
+                        vat: vat,
+                        totalDue: totalDue,
+                        totalTendered: cashGiven,
+                        change: change,
+                        state: state
+                    );
+                    e.HasMorePages = false;
+                    return;
+                }
+
                 e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
                     g: e.Graphics,
                     marginBounds: e.MarginBounds,
@@ -1148,7 +1170,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     invoiceDate: DateTime.Now,
                     customer: customerInfo,
                     paymentMethod: paymentMethod,
-                     subtotal: subtotal,
+                    subtotal: subtotal,
                     discount: discount,
                     vat: vat,
                     totalDue: totalDue,

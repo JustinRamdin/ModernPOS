@@ -46,6 +46,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         get => _vatRatePercent;
         set { _vatRatePercent = value ?? ""; OnPropertyChanged(); }
     }
+
+    private bool _useTspReceiptStyle;
+    public bool UseTspReceiptStyle
+    {
+        get => _useTspReceiptStyle;
+        set { _useTspReceiptStyle = value; OnPropertyChanged(); }
+    }
     private string _statusMessage = "";
     public string StatusMessage
     {
@@ -100,6 +107,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         var settings = await _store.LoadAsync();
         SelectedPrinter = settings.ReceiptPrinterName;
+        UseTspReceiptStyle = settings.UseTspReceiptStyle;
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
 
@@ -151,6 +159,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         var settings = new AppSettings
         {
             ReceiptPrinterName = SelectedPrinter.Trim(),
+            UseTspReceiptStyle = UseTspReceiptStyle,
             IsVatEnabled = IsVatEnabled,
             VatRatePercent = ParseVatRatePercent()
         };

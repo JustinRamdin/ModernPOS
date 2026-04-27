@@ -314,6 +314,140 @@ public static class PhysicalReceiptRenderer
         return hasMore;
     }
 
+     public static void DrawInvoiceTspPage(
+        Graphics g,
+        Rectangle marginBounds,
+        CompanyProfileDto companyProfile,
+        string receiptNo,
+        DateTime invoiceDate,
+        ReceiptCustomerInfo customer,
+        string paymentMethod,
+        decimal subtotal,
+        decimal discount,
+        decimal vat,
+        decimal totalDue,
+        decimal totalTendered,
+        decimal change,
+        InvoicePrintState state)
+    {
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
+        g.Clear(Color.White);
+
+        using var fontTitle = new Font("Consolas", 10f, FontStyle.Bold);
+        using var fontBody = new Font("Consolas", 8.5f, FontStyle.Regular);
+        using var fontBodyBold = new Font("Consolas", 8.5f, FontStyle.Bold);
+
+        var lineHeight = fontBody.GetHeight(g) + 1f;
+        float y = marginBounds.Top + 2f;
+        float left = marginBounds.Left + 2f;
+        float maxWidth = marginBounds.Width - 4f;
+        const int paperChars = 42;
+
+        static string Safe(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+        static string Fit(string value, int width) => value.Length <= width ? value : value[..width];
+        static string Dash(int count) => new('-', Math.Max(1, count));
+        static string Pair(string label, string value, int width)
+        {
+            var leftText = Fit(label, width);
+            var rightText = Fit(value, width);
+            var spaces = Math.Max(1, width - leftText.Length - rightText.Length);
+            return leftText + new string(' ', spaces) + rightText;
+        }
+
+        void DrawLine(string text, bool bold = false)
+        {
+            g.DrawString(Fit(text, paperChars), bold ? fontBodyBold : fontBody, Brushes.Black, new RectangleF(left, y, maxWidth, lineHeight));
+            y += lineHeight;
+        }
+
+        var title = string.IsNullOrWhiteSpace(companyProfile.HeaderTitle) ? companyProfile.CompanyName : companyProfile.HeaderTitle;
+        g.DrawString(Fit(title, paperChars), fontTitle, Brushes.Black, new RectangleF(left, y, maxWidth, lineHeight + 2f));
+        y += lineHeight + 2f;
+
+        DrawLine(Safe(companyProfile.CompanyName));
+        DrawLine(Safe(companyProfile.AddressLine1));
+        DrawLine(Safe(companyProfile.AddressLine2));
+
+        var contactLine = string.Join(" | ", new[] { companyProfile.Phone, companyProfile.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        if (!string.IsNullOrWhiteSpace(contactLine))
+            DrawLine(contactLine);
+        if (!string.IsNullOrWhiteSpace(companyProfile.TaxRegistrationNumber))
+            DrawLine($"Tax ID: {Safe(companyProfile.TaxRegistrationNumber)}");
+
+        DrawLine(Dash(paperChars));
+        DrawLine(Pair("RECEIPT NO.", receiptNo, paperChars));
+        DrawLine(Pair("PAYMENT DATE", invoiceDate.ToString("yyyy-MM-dd HH:mm"), paperChars));
+        DrawLine(Pair("PAYMENT", paymentMethod, paperChars));
+        DrawLine(Dash(paperChars));
+        DrawLine("BILL TO", bold: true);
+        DrawLine(Safe(customer.Name));
+        DrawLine(Safe(customer.Phone));
+        DrawLine(Safe(customer.Email));
+        DrawLine(Dash(paperChars));
+        DrawLine(Pair("DESCRIPTION", "TOTAL", paperChars), bold: true);
+        DrawLine(Dash(paperChars));
+
+        foreach (var (description, qty, unitPrice, amount) in state.Items)
+        {
+            var itemName = Fit(description, paperChars);
+            DrawLine(itemName);
+            var detailLeft = $"  {qty} x {unitPrice:0.00}";
+            var detailRight = $"{amount:0.00}";
+            DrawLine(Pair(detailLeft, detailRight, paperChars));
+        }
+
+        DrawLine(Dash(paperChars));
+        DrawLine(Pair("SUBTOTAL", subtotal.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        DrawLine(Pair("DISCOUNT", discount.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        DrawLine(Pair("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount).ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        DrawLine(Pair("TOTAL TAX (VAT)", vat.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        DrawLine(Pair("PAID", Math.Max(0m, totalDue).ToString("0.00", CultureInfo.CurrentCulture), paperChars), bold: true);
+
+        if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
+        {
+            DrawLine(Pair("CASH", totalTendered.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+            DrawLine(Pair("CHANGE", change.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        }
+
+        var remarksText = Safe(companyProfile.ReceiptFooter);
+        if (!string.IsNullOrWhiteSpace(remarksText))
+        {
+            DrawLine(Dash(paperChars));
+            DrawLine("REMARKS", bold: true);
+            foreach (var chunk in WrapByCharacterCount(remarksText, paperChars))
+                DrawLine(chunk);
+        }
+
+        DrawLine(Dash(paperChars));
+        state.ItemIndex = state.Items.Count;
+    }
+
+    private static IEnumerable<string> WrapByCharacterCount(string text, int width)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            yield break;
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0)
+            yield break;
+
+        var line = words[0];
+        for (int i = 1; i < words.Length; i++)
+        {
+            var candidate = $"{line} {words[i]}";
+            if (candidate.Length <= width)
+            {
+                line = candidate;
+                continue;
+            }
+
+            yield return line;
+            line = words[i].Length > width ? words[i][..width] : words[i];
+        }
+
+        yield return line;
+    }
     private static bool TryLoadLogoImage(byte[]? logoBytes, out Image? logoImage)
     {
         logoImage = null;

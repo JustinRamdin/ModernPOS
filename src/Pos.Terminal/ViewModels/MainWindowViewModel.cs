@@ -1129,7 +1129,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
              // Use wider print margins so content stays inside printable bounds on
             // printers with larger hardware non-printable areas.
-            doc.DefaultPageSettings.Margins = new Margins(12, 15, 25, 25);
+            doc.DefaultPageSettings.Margins = new Margins(6, 10, 25, 25);
 
  #pragma warning disable CA1416
             doc.PrintPage += (_, e) =>

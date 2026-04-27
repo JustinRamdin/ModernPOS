@@ -340,9 +340,10 @@ public static class PhysicalReceiptRenderer
 
         var lineHeight = fontBody.GetHeight(g) + 1f;
         float y = marginBounds.Top + 2f;
-        float left = marginBounds.Left + 2f;
-        float maxWidth = marginBounds.Width - 4f;
-        const int paperChars = 42;
+        const float contentInset = 10f;
+        float left = marginBounds.Left + 2f + contentInset;
+        float maxWidth = Math.Max(80f, marginBounds.Width - 4f - (contentInset * 2f));
+        const int paperChars = 38;
 
         static string Safe(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         static string Fit(string value, int width) => value.Length <= width ? value : value[..width];

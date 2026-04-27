@@ -6,4 +6,5 @@ public sealed class AppSettings
     public bool UseTspReceiptStyle { get; set; }
     public bool IsVatEnabled { get; set; } = true;
     public decimal VatRatePercent { get; set; } = 12.5m;
+    public bool IsPracticeMode { get; set; }
 }

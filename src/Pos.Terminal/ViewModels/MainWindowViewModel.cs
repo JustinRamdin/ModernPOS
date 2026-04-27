@@ -89,6 +89,23 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
     public bool HasHeaderImage => HeaderImage != null;
 
+    private bool _isPracticeMode;
+    public bool IsPracticeMode
+    {
+        get => _isPracticeMode;
+        private set
+        {
+            _isPracticeMode = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsPracticeModeBannerVisible));
+            OnPropertyChanged(nameof(PracticeModeBannerText));
+        }
+    }
+
+    public bool IsPracticeModeBannerVisible => IsPracticeMode;
+    public string PracticeModeBannerText => "(practice mode on)";
+
+
     // -----------------------------
     // Toast (short, non-blocking notifications)
     // -----------------------------
@@ -329,7 +346,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public async void ShowInventory()
     {
         PageTitle = "Inventory";
-        var vm = new InventoryViewModel();
+        var vm = new InventoryViewModel(IsPracticeMode);
         CurrentView = new InventoryView { DataContext = vm };
         await vm.LoadAsync();
     }
@@ -440,13 +457,57 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
+            if (IsPracticeMode)
+            {
+                Status = "Loading products from local practice data...";
+                await using var localDb = CreateLocalDb();
+                await localDb.Database.EnsureCreatedAsync();
+
+                var products = await localDb.Products
+                    .AsNoTracking()
+                    .Where(p => p.IsActive && p.DeletedAtUtc == null)
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
+
+                var balances = await localDb.Inventory
+                    .AsNoTracking()
+                    .Where(i => i.LocationCode == "DEFAULT")
+                    .ToDictionaryAsync(i => i.ProductId);
+
+                _allProducts = products
+                    .Select(p =>
+                    {
+                        balances.TryGetValue(p.Id, out var bal);
+                        return new ProductDto
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Sku = p.Sku,
+                            Description = p.Description ?? "",
+                            Location = "DEFAULT",
+                            Price = p.Price,
+                            VatInclusive = p.VatInclusive,
+                            IsLength = p.IsLength,
+                            Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
+                            OnHand = bal?.OnHand ?? 0m,
+                            OnHandInches = bal?.OnHandInches ?? 0
+                        };
+                    })
+                    .ToList();
+
+                BuildCategories();
+                ApplyFilters();
+                Status = $"Loaded {_allProducts.Count} products from local practice data";
+                return;
+            }
+
             Status = "Loading products from server...";
             var deploy = await _settingsStore.LoadDeploymentAsync();
 
-             using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
-            var products = await api.GetProductsAsync();
+            using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
+            var remoteProducts = await api.GetProductsAsync();
 
-             _allProducts = products
+             _allProducts = remoteProducts
                 .OrderBy(p => p.Name)
                 .Select(p => new ProductDto
                 {
@@ -473,7 +534,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         {
             _allProducts = [];
             Products.Clear();
-             Status = BuildServerStatusMessage(ex, "load products");
+            Status = BuildServerStatusMessage(ex, "load products");
             Toast("Server request failed.");
         }
     }
@@ -481,6 +542,9 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
     public async Task<bool> IsServerReachableAsync()
     {
+         if (IsPracticeMode)
+            return true;
+
         try
         {
             var deploy = await _settingsStore.LoadDeploymentAsync();
@@ -718,7 +782,9 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
-            Status = "Server checkout unavailable; saving CASH sale locally...";
+            Status = IsPracticeMode
+                ? "Practice mode enabled; saving CASH sale locally..."
+                : "Server checkout unavailable; saving CASH sale locally...";
             await SaveCashSaleLocallyAsync(cashGiven);
         }
         catch (Exception ex)
@@ -760,7 +826,9 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
-            Status = $"Server checkout unavailable; saving {method} sale locally...";
+            Status = IsPracticeMode
+                ? $"Practice mode enabled; saving {method} sale locally..."
+                : $"Server checkout unavailable; saving {method} sale locally...";
             await SaveCardSaleLocallyAsync(method);
         }
         catch (Exception ex)
@@ -797,6 +865,12 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
      private async Task<RemoteServerApi.ServerCheckoutResponse?> TryCheckoutServerAsync(string paymentMethod, int paymentMethodCode, decimal paidAmount)
     {
+        if (IsPracticeMode)
+        {
+            Status = $"Practice mode enabled; saving {paymentMethod} sale locally.";
+            return null;
+        }
+
         try
         {
             Status = $"Submitting {paymentMethod} checkout to server...";
@@ -1033,6 +1107,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     private void ApplyHeaderSettings(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();
+        IsPracticeMode = _settings.IsPracticeMode;
         RaiseTotalsChanged();
     }
 

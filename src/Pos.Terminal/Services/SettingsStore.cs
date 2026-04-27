@@ -19,6 +19,7 @@ public sealed class SettingsStore
     private const string FinanceVatEnabledKey = "finance.vat.enabled";
     private const string FinanceVatRatePercentKey = "finance.vat.rate.percent";
     private const string ReceiptRemarksKey = "receipt.remarks";
+    private const string PracticeModeEnabledKey = "practice.mode.enabled";
 
     private const string DeployConfiguredKey = "deploy.configured";
     private const string DeployModeKey = "deploy.mode";
@@ -43,7 +44,8 @@ public sealed class SettingsStore
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
             UseTspReceiptStyle = GetBoolValue(lookup, ReceiptPrinterTspStyleKey, false),
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
-            VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m)
+            VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m),
+            IsPracticeMode = GetBoolValue(lookup, PracticeModeEnabledKey, false)
         };
     }
 
@@ -95,6 +97,7 @@ public sealed class SettingsStore
         await UpsertAsync(db, ReceiptPrinterTspStyleKey, settings.UseTspReceiptStyle ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
+        await UpsertAsync(db, PracticeModeEnabledKey, settings.IsPracticeMode ? "true" : "false", ct);
 
         await db.SaveChangesAsync(ct);
     }

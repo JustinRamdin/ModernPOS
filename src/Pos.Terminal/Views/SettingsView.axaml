@@ -57,6 +57,12 @@
         </TabItem>
       </TabControl>
 
+      <StackPanel Spacing="8">
+        <TextBlock Text="Practice Mode" FontWeight="Bold"/>
+        <TextBlock Text="{Binding PracticeModeStatus}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+        <Button Content="{Binding PracticeModeButtonText}" Click="TogglePracticeMode_Click" HorizontalAlignment="Left"/>
+      </StackPanel>
+      
       <StackPanel Orientation="Horizontal" Spacing="12">
         <Button Content="Save Settings" Click="Save_Click"/>
         <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>

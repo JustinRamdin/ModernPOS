@@ -16,6 +16,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private readonly SettingsStore _store;
     private readonly SharedCompanyProfileService _companyProfileService;
     private readonly Action<AppSettings>? _onSaved;
+    private readonly Action<bool>? _onPracticeModeToggled;
 
     public ObservableCollection<string> Printers { get; } = new();
 
@@ -53,6 +54,24 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         get => _useTspReceiptStyle;
         set { _useTspReceiptStyle = value; OnPropertyChanged(); }
     }
+    private bool _isPracticeMode;
+    public bool IsPracticeMode
+    {
+        get => _isPracticeMode;
+        private set
+        {
+            _isPracticeMode = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(PracticeModeButtonText));
+            OnPropertyChanged(nameof(PracticeModeStatus));
+        }
+    }
+
+    public string PracticeModeButtonText => IsPracticeMode ? "Exit Practice Mode" : "Enter Practice Mode";
+    public string PracticeModeStatus => IsPracticeMode
+        ? "Practice mode is ON. Sales and inventory changes stay local and do not update the server."
+        : "Practice mode is OFF. Sales and inventory changes use the live server.";
+
     private string _statusMessage = "";
     public string StatusMessage
     {
@@ -96,10 +115,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         private set { _printerStatus = value; OnPropertyChanged(); }
     }
 
-    public SettingsViewModel(SettingsStore store, Action<AppSettings>? onSaved)
+    public SettingsViewModel(SettingsStore store, Action<AppSettings>? onSaved, Action<bool>? onPracticeModeToggled = null)
     {
         _store = store;
         _onSaved = onSaved;
+        _onPracticeModeToggled = onPracticeModeToggled;
         _companyProfileService = new SharedCompanyProfileService(store);
     }
 
@@ -110,6 +130,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         UseTspReceiptStyle = settings.UseTspReceiptStyle;
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
+        IsPracticeMode = settings.IsPracticeMode;
 
         await _store.ClearLegacyReceiptIdentityAsync();
         LoadPrinters();
@@ -161,12 +182,28 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             ReceiptPrinterName = SelectedPrinter.Trim(),
             UseTspReceiptStyle = UseTspReceiptStyle,
             IsVatEnabled = IsVatEnabled,
-            VatRatePercent = ParseVatRatePercent()
+             VatRatePercent = ParseVatRatePercent(),
+            IsPracticeMode = IsPracticeMode
         };
 
         await _store.SaveAsync(settings);
         _onSaved?.Invoke(settings);
         StatusMessage = "Terminal preferences saved.";
+    }
+
+    public async Task TogglePracticeModeAsync()
+    {
+        var settings = await _store.LoadAsync();
+        settings.IsPracticeMode = !settings.IsPracticeMode;
+        await _store.SaveAsync(settings);
+
+        IsPracticeMode = settings.IsPracticeMode;
+        _onSaved?.Invoke(settings);
+        StatusMessage = settings.IsPracticeMode
+            ? "Practice mode enabled. Restarting into practice mode..."
+            : "Practice mode disabled. Restarting into live mode...";
+
+        _onPracticeModeToggled?.Invoke(settings.IsPracticeMode);
     }
 
     private decimal ParseVatRatePercent()

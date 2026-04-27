@@ -1,3 +1,4 @@
+using Pos.Terminal.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -12,7 +13,15 @@ public override void Initialize() => AvaloniaXamlLoader.Load(this);
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new SetupWindow();
+            var settings = new SettingsStore();
+            var deployment = settings.LoadDeploymentAsync().GetAwaiter().GetResult();
+
+            if (deployment.IsConfigured && !string.IsNullOrWhiteSpace(deployment.AuthToken))
+                desktop.MainWindow = new MainWindow();
+            else if (!string.IsNullOrWhiteSpace(deployment.ServerHost))
+                desktop.MainWindow = new LoginWindow(deployment.ServerHost, deployment.ServerPort);
+            else
+                desktop.MainWindow = new SetupWindow();
         }
 
         base.OnFrameworkInitializationCompleted();

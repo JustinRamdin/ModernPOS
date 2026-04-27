@@ -85,12 +85,19 @@
                Margin="0,0,12,0"
                IsVisible="{Binding HasHeaderImage}"/>
 
-      <TextBlock Grid.Column="1"
-                   Text="{Binding HeaderTitle}"
+      <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="4">
+        <TextBlock Text="{Binding PracticeModeBannerText}"
+                   IsVisible="{Binding IsPracticeModeBannerVisible}"
+                   Foreground="OrangeRed"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding HeaderTitle}"
                    Foreground="{StaticResource PrimaryTextBrush}"
                    FontSize="32"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"/>
+        </StackPanel>
         <StackPanel Grid.Column="2" HorizontalAlignment="Right" Spacing="6">
         <TextBlock Text="{Binding ConnectedCompany}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
         <TextBlock Text="{Binding LoggedInUserLabel}" HorizontalAlignment="Right"/>

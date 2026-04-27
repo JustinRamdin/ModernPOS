@@ -53,9 +53,13 @@ internal static class CashDrawerService
             // Send both pulse variants so either wiring opens the drawer.
             var commands = new[]
             {
-                new byte[] { 0x07 },           
-                new byte[] { 0x1B, 0x70, 0x00, 0x19, 0xFA }, // ESC p m=0 t1 t2 (pin 2)
-                new byte[] { 0x1B, 0x70, 0x01, 0x19, 0xFA }  // ESC p m=1 t1 t2 (pin 5)
+                new byte[] { 0x07 },
+                new byte[] { 0x1B, 0x70, 0x00, 0x19, 0xFA }, // ESC/POS ESC p m=0 t1 t2 (pin 2)
+                new byte[] { 0x1B, 0x70, 0x01, 0x19, 0xFA }, // ESC/POS ESC p m=1 t1 t2 (pin 5)
+                new byte[] { 0x1B, 0x07, 0x00 },             // Star ESC BEL n=0
+                new byte[] { 0x1B, 0x07, 0x01 },             // Star ESC BEL n=1
+                new byte[] { 0x10, 0x14, 0x01, 0x00, 0x05 }, // Star DLE DC4 peripheral 1
+                new byte[] { 0x10, 0x14, 0x01, 0x01, 0x05 }  // Star DLE DC4 peripheral 2
             };
 
             Exception? lastWriteFailure = null;

@@ -4,7 +4,7 @@ using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
 using Pos.Server.Auth;
 using Pos.Contracts;
-using System.Text.Json;
+using Pos.Application.Inventory;
 
 namespace Pos.Server.Controllers;
 
@@ -92,6 +92,40 @@ public class SalesController : ControllerBase
                 UnitPrice = unit,
                 LineTotal = total
             });
+
+            if (p.IsLength)
+            {
+                if (line.Qty != decimal.Truncate(line.Qty))
+                    return BadRequest($"{p.Name}: Length quantity must be a whole number of inches.");
+
+                if (line.Qty > int.MaxValue || line.Qty < int.MinValue)
+                    return BadRequest($"{p.Name}: Length quantity is out of range.");
+
+                var inchesToSubtract = (int)line.Qty;
+                var lengthAdjust = StockService.TrySubtractInches(
+                    p.OnHandInches,
+                    inchesToSubtract,
+                    allowNegative: false,
+                    out var newOnHandInches);
+
+                if (!lengthAdjust.Success)
+                    return BadRequest($"{p.Name}: {lengthAdjust.ErrorMessage}");
+
+                p.OnHandInches = newOnHandInches;
+            }
+            else
+            {
+                var unitAdjust = StockService.TrySubtractUnits(
+                    p.OnHand,
+                    line.Qty,
+                    allowNegative: false,
+                    out var newOnHand);
+
+                if (!unitAdjust.Success)
+                    return BadRequest($"{p.Name}: {unitAdjust.ErrorMessage}");
+
+                p.OnHand = Math.Round(newOnHand, 3);
+            }
         }
 
         sale.Subtotal = sale.Lines.Sum(x => x.LineTotal);

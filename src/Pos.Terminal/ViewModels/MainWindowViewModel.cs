@@ -228,6 +228,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public ICommand IncreaseQtyCommand { get; }
     public ICommand DecreaseQtyCommand { get; }
     public ICommand EditQtyCommand { get; }
+    public ICommand OpenDrawerCommand { get; }
 
     // View-bridge: TerminalView assigns this to show dialogs
     public Func<CartLine, Task>? EditQtyRequested { get; set; }
@@ -327,6 +328,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             if (p is not CartLine line) return;
             if (EditQtyRequested != null) await EditQtyRequested(line);
         });
+
+        OpenDrawerCommand = new AsyncRelayCommand(async _ => await OpenCashDrawerAsync());
 
         ShowTerminal();
 
@@ -1271,6 +1274,27 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     }
 
 
+    public async Task OpenCashDrawerAsync()
+    {
+        var settings = await _settingsStore.LoadAsync();
+        if (string.IsNullOrWhiteSpace(settings.ReceiptPrinterName))
+        {
+            Status = "No receipt printer configured.";
+            Toast("Set a receipt printer first in Settings.");
+            return;
+        }
+
+        if (!CashDrawerService.TryOpen(settings.ReceiptPrinterName, out var error))
+        {
+            Status = $"Cash drawer signal failed: {error}";
+            Toast("Unable to open cash drawer.");
+            return;
+        }
+
+        Status = "Cash drawer opened.";
+        Toast("Cash drawer opened.");
+    }
+    
     // ✅ The ONE shared DB config used by ALL modules
     private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
     => DataLocalDb.BuildOptions();

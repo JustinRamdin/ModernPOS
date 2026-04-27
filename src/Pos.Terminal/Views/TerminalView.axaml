@@ -115,10 +115,11 @@
 
               <Button Classes="primary" Content="Pay" IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" Click="Pay_Click" />
 
-              <Grid ColumnDefinitions="*,*,*">
+              <Grid ColumnDefinitions="*,*,*,*">
                 <Button Classes="ghost" Content="Discount" Click="Discount_Click" Margin="0,0,10,0" />
                 <Button Classes="ghost" Grid.Column="1" Content="Clear" Click="Clear_Click" Margin="0,0,10,0" />
-                <Button Classes="ghost" Grid.Column="2" Content="Checkout (Cash)" Click="CashCheckout_Click" IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" />
+                <Button Classes="ghost" Grid.Column="2" Content="Checkout (Cash)" Click="CashCheckout_Click" Margin="0,0,10,0" IsEnabled="{Binding IsCartNotEmptyAndCustomerSelected}" />
+                <Button Classes="ghost" Grid.Column="3" Content="Open Drawer" Command="{Binding OpenDrawerCommand}" />
               </Grid>
             </StackPanel>
           </Border>

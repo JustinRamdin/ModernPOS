@@ -138,7 +138,7 @@ public class LocalSaleService
 
 
         var receiptNo =
-            $"{terminalId}-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}"[..32];
+            $"{terminalId}-{Guid.NewGuid():N}"[..32];
 
         var sale = new Sale
         {

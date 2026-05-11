@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Pos.Contracts;
 using Pos.Server.Hosting;
@@ -42,6 +43,12 @@ public partial class InitialSetupWindow : Window
         new ServerAppSettingsStore().Save(settings);
 
         var dashboard = new DashboardWindow(settings, server);
+        
+         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = dashboard;
+        }
+
         dashboard.Show();
         Close();
     }

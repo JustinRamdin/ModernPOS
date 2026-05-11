@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "WkbdCVj9fvM=",
+  "dgSpecHash": "gZUxBsPKAQM=",
   "success": true,
   "projectFilePath": "C:\\ModernPOS\\src\\Pos.Domain\\Pos.Domain.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.2\\microsoft.netcore.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.2\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.2\\microsoft.aspnetcore.app.runtime.win-x64.10.0.2.nupkg.sha512"
+  ],
   "logs": []
 }

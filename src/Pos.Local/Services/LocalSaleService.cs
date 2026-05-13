@@ -148,7 +148,6 @@ public class LocalSaleService
         // -----------------------------
         foreach (var l in lines)
         {
-            var p = products[l.ProductId];
 
             var inv = await _db.Inventory.FirstOrDefaultAsync(
                 x => x.ProductId == l.ProductId &&
@@ -176,7 +175,8 @@ public class LocalSaleService
                     out var newQty);
 
                 if (!res.Success)
-                    throw new InvalidOperationException($"{p.Name}: {res.ErrorMessage}");
+                     throw new InvalidOperationException($"{l.ProductName}: {res.ErrorMessage}");
+
 
                 inv.OnHand = Math.Round(newQty, 3);
             }
@@ -189,7 +189,7 @@ public class LocalSaleService
                     out var newInches);
 
                 if (!res.Success)
-                    throw new InvalidOperationException($"{p.Name}: {res.ErrorMessage}");
+                    throw new InvalidOperationException($"{l.ProductName}: {res.ErrorMessage}");
 
                 inv.OnHandInches = newInches;
             }

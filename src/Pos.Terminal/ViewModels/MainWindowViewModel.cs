@@ -920,6 +920,10 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             lines: CartLines.Select(x => new LocalCartLine
             {
                 ProductId = x.ProductId,
+                ProductName = x.Name,
+                UnitPrice = x.UnitPrice,
+                VatInclusive = x.VatInclusive,
+                IsLength = x.IsLength,
                 QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
                 Qty = x.Qty,
                 QtyInches = x.QtyInches
@@ -962,6 +966,10 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             lines: CartLines.Select(x => new LocalCartLine
             {
                 ProductId = x.ProductId,
+                ProductName = x.Name,
+                UnitPrice = x.UnitPrice,
+                VatInclusive = x.VatInclusive,
+                IsLength = x.IsLength,
                 QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
                 Qty = x.Qty,
                 QtyInches = x.QtyInches
@@ -1002,6 +1010,10 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             lines: CartLines.Select(x => new LocalCartLine
             {
                 ProductId = x.ProductId,
+                ProductName = x.Name,
+                UnitPrice = x.UnitPrice,
+                VatInclusive = x.VatInclusive,
+                IsLength = x.IsLength,
                 QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
                 Qty = x.Qty,
                 QtyInches = x.QtyInches

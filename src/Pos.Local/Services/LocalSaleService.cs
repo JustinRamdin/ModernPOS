@@ -40,20 +40,11 @@ public class LocalSaleService
         if (lines.Count == 0)
             throw new InvalidOperationException("Cart is empty.");
 
-        var productIds = lines.Select(x => x.ProductId).Distinct().ToList();
-
-        var products = await _db.Products
-            .AsNoTracking()
-            .Where(p =>
-                productIds.Contains(p.Id) &&
-                p.DeletedAtUtc == null &&
-                p.IsActive)
-            .ToDictionaryAsync(p => p.Id, ct);
 
         foreach (var l in lines)
         {
-            if (!products.ContainsKey(l.ProductId))
-                throw new InvalidOperationException($"Product missing from offline catalog: {l.ProductId}");
+            if (string.IsNullOrWhiteSpace(l.ProductName))
+                throw new InvalidOperationException($"Product name missing for cart line: {l.ProductId}");
 
             if (l.QuantityKind == LocalLineKind.Unit && l.Qty <= 0)
                 throw new InvalidOperationException("Invalid unit quantity.");
@@ -71,13 +62,11 @@ public class LocalSaleService
         // -----------------------------
         foreach (var l in lines)
         {
-            var p = products[l.ProductId];
+            if (l.IsLength && l.QuantityKind != LocalLineKind.Inches)
+                throw new InvalidOperationException($"{l.ProductName} must be sold by length.");
 
-            if (p.IsLength && l.QuantityKind != LocalLineKind.Inches)
-                throw new InvalidOperationException($"{p.Name} must be sold by length.");
-
-            if (!p.IsLength && l.QuantityKind != LocalLineKind.Unit)
-                throw new InvalidOperationException($"{p.Name} must be sold by quantity.");
+            if (!l.IsLength && l.QuantityKind != LocalLineKind.Unit)
+                throw new InvalidOperationException($"{l.ProductName} must be sold by quantity.");
 
             // MAP Local enum → Application enum
             var appKind = l.QuantityKind == LocalLineKind.Inches
@@ -85,10 +74,10 @@ public class LocalSaleService
                 : AppLineKind.Unit;
 
             var calc = _checkout.CalculateLine(
-                productId: p.Id,
-                productName: p.Name,
-                enteredSellingPrice: p.Price, // price per unit OR per inch
-                vatInclusive: p.VatInclusive,
+                productId: l.ProductId,
+                productName: l.ProductName,
+                enteredSellingPrice: l.UnitPrice, // price per unit OR per inch
+                vatInclusive: l.VatInclusive,
                 quantityKind: appKind,
                 qty: l.Qty,
                 qtyInches: l.QtyInches
@@ -96,7 +85,7 @@ public class LocalSaleService
 
             saleLines.Add(new SaleLine
             {
-                ProductId = p.Id,
+                ProductId = l.ProductId,
                 QuantityKind = l.QuantityKind,
 
                 Qty = l.Qty,
@@ -453,6 +442,11 @@ public class LocalSaleService
 public sealed class LocalCartLine
 {
     public Guid ProductId { get; init; }
+    public string ProductName { get; init; } = "";
+    public decimal UnitPrice { get; init; }
+    public bool VatInclusive { get; init; }
+    public bool IsLength { get; init; }
+
 
     // ALWAYS use Local enum here
     public LocalLineKind QuantityKind { get; init; } = LocalLineKind.Unit;

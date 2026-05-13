@@ -144,6 +144,39 @@ public partial class DashboardWindow : Window
         await _api.RestoreAsync(RestoreFileBox.Text ?? string.Empty);
         StatusText.Text = "Restore completed. Restart server app recommended.";
     }
+
+     private async void BrowseRestoreFile_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.StorageProvider is null)
+            return;
+
+        var initialFolder = !string.IsNullOrWhiteSpace(RestoreFileBox.Text)
+            ? Path.GetDirectoryName(RestoreFileBox.Text)
+            : null;
+        var startLocation = !string.IsNullOrWhiteSpace(initialFolder) && Directory.Exists(initialFolder)
+            ? await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialFolder)
+            : null;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Select backup file to restore",
+            AllowMultiple = false,
+            SuggestedStartLocation = startLocation,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Database backups") { Patterns = ["*.db"] },
+                new FilePickerFileType("All files") { Patterns = ["*"] }
+            ]
+        });
+
+        var file = files.FirstOrDefault();
+        if (file is null)
+            return;
+
+        RestoreFileBox.Text = file.Path.LocalPath;
+        StatusText.Text = "Backup file selected.";
+    }
     private async void SaveCompanyProfile_Click(object? sender, RoutedEventArgs e)
     {
         var request = new UpdateCompanyProfileRequest(

@@ -84,7 +84,10 @@
           <TextBox x:Name="RetentionBox" Text="14" Watermark="Retention Count"/>
           <Button Content="Save Schedule" Click="SaveSchedule_Click"/>
           <TextBlock Text="Restore" FontWeight="Bold" Margin="0,8,0,0"/>
-          <TextBox x:Name="RestoreFileBox" Watermark="Backup file path (*.db)"/>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox x:Name="RestoreFileBox" Watermark="Backup file path (*.db)" HorizontalAlignment="Stretch" Width="540"/>
+            <Button Content="Browse Backup File" Click="BrowseRestoreFile_Click"/>
+          </StackPanel>
           <Button Content="Restore Backup" Click="Restore_Click"/>
           <TextBlock x:Name="StatusText" TextWrapping="Wrap"/>
         </StackPanel>

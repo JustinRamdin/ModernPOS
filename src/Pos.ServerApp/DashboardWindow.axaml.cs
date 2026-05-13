@@ -48,7 +48,7 @@ public partial class DashboardWindow : Window
 
     private void ApplyConfigurationState()
     {
-        SetupTab.IsEnabled = !_settings.IsConfigured;
+        SetupTab.IsEnabled = true;
         DashboardTab.IsEnabled = _settings.IsConfigured;
         MainTabControl.SelectedItem = _settings.IsConfigured ? DashboardTab : SetupTab;
     }

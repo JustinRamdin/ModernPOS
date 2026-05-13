@@ -15,7 +15,7 @@ public partial class App : Avalonia.Application
         {
             var store = new ServerAppSettingsStore();
             var settings = store.Load();
-            desktop.MainWindow = settings.IsConfigured ? new DashboardWindow(settings) : new InitialSetupWindow();
+            desktop.MainWindow = new DashboardWindow(settings);
         }
 
         base.OnFrameworkInitializationCompleted();

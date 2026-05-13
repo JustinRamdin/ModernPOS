@@ -1,5 +1,7 @@
 using System.Linq;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -14,7 +16,7 @@ namespace Pos.ServerApp;
 public partial class DashboardWindow : Window
 {
     private readonly ServerAppSettings _settings;
-    private readonly ServerAdminApi _api;
+    private ServerAdminApi _api;
     private byte[]? _headerImageBytes;
     private byte[]? _logoImageBytes;
     private IHost? _host;
@@ -22,6 +24,7 @@ public partial class DashboardWindow : Window
     public DashboardWindow() : this(new ServerAppSettings())
     {
     }
+
     public DashboardWindow(ServerAppSettings settings, IHost? existingHost = null)
     {
         InitializeComponent();
@@ -33,7 +36,57 @@ public partial class DashboardWindow : Window
 
     private async void OnOpened(object? sender, EventArgs e)
     {
+        ApplyConfigurationState();
+
+        if (!_settings.IsConfigured)
+            return;
+
         _host ??= await ModernPosServerHost.StartAsync(new ModernPosServerOptions(_settings.ConnectionString, _settings.Port, _settings.CompanyName));
+        await RefreshDashboardAsync();
+        await LoadCompanyProfileAsync();
+    }
+
+    private void ApplyConfigurationState()
+    {
+        SetupTab.IsEnabled = !_settings.IsConfigured;
+        DashboardTab.IsEnabled = _settings.IsConfigured;
+        MainTabControl.SelectedItem = _settings.IsConfigured ? DashboardTab : SetupTab;
+    }
+
+    private async void Initialize_Click(object? sender, RoutedEventArgs e)
+    {
+        if (PasswordBox.Text != ConfirmPasswordBox.Text)
+        {
+            SetupStatusText.Text = "Passwords do not match.";
+            return;
+        }
+
+        var port = int.TryParse(PortBox.Text, out var parsed) ? parsed : 5050;
+        var company = string.IsNullOrWhiteSpace(CompanyNameBox.Text) ? "ModernPOS" : CompanyNameBox.Text.Trim();
+
+        _settings.IsConfigured = true;
+        _settings.CompanyName = company;
+        _settings.Port = port;
+        _settings.ConnectionString = $"Data Source=server-{port}.db";
+
+        _api = new ServerAdminApi("127.0.0.1", _settings.Port);
+        _host = await ModernPosServerHost.StartAsync(new ModernPosServerOptions(_settings.ConnectionString, _settings.Port, _settings.CompanyName));
+
+        if (!await _api.IsInitializedAsync())
+        {
+            try
+            {
+                await _api.BootstrapAsync(new BootstrapServerRequest(company, SuperUserBox.Text ?? "admin", PasswordBox.Text ?? string.Empty, port));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                // Server was initialized by another process between status check and bootstrap call.
+            }
+        }
+
+        new ServerAppSettingsStore().Save(_settings);
+        SetupStatusText.Text = "Server initialized successfully.";
+        ApplyConfigurationState();
         await RefreshDashboardAsync();
         await LoadCompanyProfileAsync();
     }

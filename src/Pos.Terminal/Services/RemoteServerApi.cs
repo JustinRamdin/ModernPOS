@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Pos.Application.Auth;
 using Pos.Contracts;
 using Pos.Terminal.Models;
@@ -177,6 +178,7 @@ public sealed class RemoteServerApi : IDisposable
     private async Task<T?> GetFromJsonWithFallbackAsync<T>(IReadOnlyList<string> urls, string allNotFoundMessage)
     {
         HttpRequestException? lastHttpError = null;
+        Exception? lastParseError = null;
         for (var i = 0; i < urls.Count; i++)
         {
             try
@@ -191,10 +193,20 @@ public sealed class RemoteServerApi : IDisposable
             {
                 throw new HttpRequestException(allNotFoundMessage, ex, ex.StatusCode);
             }
+            catch (JsonException ex) when (i < urls.Count - 1)
+            {
+                lastParseError = ex;
+            }
+            catch (NotSupportedException ex) when (i < urls.Count - 1)
+            {
+                lastParseError = ex;
+            }
         }
 
         if (lastHttpError != null)
             throw lastHttpError;
+        if (lastParseError != null)
+            throw lastParseError;
 
         return default;
     }

@@ -103,7 +103,7 @@
                 GridLinesVisibility="All"
                 HeadersVisibility="All"
                 AutoGenerateColumns="False"
-                CanUserSortColumns="True"
+                CanUserSortColumns="False"
                 CanUserResizeColumns="True"
                 CanUserReorderColumns="True" />
     </Grid>

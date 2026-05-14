@@ -8,19 +8,45 @@ namespace Pos.Terminal.Views;
 
 public partial class ExportTemplateDialog : Window
 {
+    private Pos.Terminal.ViewModels.ExportTemplateDialogViewModel? _boundVm;
+
     public ExportTemplateDialog()
     {
         InitializeComponent();
 
-        // When DataContext is set, bind dynamic columns to ColumnHeaders
-        this.AttachedToVisualTree += (_, __) =>
-        {
-            if (DataContext is not Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
-                return;
+        // DataContext can be assigned after the control is attached, so listen for changes.
+        DataContextChanged += (_, __) => RebindColumns();
+        AttachedToVisualTree += (_, __) => RebindColumns();
+        DetachedFromVisualTree += (_, __) => UnbindColumns();
+    }
 
-            vm.ColumnHeaders.CollectionChanged += (_, __) => BuildColumns(vm);
-            BuildColumns(vm);
-        };
+    private void RebindColumns()
+    {
+        UnbindColumns();
+
+        if (DataContext is not Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)
+            return;
+
+        _boundVm = vm;
+        vm.ColumnHeaders.CollectionChanged += OnColumnHeadersChanged;
+        BuildColumns(vm);
+    }
+
+    private void UnbindColumns()
+    {
+        if (_boundVm is null)
+            return;
+
+        _boundVm.ColumnHeaders.CollectionChanged -= OnColumnHeadersChanged;
+        _boundVm = null;
+    }
+
+    private void OnColumnHeadersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_boundVm is null)
+            return;
+
+            BuildColumns(_boundVm);
     }
 
     private void BuildColumns(Pos.Terminal.ViewModels.ExportTemplateDialogViewModel vm)

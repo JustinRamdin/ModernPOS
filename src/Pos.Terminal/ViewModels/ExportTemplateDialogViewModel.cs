@@ -348,7 +348,20 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Gross");
                     ColumnHeaders.Add("Balance");
 
-                    foreach (var row in await svc.GetCustomerSalesAsync(fromUtc, toUtc))
+                    using var api = await CreateApiAsync();
+                    var serverRows = await api.GetSalesExportAsync(fromUtc, toUtc);
+                    var customerRows = ApplySalesFilters(serverRows.Select(MapServerSalesRow))
+                        .Where(r => !string.Equals(r.CustomerName, "Walk-in", StringComparison.OrdinalIgnoreCase))
+                        .GroupBy(r => r.CustomerName)
+                        .Select(g => new
+                        {
+                            CustomerName = g.Key,
+                            ReceiptCount = g.Count(),
+                            GrossTotal = g.Sum(x => x.GrossTotal)
+                        })
+                        .OrderByDescending(r => r.GrossTotal)
+                        .ToList();
+
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
@@ -356,7 +369,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                             ["Customer"] = row.CustomerName,
                             ["Receipts"] = row.ReceiptCount.ToString(CultureInfo.InvariantCulture),
                             ["Gross"] = row.GrossTotal.ToString("0.00", CultureInfo.InvariantCulture),
-                            ["Balance"] = row.CurrentBalance.ToString("0.00", CultureInfo.InvariantCulture)
+                            ["Balance"] = "0.00"
                         }));
                     }
                     break;

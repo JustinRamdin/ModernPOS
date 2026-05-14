@@ -82,4 +82,21 @@ public partial class ReportsView : UserControl
 
         await dialog.ShowDialog(host);
     }
+     public async void SubmitRefund_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not ReportsViewModel vm) return;
+        await vm.RefundSelectedLineAsync();
+    }
+
+    public void ReprintSale_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not ReportsViewModel vm) return;
+        vm.MarkReprintRequested();
+    }
+
+    public void RefundSale_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not ReportsViewModel vm) return;
+        vm.Status = "Select item and quantity, then click Submit Refund.";
+    }
 }

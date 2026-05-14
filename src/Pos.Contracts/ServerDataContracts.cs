@@ -125,3 +125,9 @@ public sealed record ServerSalesExportRowDto(
     decimal NetTotal,
     decimal VatTotal,
     decimal GrossTotal);
+
+public sealed record SaleLogLineDto(Guid SaleLineId, Guid ProductId, string ProductName, decimal Qty, decimal UnitPrice, decimal LineTotal);
+
+public sealed record SaleLogEntryDto(Guid SaleId, DateTime SoldAtUtc, string ReceiptNo, decimal Subtotal, decimal Total, string PaymentType, IReadOnlyList<SaleLogLineDto> Lines);
+
+public sealed record SaleItemRefundRequest(Guid SaleLineId, decimal Quantity);

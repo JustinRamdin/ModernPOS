@@ -259,7 +259,52 @@
                 </ItemsControl>
               </StackPanel>
             </Border>
-
+            
+            <!-- Sales Log -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="h2" Text="Sales Log" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                  <TextBox Grid.Column="0" Text="{Binding SalesSearchText, Mode=TwoWay}" Watermark="Search receipt or item..." />
+                  <Button Grid.Column="1" Classes="ghost" Content="Search" Command="{Binding ApplyDateRangeCommand}" />
+                </Grid>
+                <Grid ColumnDefinitions="2*,*" ColumnSpacing="10">
+                  <ListBox ItemsSource="{Binding SalesLog}" SelectedItem="{Binding SelectedSale, Mode=TwoWay}" Height="220">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <Border Padding="6">
+                          <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="{Binding ReceiptNo}" />
+                            <TextBlock Classes="muted" Text="{Binding SoldAtUtc}" />
+                            <TextBlock Text="{Binding Total, StringFormat='Total: ${0:0.00}'}" />
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="Refund" Click="RefundSale_Click" />
+                        <MenuItem Header="Reprint" Click="ReprintSale_Click" />
+                      </ContextMenu>
+                    </ListBox.ContextMenu>
+                  </ListBox>
+                  <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock Text="Refund Item" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding SelectedSaleLines}" SelectedItem="{Binding SelectedRefundLine, Mode=TwoWay}">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding ProductName}" />
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding RefundQuantity, Mode=TwoWay}" Watermark="Qty" />
+                    <Button Content="Submit Refund" Click="SubmitRefund_Click" />
+                    <TextBlock Classes="muted" Text="Right click a sale to refund or reprint." />
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+            
             <!-- Top Products -->
             <Border Classes="card">
               <StackPanel Spacing="8">

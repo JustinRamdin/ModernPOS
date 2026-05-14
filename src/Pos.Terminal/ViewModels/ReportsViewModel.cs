@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Pos.Contracts;
@@ -41,6 +42,13 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public ObservableCollection<LowStockRowDto> LowStock { get; } = new();
     public ObservableCollection<CustomerSalesRowDto> CustomerSales { get; } = new();
     public ObservableCollection<ExportTemplateDefinition> ExportTemplates { get; } = new();
+    public ObservableCollection<SaleLogEntryDto> SalesLog { get; } = new();
+    public ObservableCollection<SaleLogLineDto> SelectedSaleLines { get; } = new();
+    private SaleLogEntryDto? _selectedSale;
+    public SaleLogEntryDto? SelectedSale { get => _selectedSale; set { _selectedSale = value; SelectedSaleLines.Clear(); if (value is not null) foreach (var l in value.Lines) SelectedSaleLines.Add(l); OnPropertyChanged(); } }
+    public string SalesSearchText { get; set; } = string.Empty;
+    public SaleLogLineDto? SelectedRefundLine { get; set; }
+    public decimal RefundQuantity { get; set; } = 1;
 
     public ICommand RefreshAllCommand { get; }
     public ICommand ApplyDateRangeCommand { get; }
@@ -80,6 +88,10 @@ using var api = await CreateApiAsync();
             ProfitByProduct.Clear(); foreach (var r in report.ProfitByProduct) ProfitByProduct.Add(r);
             CustomerSales.Clear(); foreach (var r in report.CustomerSales) CustomerSales.Add(r);
             InventoryValuation.Clear(); foreach (var r in report.InventoryValuation) InventoryValuation.Add(r);
+            var salesLog = await api.GetSalesLogAsync(fromUtc, toUtc);
+            SalesLog.Clear();
+            foreach (var sale in salesLog.Where(s => string.IsNullOrWhiteSpace(SalesSearchText) || s.ReceiptNo.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase) || s.Lines.Any(l => l.ProductName.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase))))
+                SalesLog.Add(sale);
 
             Status = report.ReceiptCount == 0 && report.InventoryValuation.Count == 0 && report.CustomerSales.Count == 0
                 ? "No data available from server."
@@ -109,7 +121,22 @@ using var api = await CreateApiAsync();
     }
 
     private static async Task<RemoteServerApi> CreateApiAsync() { var d = await new SettingsStore().LoadDeploymentAsync(); return new RemoteServerApi(d.ServerHost, d.ServerPort, d.AuthToken); }
-    private void NotifyAll() { foreach (var n in new[] { nameof(ReceiptCount), nameof(NetTotal), nameof(VatTotal), nameof(GrossTotal), nameof(AvgGross), nameof(SalesGross), nameof(Cogs), nameof(GrossProfit), nameof(GrossMarginPct) }) OnPropertyChanged(n); }
+    public async Task RefundSelectedLineAsync()
+    {
+        if (SelectedSale is null || SelectedRefundLine is null || RefundQuantity <= 0) return;
+        using var api = await CreateApiAsync();
+        await api.RefundSaleItemAsync(SelectedSale.SaleId, SelectedRefundLine.SaleLineId, RefundQuantity);
+        Status = $"Refund posted for {SelectedRefundLine.ProductName}.";
+        await LoadAllAsync();
+    }
+
+    public void MarkReprintRequested()
+    {
+        if (SelectedSale is not null)
+            Status = $"Reprint requested for receipt {SelectedSale.ReceiptNo}.";
+    }
+
+    private void NotifyAll() { foreach (var n in new[] { nameof(ReceiptCount), nameof(NetTotal), nameof(VatTotal), nameof(GrossTotal), nameof(AvgGross), nameof(SalesGross), nameof(Cogs), nameof(GrossProfit), nameof(GrossMarginPct), nameof(SelectedSale), nameof(SelectedRefundLine), nameof(RefundQuantity) }) OnPropertyChanged(n); }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

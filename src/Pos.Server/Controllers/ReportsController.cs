@@ -84,6 +84,71 @@ public class ReportsController : ControllerBase
 
         return new ReportSummaryDto(sales.Count, gross, salesGross, cogsTotal, salesGross - cogsTotal, salesByDay, topProducts, profitByProduct, inventory, customers);
     }
+
+    [HttpGet("sales-log")]
+    public async Task<ActionResult<IReadOnlyList<SaleLogEntryDto>>> SalesLog([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
+
+        var sales = await _db.Sales.AsNoTracking()
+            .Include(s => s.Payments)
+            .Include(s => s.Lines).ThenInclude(l => l.Product)
+            .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .OrderByDescending(s => s.SoldAtUtc)
+            .ToListAsync(ct);
+
+        return sales.Select(s => new SaleLogEntryDto(
+            s.Id,
+            s.SoldAtUtc,
+            s.Id.ToString("N")[..8].ToUpperInvariant(),
+            s.Subtotal,
+            s.Total,
+            s.Payments.Count == 0 ? "Unknown" : string.Join(", ", s.Payments.Select(p => p.Method.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)),
+            s.Lines.Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()
+        )).ToList();
+    }
+
+    [HttpPost("sales/{saleId:guid}/refund-item")]
+    public async Task<ActionResult> RefundSaleItem(Guid saleId, [FromBody] SaleItemRefundRequest request, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser)) return Unauthorized();
+
+        var sale = await _db.Sales.Include(s => s.Lines).FirstOrDefaultAsync(s => s.Id == saleId, ct);
+        if (sale is null) return NotFound();
+
+        var line = sale.Lines.FirstOrDefault(l => l.Id == request.SaleLineId);
+        if (line is null) return NotFound();
+        if (request.Quantity <= 0 || request.Quantity > line.Qty) return BadRequest("Invalid refund quantity.");
+
+        var refundLineTotal = Math.Round(line.UnitPrice * request.Quantity, 2, MidpointRounding.AwayFromZero);
+        var refundSale = new Sale
+        {
+            Id = Guid.NewGuid(),
+            TerminalId = sale.TerminalId,
+            SoldAtUtc = DateTime.UtcNow,
+            Subtotal = -refundLineTotal,
+            Total = -refundLineTotal,
+            Lines = new List<SaleLine>
+            {
+                new()
+                {
+                    ProductId = line.ProductId,
+                    Qty = -request.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    LineTotal = -refundLineTotal
+                }
+            },
+            Payments = new List<Payment>
+            {
+                new() { Method = PaymentMethod.Cash, Amount = -refundLineTotal }
+            }
+        };
+
+        _db.Sales.Add(refundSale);
+        await _db.SaveChangesAsync(ct);
+        return Ok();
+    }
+
      [HttpGet("sales-export")]
     public async Task<ActionResult<IReadOnlyList<ServerSalesExportRowDto>>> SalesExport([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
     {

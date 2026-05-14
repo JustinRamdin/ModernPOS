@@ -153,6 +153,14 @@ public sealed class RemoteServerApi : IDisposable
             "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
     }
 
+    public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        return await _http.GetFromJsonAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
+    }
+
+    public async Task RefundSaleItemAsync(Guid saleId, Guid saleLineId, decimal quantity)
+        => (await _http.PostAsJsonAsync($"api/reports/sales/{saleId}/refund-item", new SaleItemRefundRequest(saleLineId, quantity))).EnsureSuccessStatusCode();
     public void Dispose() => _http.Dispose();
     private async Task<T?> GetFromJsonWithFallbackAsync<T>(IReadOnlyList<string> urls, string allNotFoundMessage)
     {

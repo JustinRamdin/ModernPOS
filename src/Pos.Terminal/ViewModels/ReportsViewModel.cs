@@ -154,10 +154,10 @@ using var api = await CreateApiAsync();
             SelectedSale.Lines.Select(line => new PhysicalReceiptRenderer.ReceiptRenderLine(
                 line.ProductName,
                 IsLength: false,
-                qty: line.Qty,
-                qtyInches: 0,
-                unitPrice: line.UnitPrice,
-                lineTotal: line.LineTotal)));
+                Qty: line.Qty,
+                QtyInches: 0,
+                UnitPrice: line.UnitPrice,
+                LineTotal: line.LineTotal)));
 #pragma warning restore CA1416
 
         try

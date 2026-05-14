@@ -362,6 +362,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                         .OrderByDescending(r => r.GrossTotal)
                         .ToList();
 
+                    foreach (var row in customerRows)
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>

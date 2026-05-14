@@ -110,6 +110,9 @@ public sealed record InventoryValuationRowDto(string Name, string? Sku, decimal 
     public decimal EstimatedGrossMargin => SellingValue - CostValue;
 }
 
+public sealed record InventoryMovementRowDto(DateTime OccurredAtUtc, string Type, string Sku, string Name, string DeltaDisplay, string Reason);
+
+public sealed record LowStockRowDto(string Sku, string Name, string OnHandDisplay, decimal AvgDailyUsageBase, decimal DaysRemaining, decimal SuggestedReorderBase);
 public sealed record CustomerSalesRowDto(string Name, int ReceiptCount, decimal SalesGross, decimal CurrentBalance)
 {
     public string CustomerName => Name;

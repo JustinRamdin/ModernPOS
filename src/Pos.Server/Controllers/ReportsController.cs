@@ -108,6 +108,54 @@ public class ReportsController : ControllerBase
         )).ToList();
     }
 
+    [HttpGet("inventory-movements")]
+    public async Task<ActionResult<IReadOnlyList<InventoryMovementRowDto>>> InventoryMovements([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, [FromQuery] string? locationCode, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
+
+        var sales = await _db.Sales.AsNoTracking()
+            .Include(s => s.Lines).ThenInclude(l => l.Product)
+            .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .OrderByDescending(s => s.SoldAtUtc)
+            .ToListAsync(ct);
+
+        var rows = sales.SelectMany(s => s.Lines.Select(l =>
+        {
+            var isLength = l.Product?.IsLength ?? false;
+            var qtyText = isLength ? $"-{Math.Round(l.Qty * 12m, 0):0} in" : $"-{l.Qty:0.##}";
+            return new InventoryMovementRowDto(s.SoldAtUtc, "SALE", l.Product?.Sku ?? string.Empty, l.Product?.Name ?? "Unknown", qtyText, $"Receipt {s.Id.ToString("N")[..8].ToUpperInvariant()}");
+        })).ToList();
+
+        return rows;
+    }
+
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<IReadOnlyList<LowStockRowDto>>> LowStock([FromQuery] string? locationCode, [FromQuery] int lookbackDays = 14, CancellationToken ct = default)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
+
+        var fromUtc = DateTime.UtcNow.AddDays(-Math.Max(1, lookbackDays));
+        var lineUsage = await _db.SaleLines.AsNoTracking()
+            .Include(l => l.Sale)
+            .Where(l => l.Sale != null && l.Sale.SoldAtUtc >= fromUtc)
+            .GroupBy(l => l.ProductId)
+            .Select(g => new { ProductId = g.Key, Qty = g.Sum(x => x.Qty) })
+            .ToDictionaryAsync(x => x.ProductId, x => x.Qty, ct);
+
+        var products = await _db.Products.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(ct);
+        var rows = products.Select(p =>
+        {
+            var usage = lineUsage.TryGetValue(p.Id, out var qty) ? qty / Math.Max(1, lookbackDays) : 0m;
+            var onHandBase = p.IsLength ? p.OnHandInches : p.OnHand;
+            var daysRemaining = usage <= 0 ? 9999m : onHandBase / usage;
+            var reorder = Math.Max(0, (usage * 14m) - onHandBase);
+            return new LowStockRowDto(p.Sku, p.Name, p.IsLength ? $"{p.OnHandInches} in" : p.OnHand.ToString("0.##"), Math.Round(usage,2), Math.Round(daysRemaining,1), Math.Round(reorder,2));
+        }).Where(r => r.DaysRemaining <= 14m).ToList();
+
+        return rows;
+    }
+
+
     [HttpPost("sales/{saleId:guid}/refund-item")]
     public async Task<ActionResult> RefundSaleItem(Guid saleId, [FromBody] SaleItemRefundRequest request, CancellationToken ct)
     {

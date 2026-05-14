@@ -159,6 +159,18 @@ public sealed class RemoteServerApi : IDisposable
         return await _http.GetFromJsonAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
     }
 
+    public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
+    {
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}&locationCode={Uri.EscapeDataString(locationCode)}";
+        return await _http.GetFromJsonAsync<List<InventoryMovementRowDto>>($"api/reports/inventory-movements?{query}") ?? [];
+    }
+
+    public async Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays)
+    {
+        var query = $"locationCode={Uri.EscapeDataString(locationCode)}&lookbackDays={lookbackDays}";
+        return await _http.GetFromJsonAsync<List<LowStockRowDto>>($"api/reports/low-stock?{query}") ?? [];
+    }
+
     public async Task RefundSaleItemAsync(Guid saleId, Guid saleLineId, decimal quantity)
         => (await _http.PostAsJsonAsync($"api/reports/sales/{saleId}/refund-item", new SaleItemRefundRequest(saleLineId, quantity))).EnsureSuccessStatusCode();
     public void Dispose() => _http.Dispose();

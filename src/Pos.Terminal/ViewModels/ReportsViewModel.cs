@@ -89,6 +89,8 @@ using var api = await CreateApiAsync();
             ProfitByProduct.Clear(); foreach (var r in report.ProfitByProduct) ProfitByProduct.Add(r);
             CustomerSales.Clear(); foreach (var r in report.CustomerSales) CustomerSales.Add(r);
             InventoryValuation.Clear(); foreach (var r in report.InventoryValuation) InventoryValuation.Add(r);
+            var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode);
+            InventoryMovements.Clear(); foreach (var r in movements) InventoryMovements.Add(r);
             var salesLog = await api.GetSalesLogAsync(fromUtc, toUtc);
             SalesLog.Clear();
             foreach (var sale in salesLog.Where(s => string.IsNullOrWhiteSpace(SalesSearchText) || s.ReceiptNo.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase) || s.Lines.Any(l => l.ProductName.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase))))
@@ -103,7 +105,18 @@ using var api = await CreateApiAsync();
     }
 
     public Task LoadInventoryAsync() => LoadAllAsync();
-    public Task LoadLowStockAsync() { LowStock.Clear(); Status = "No data available."; return Task.CompletedTask; }
+    public async Task LoadLowStockAsync()
+    {
+        try
+        {
+            using var api = await CreateApiAsync();
+            var rows = await api.GetLowStockAsync(LocationCode, LookbackDays);
+            LowStock.Clear();
+            foreach (var row in rows) LowStock.Add(row);
+            Status = rows.Count == 0 ? "No low-stock items from server." : "Low stock loaded.";
+        }
+        catch (Exception ex) { Status = $"Low stock failed: {ex.Message}"; }
+    }
 
     private (DateTime fromUtc, DateTime toUtc) GetUtcRange()
     {
@@ -245,5 +258,3 @@ using var api = await CreateApiAsync();
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed record InventoryMovementRowDto(DateTime AtUtc, string Type, string Name, decimal Qty);
-public sealed record LowStockRowDto(string Name, string? Sku, decimal OnHand, int OnHandInches, decimal DaysRemaining, decimal SuggestedReorderQty);

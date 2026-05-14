@@ -151,6 +151,17 @@ public sealed class RemoteServerApi : IDisposable
 
     public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
     {
+         // Prefer sales-log because it is generated from the same dataset used by the Sales Register UI,
+        // which avoids stale/partial implementations of legacy export endpoints.
+        try
+        {
+            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
+        }
+        catch (HttpRequestException ex) when ((int?)ex.StatusCode == 404)
+        {
+            // Older servers may not expose sales-log; fall back to legacy export endpoints.
+        }
+
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
         var candidates = new[]
         {
@@ -158,20 +169,9 @@ public sealed class RemoteServerApi : IDisposable
             $"api/sales/export?{query}"
         };
 
-        try
-        {
-            return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
-                candidates,
-                "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
-        }
-        catch (JsonException)
-        {
-            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
-        }
-        catch (NotSupportedException)
-        {
-            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
-        }
+         return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
+            candidates,
+            "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
     }
 
 

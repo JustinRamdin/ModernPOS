@@ -142,16 +142,48 @@ public sealed class RemoteServerApi : IDisposable
 
     public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
     {
-         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
         var candidates = new[]
         {
             $"api/reports/sales-export?{query}",
             $"api/sales/export?{query}"
         };
 
-        return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
-            candidates,
-            "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
+        try
+        {
+            return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
+                candidates,
+                "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
+        }
+        catch (JsonException)
+        {
+            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
+        }
+        catch (NotSupportedException)
+        {
+            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
+        }
+    }
+
+
+    private async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportFromSalesLogAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        var salesLog = await GetSalesLogAsync(fromUtc, toUtc);
+        return salesLog
+            .Select(entry =>
+            {
+                var vat = Math.Max(0m, entry.Total - entry.Subtotal);
+                return new ServerSalesExportRowDto(
+                    entry.SoldAtUtc,
+                    entry.ReceiptNo,
+                    "Completed",
+                    entry.PaymentType,
+                    string.Empty,
+                    entry.Subtotal,
+                    vat,
+                    entry.Total);
+            })
+            .ToList();
     }
 
     public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)

@@ -458,7 +458,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Profit");
                     ColumnHeaders.Add("Margin %");
 
-                    foreach (var row in await svc.GetProfitByProductAsync(fromUtc, toUtc, 200))
+                    using var api = await CreateApiAsync();
+                    var summary = await api.GetReportSummaryAsync(fromUtc, toUtc);
+                    foreach (var row in summary.ProfitByProduct)
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
@@ -664,7 +666,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         if (!string.IsNullOrWhiteSpace(CustomerFilter))
         {
             filtered = filtered.Where(row =>
-                string.Equals(row.CustomerName, CustomerFilter, StringComparison.OrdinalIgnoreCase));
+                string.Equals(row.CustomerName ?? string.Empty, CustomerFilter, StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrWhiteSpace(SearchFilter))
@@ -672,15 +674,15 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             var term = SearchFilter;
             filtered = filtered.Where(row =>
                 row.ReceiptNo.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || row.Status.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || row.CustomerName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (row.Status?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (row.CustomerName?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
                 || (TryGetPaymentType(row)?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
         return filtered;
     }
 
-    private static bool IsPaymentToAccount(string status)
+    private static bool IsPaymentToAccount(string? status)
         => string.Equals(status, "Payment to Account", StringComparison.OrdinalIgnoreCase);
 
      private static string? TryGetPaymentType(SalesExportRowDto row)

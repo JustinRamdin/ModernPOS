@@ -40,7 +40,16 @@ public sealed class RemoteServerApi : IDisposable
     public async Task<ServerCheckoutResponse> CheckoutAsync(Pos.Contracts.CheckoutRequest request)
     {
         var response = await _http.PostAsJsonAsync("api/sales/checkout", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = (await response.Content.ReadAsStringAsync()).Trim();
+            var detail = string.IsNullOrWhiteSpace(body) ? "No response body." : body;
+            throw new HttpRequestException(
+                $"Checkout failed: {(int)response.StatusCode} ({response.ReasonPhrase}). {detail}",
+                null,
+                response.StatusCode);
+        }
+
         return await response.Content.ReadFromJsonAsync<ServerCheckoutResponse>()
             ?? throw new InvalidOperationException("Empty checkout response");
     }

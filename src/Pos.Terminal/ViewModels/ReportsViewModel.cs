@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Drawing.Printing;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -130,10 +131,112 @@ using var api = await CreateApiAsync();
         await LoadAllAsync();
     }
 
-    public void MarkReprintRequested()
+    public async Task ReprintSelectedSaleAsync()
     {
-        if (SelectedSale is not null)
-            Status = $"Reprint requested for receipt {SelectedSale.ReceiptNo}.";
+        if (SelectedSale is null)
+            return;
+
+        var settings = await new SettingsStore().LoadAsync();
+        if (string.IsNullOrWhiteSpace(settings.ReceiptPrinterName))
+        {
+            Status = "No receipt printer configured.";
+            return;
+        }
+
+        if (!OperatingSystem.IsWindows())
+        {
+            Status = "Receipt printing is only supported on Windows.";
+            return;
+        }
+
+#pragma warning disable CA1416
+        var state = PhysicalReceiptRenderer.CreateState(
+            SelectedSale.Lines.Select(line => new PhysicalReceiptRenderer.ReceiptRenderLine(
+                line.ProductName,
+                isLength: false,
+                qty: line.Qty,
+                qtyInches: 0,
+                unitPrice: line.UnitPrice,
+                lineTotal: line.LineTotal)));
+#pragma warning restore CA1416
+
+        try
+        {
+            using var api = await CreateApiAsync();
+            var companyProfile = await api.GetCompanyProfileAsync();
+
+            var printerSettings = new PrinterSettings
+            {
+                PrinterName = settings.ReceiptPrinterName
+            };
+
+            if (!printerSettings.IsValid)
+            {
+                Status = $"Printer not found: {settings.ReceiptPrinterName}";
+                return;
+            }
+
+            using var doc = new PrintDocument
+            {
+                PrinterSettings = printerSettings,
+                DocumentName = $"Invoice {SelectedSale.ReceiptNo}"
+            };
+            doc.DefaultPageSettings.Margins = new Margins(3, 5, 25, 25);
+
+#pragma warning disable CA1416
+            doc.PrintPage += (_, e) =>
+            {
+                if (e.Graphics is null)
+                {
+                    e.HasMorePages = false;
+                    return;
+                }
+
+                if (settings.UseTspReceiptStyle)
+                {
+                    PhysicalReceiptRenderer.DrawInvoiceTspPage(
+                        g: e.Graphics,
+                        marginBounds: e.MarginBounds,
+                        companyProfile: companyProfile,
+                        receiptNo: SelectedSale.ReceiptNo,
+                        invoiceDate: SelectedSale.SoldAtUtc.ToLocalTime(),
+                        customer: new PhysicalReceiptRenderer.ReceiptCustomerInfo(null, null, null),
+                        paymentMethod: SelectedSale.PaymentType,
+                        subtotal: SelectedSale.Subtotal,
+                        discount: 0m,
+                        vat: 0m,
+                        totalDue: SelectedSale.Total,
+                        totalTendered: SelectedSale.Total,
+                        change: 0m,
+                        state: state);
+                    e.HasMorePages = false;
+                    return;
+                }
+
+                e.HasMorePages = PhysicalReceiptRenderer.DrawInvoiceLetterPage(
+                    g: e.Graphics,
+                    marginBounds: e.MarginBounds,
+                    companyProfile: companyProfile,
+                    receiptNo: SelectedSale.ReceiptNo,
+                    invoiceDate: SelectedSale.SoldAtUtc.ToLocalTime(),
+                    customer: new PhysicalReceiptRenderer.ReceiptCustomerInfo(null, null, null),
+                    paymentMethod: SelectedSale.PaymentType,
+                    subtotal: SelectedSale.Subtotal,
+                    discount: 0m,
+                    vat: 0m,
+                    totalDue: SelectedSale.Total,
+                    totalTendered: SelectedSale.Total,
+                    change: 0m,
+                    state: state);
+            };
+#pragma warning restore CA1416
+            doc.Print();
+            Status = $"Receipt {SelectedSale.ReceiptNo} sent to {settings.ReceiptPrinterName}.";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Reprint failed: {ex.Message}";
+        }
     }
 
     private void NotifyAll() { foreach (var n in new[] { nameof(ReceiptCount), nameof(NetTotal), nameof(VatTotal), nameof(GrossTotal), nameof(AvgGross), nameof(SalesGross), nameof(Cogs), nameof(GrossProfit), nameof(GrossMarginPct), nameof(SelectedSale), nameof(SelectedRefundLine), nameof(RefundQuantity) }) OnPropertyChanged(n); }

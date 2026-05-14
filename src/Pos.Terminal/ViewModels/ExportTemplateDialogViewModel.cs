@@ -468,7 +468,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                             ["SKU"] = row.Sku,
                             ["Item"] = row.Name,
                             ["Qty"] = row.QuantityDisplay,
-                            ["Sales"] = row.SalesGross.ToString("0.00", CultureInfo.InvariantCulture),
+                            ["Sales"] = row.Revenue.ToString("0.00", CultureInfo.InvariantCulture),
                             ["COGS"] = row.Cogs.ToString("0.00", CultureInfo.InvariantCulture),
                             ["Profit"] = row.GrossProfit.ToString("0.00", CultureInfo.InvariantCulture),
                             ["Margin %"] = row.GrossMarginPct.ToString("0.00", CultureInfo.InvariantCulture)

@@ -19,11 +19,14 @@ public class ReportsController : ControllerBase
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
 
-        var sales = await _db.Sales.AsNoTracking().Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc).ToListAsync(ct);
-        var saleIds = sales.Select(s => s.Id).ToList();
-        var lines = saleIds.Count == 0
-            ? []
-            : await _db.SaleLines.AsNoTracking().Where(l => saleIds.Contains(l.SaleId)).ToListAsync(ct);
+        // Keep report calculations aligned with the Sales Register dataset.
+        var sales = await _db.Sales
+            .AsNoTracking()
+            .Include(s => s.Lines)
+            .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .ToListAsync(ct);
+
+        var lines = sales.SelectMany(s => s.Lines).ToList();
         var products = await _db.Products.AsNoTracking().ToDictionaryAsync(p => p.Id, ct);
 
         var salesByDay = sales.GroupBy(s => DateOnly.FromDateTime(s.SoldAtUtc.Date)).OrderBy(g => g.Key)
@@ -59,15 +62,22 @@ public class ReportsController : ControllerBase
             .OrderBy(c => c.Name)
             .ToListAsync(ct);
 
-        // Note: sales currently do not store a customer reference, so report customer rows
-        // expose account balance and default sales metrics to zero until that linkage exists.
+        // Sales are not linked to customers yet, so attribute all register sales to an "Unassigned" bucket
+        // to keep Customer Sales aligned with the same source data used by Sales Register.
+        var totalCustomerReceipts = sales.Count;
+        var totalCustomerGross = sales.Sum(s => s.Total);
         var customers = customerEntities
-           .Select(c => new CustomerSalesRowDto(
+            .Select(c => new CustomerSalesRowDto(
                 c.Name,
                 0,
                 0m,
                 c.Balance))
             .ToList();
+
+            if (totalCustomerReceipts > 0 || totalCustomerGross > 0m)
+        {
+            customers.Insert(0, new CustomerSalesRowDto("Unassigned", totalCustomerReceipts, totalCustomerGross, 0m));
+        }
         var gross = sales.Sum(x => x.Total);
         var salesGross = lines.Sum(x => x.LineTotal);
         var cogsTotal = lineGroups.Sum(x => x.cogs);

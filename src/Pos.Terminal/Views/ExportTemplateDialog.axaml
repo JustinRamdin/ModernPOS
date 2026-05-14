@@ -1,8 +1,14 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Pos.Terminal.Views.ExportTemplateDialog">
+<<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.Terminal.Views.ExportTemplateDialog"
+        Width="1200"
+        Height="760"
+        MinWidth="980"
+        MinHeight="620"
+        WindowStartupLocation="CenterOwner"
+        Title="Export workspace">
 
- <UserControl.Styles>
+ <Window.Styles>
     <Style Selector="DatePicker.export-date">
       <Setter Property="MinWidth" Value="250" />
     </Style>
@@ -20,7 +26,7 @@
     <Style Selector="DatePicker.export-date /template/ ComboBox#PART_YearPicker">
       <Setter Property="Width" Value="90" />
     </Style>
-  </UserControl.Styles>
+  </Window.Styles>
 
   <Grid RowDefinitions="Auto,Auto,*" Margin="12">
 
@@ -103,4 +109,4 @@
     </Grid>
 
   </Grid>
-</UserControl>
+</Window>

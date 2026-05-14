@@ -153,7 +153,7 @@ using var api = await CreateApiAsync();
         var state = PhysicalReceiptRenderer.CreateState(
             SelectedSale.Lines.Select(line => new PhysicalReceiptRenderer.ReceiptRenderLine(
                 line.ProductName,
-                isLength: false,
+                IsLength: false,
                 qty: line.Qty,
                 qtyInches: 0,
                 unitPrice: line.UnitPrice,

@@ -6,6 +6,7 @@ namespace Pos.Terminal.ViewModels;
 public enum ExportTemplateKind
 {
     Sales,
+    FinancialSummary,
     Purchases,
     Customers,
     Inventory,

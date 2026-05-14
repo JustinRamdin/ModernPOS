@@ -289,6 +289,35 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     break;
                 }
 
+                 case ExportTemplateKind.FinancialSummary:
+                {
+                    ColumnHeaders.Add("From (UTC)");
+                    ColumnHeaders.Add("To (UTC)");
+                    ColumnHeaders.Add("Receipts");
+                    ColumnHeaders.Add("Sales");
+                    ColumnHeaders.Add("COGS");
+                    ColumnHeaders.Add("Gross Profit");
+                    ColumnHeaders.Add("Gross Margin %");
+
+                    using var api = await CreateApiAsync();
+                    var summary = await api.GetReportSummaryAsync(fromUtc, toUtc);
+                    var marginPct = summary.SalesGross <= 0m
+                        ? 0m
+                        : (summary.GrossProfit / summary.SalesGross) * 100m;
+
+                    Rows.Add(new ExportRow(new Dictionary<string, string>
+                    {
+                        ["From (UTC)"] = fromUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                        ["To (UTC)"] = toUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                        ["Receipts"] = summary.ReceiptCount.ToString(CultureInfo.InvariantCulture),
+                        ["Sales"] = summary.SalesGross.ToString("0.00", CultureInfo.InvariantCulture),
+                        ["COGS"] = summary.Cogs.ToString("0.00", CultureInfo.InvariantCulture),
+                        ["Gross Profit"] = summary.GrossProfit.ToString("0.00", CultureInfo.InvariantCulture),
+                        ["Gross Margin %"] = marginPct.ToString("0.00", CultureInfo.InvariantCulture)
+                    }));
+                    break;
+                }
+
                 case ExportTemplateKind.Purchases:
                 {
                     ColumnHeaders.Add("Date (UTC)");

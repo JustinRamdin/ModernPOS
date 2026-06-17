@@ -10,6 +10,7 @@ namespace Pos.Terminal.Services;
 public sealed class RemoteServerApi : IDisposable
 {
     private readonly HttpClient _http;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public RemoteServerApi(string host, int port, string? authToken = null)
     {
@@ -143,120 +144,43 @@ public sealed class RemoteServerApi : IDisposable
             $"api/sales/summary?{query}"
         };
 
-        return await GetFromJsonWithFallbackAsync<ReportSummaryDto>(
+        return await GetFromJsonBodyWithFallbackAsync<ReportSummaryDto>(
                 candidates,
                 "Your server does not expose a reports summary endpoint. Update the server to use financial reports.")
             ?? throw new InvalidOperationException("Empty reports response");
     }
 
-    public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
-    {
-        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
-        var candidates = new[]
-        {
-            $"api/reports/sales-export?{query}",
-            $"api/sales/export?{query}"
-        };
-
-        return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
-           candidates,
-           "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
-    }
-
-    public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesRegisterExportAsync(DateTime fromUtc, DateTime toUtc)
-    {
-        int? expectedReceiptCount = null;
-        try
-        {
-            expectedReceiptCount = (await GetReportSummaryAsync(fromUtc, toUtc)).ReceiptCount;
-        }
-        catch
-        {
-            // The row sources below are still authoritative enough to export.
-        }
-
-        var candidates = new List<IReadOnlyList<ServerSalesExportRowDto>>();
-
-        try
-        {
-            candidates.Add(MapSalesLogForExport(await GetSalesLogAsync(fromUtc, toUtc)));
-        }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
-        {
-            // Older or malformed sales-log responses should not block export.
-        }
-
-        try
-        {
-            candidates.Add(await GetSalesExportAsync(fromUtc, toUtc));
-        }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
-        {
-            // Keep any successfully loaded sales-log candidate.
-        }
-
-        if (candidates.Count == 0)
-            return [];
-
-        if (expectedReceiptCount is int expected)
-        {
-            var exact = candidates.FirstOrDefault(rows => rows.Count == expected);
-            if (exact is not null)
-                return exact;
-        }
-
-        return candidates
-            .OrderByDescending(rows => rows.Count)
-            .First();
-    }
-
     public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)
     {
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
-        return await _http.GetFromJsonAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
+        return await GetFromJsonBodyAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
     }
-
-    private static IReadOnlyList<ServerSalesExportRowDto> MapSalesLogForExport(IReadOnlyList<SaleLogEntryDto> salesLog)
-        => salesLog
-            .Select(entry =>
-            {
-                var vat = Math.Max(0m, entry.Total - entry.Subtotal);
-                return new ServerSalesExportRowDto(
-                    entry.SoldAtUtc,
-                    entry.ReceiptNo,
-                    "Completed",
-                    entry.PaymentType,
-                    string.Empty,
-                    entry.Subtotal,
-                    vat,
-                    entry.Total);
-            })
-            .ToList();
 
     public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
     {
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}&locationCode={Uri.EscapeDataString(locationCode)}";
-        return await _http.GetFromJsonAsync<List<InventoryMovementRowDto>>($"api/reports/inventory-movements?{query}") ?? [];
+        return await GetFromJsonBodyAsync<List<InventoryMovementRowDto>>($"api/reports/inventory-movements?{query}") ?? [];
     }
 
     public async Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays)
     {
         var query = $"locationCode={Uri.EscapeDataString(locationCode)}&lookbackDays={lookbackDays}";
-        return await _http.GetFromJsonAsync<List<LowStockRowDto>>($"api/reports/low-stock?{query}") ?? [];
+        return await GetFromJsonBodyAsync<List<LowStockRowDto>>($"api/reports/low-stock?{query}") ?? [];
     }
 
     public async Task RefundSaleItemAsync(Guid saleId, Guid saleLineId, decimal quantity)
         => (await _http.PostAsJsonAsync($"api/reports/sales/{saleId}/refund-item", new SaleItemRefundRequest(saleLineId, quantity))).EnsureSuccessStatusCode();
     public void Dispose() => _http.Dispose();
-    private async Task<T?> GetFromJsonWithFallbackAsync<T>(IReadOnlyList<string> urls, string allNotFoundMessage)
+    private async Task<T?> GetFromJsonBodyWithFallbackAsync<T>(IReadOnlyList<string> urls, string allNotFoundMessage)
     {
         HttpRequestException? lastHttpError = null;
         Exception? lastParseError = null;
+
         for (var i = 0; i < urls.Count; i++)
         {
             try
             {
-                return await _http.GetFromJsonAsync<T>(urls[i]);
+                return await GetFromJsonBodyAsync<T>(urls[i]);
             }
             catch (HttpRequestException ex) when ((int?)ex.StatusCode == 404 && i < urls.Count - 1)
             {
@@ -266,11 +190,7 @@ public sealed class RemoteServerApi : IDisposable
             {
                 throw new HttpRequestException(allNotFoundMessage, ex, ex.StatusCode);
             }
-            catch (JsonException ex) when (i < urls.Count - 1)
-            {
-                lastParseError = ex;
-            }
-            catch (NotSupportedException ex) when (i < urls.Count - 1)
+            catch (Exception ex) when ((ex is JsonException or NotSupportedException or FormatException) && i < urls.Count - 1)
             {
                 lastParseError = ex;
             }
@@ -282,5 +202,17 @@ public sealed class RemoteServerApi : IDisposable
             throw lastParseError;
 
         return default;
+    }
+
+    private async Task<T?> GetFromJsonBodyAsync<T>(string url)
+    {
+        using var response = await _http.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        if (stream.CanSeek && stream.Length == 0)
+            return default;
+
+        return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions);
     }
 }

@@ -42,7 +42,6 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public ObservableCollection<InventoryMovementRowDto> InventoryMovements { get; } = new();
     public ObservableCollection<LowStockRowDto> LowStock { get; } = new();
     public ObservableCollection<CustomerSalesRowDto> CustomerSales { get; } = new();
-    public ObservableCollection<ExportTemplateDefinition> ExportTemplates { get; } = new();
     public ObservableCollection<SaleLogEntryDto> SalesLog { get; } = new();
     public ObservableCollection<SaleLogLineDto> SelectedSaleLines { get; } = new();
     private SaleLogEntryDto? _selectedSale;
@@ -63,11 +62,6 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         ApplyDateRangeCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         RefreshInventoryCommand = new AsyncRelayCommand(async _ => await LoadInventoryAsync());
         RefreshLowStockCommand = new AsyncRelayCommand(async _ => await LoadLowStockAsync());
-        ExportTemplates.Add(new ExportTemplateDefinition("Sales register", "Receipts with totals, customer, payment type, and status.", ExportTemplateKind.Sales));
-        ExportTemplates.Add(new ExportTemplateDefinition("Financial summary", "High-level financial totals including sales, COGS, gross profit, and margin.", ExportTemplateKind.FinancialSummary));
-        ExportTemplates.Add(new ExportTemplateDefinition("COGS & profitability by product", "Per-product sales, COGS, profit, and gross margin percent.", ExportTemplateKind.Profit));
-        ExportTemplates.Add(new ExportTemplateDefinition("Top selling products", "Best-selling products by quantity and gross sales.", ExportTemplateKind.TopProducts));
-        ExportTemplates.Add(new ExportTemplateDefinition("Customer sales", "Customer-level receipts, gross totals, and balances.", ExportTemplateKind.Customers));
     }
 
     public async Task LoadAllAsync()

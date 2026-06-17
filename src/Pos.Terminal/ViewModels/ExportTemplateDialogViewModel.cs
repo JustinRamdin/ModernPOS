@@ -241,7 +241,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     var grossTotal = 0m;
 
                     using var api = await CreateApiAsync();
-                    var serverRows = await api.GetSalesExportAsync(fromUtc, toUtc);
+                    var serverRows = await api.GetSalesRegisterExportAsync(fromUtc, toUtc);
                     var results = serverRows.Select(MapServerSalesRow).ToList();
                     var filtered = ApplySalesFilters(results);
 
@@ -518,7 +518,7 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         {
             var (fromUtc, toUtc) = GetUtcRange();
             using var api = await CreateApiAsync();
-            var paymentTypes = (await api.GetSalesExportAsync(fromUtc, toUtc))
+            var paymentTypes = (await api.GetSalesRegisterExportAsync(fromUtc, toUtc))
                 .Select(MapServerSalesRow)
                 .Select(TryGetPaymentType)
                 .Where(value => !string.IsNullOrWhiteSpace(value))

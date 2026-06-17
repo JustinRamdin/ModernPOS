@@ -163,11 +163,75 @@ public sealed class RemoteServerApi : IDisposable
            "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
     }
 
+    public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesRegisterExportAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        int? expectedReceiptCount = null;
+        try
+        {
+            expectedReceiptCount = (await GetReportSummaryAsync(fromUtc, toUtc)).ReceiptCount;
+        }
+        catch
+        {
+            // The row sources below are still authoritative enough to export.
+        }
+
+        var candidates = new List<IReadOnlyList<ServerSalesExportRowDto>>();
+
+        try
+        {
+            candidates.Add(MapSalesLogForExport(await GetSalesLogAsync(fromUtc, toUtc)));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+        {
+            // Older or malformed sales-log responses should not block export.
+        }
+
+        try
+        {
+            candidates.Add(await GetSalesExportAsync(fromUtc, toUtc));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+        {
+            // Keep any successfully loaded sales-log candidate.
+        }
+
+        if (candidates.Count == 0)
+            return [];
+
+        if (expectedReceiptCount is int expected)
+        {
+            var exact = candidates.FirstOrDefault(rows => rows.Count == expected);
+            if (exact is not null)
+                return exact;
+        }
+
+        return candidates
+            .OrderByDescending(rows => rows.Count)
+            .First();
+    }
+
     public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)
     {
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
         return await _http.GetFromJsonAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
     }
+
+    private static IReadOnlyList<ServerSalesExportRowDto> MapSalesLogForExport(IReadOnlyList<SaleLogEntryDto> salesLog)
+        => salesLog
+            .Select(entry =>
+            {
+                var vat = Math.Max(0m, entry.Total - entry.Subtotal);
+                return new ServerSalesExportRowDto(
+                    entry.SoldAtUtc,
+                    entry.ReceiptNo,
+                    "Completed",
+                    entry.PaymentType,
+                    string.Empty,
+                    entry.Subtotal,
+                    vat,
+                    entry.Total);
+            })
+            .ToList();
 
     public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
     {

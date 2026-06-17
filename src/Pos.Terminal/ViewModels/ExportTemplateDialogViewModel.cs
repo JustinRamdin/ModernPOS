@@ -220,11 +220,6 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             Status = "Loading template data...";
             var (fromUtc, toUtc) = GetUtcRange();
 
-            await using var db = CreateLocalDb();
-            await db.Database.EnsureCreatedAsync();
-
-            var svc = new ReportingService(db);
-
             ColumnHeaders.Clear();
             Rows.Clear();
 
@@ -320,6 +315,10 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
 
                 case ExportTemplateKind.Purchases:
                 {
+                    await using var db = CreateLocalDb();
+                    await db.Database.EnsureCreatedAsync();
+                    var svc = new ReportingService(db);
+
                     ColumnHeaders.Add("Date (UTC)");
                     ColumnHeaders.Add("SKU");
                     ColumnHeaders.Add("Item");
@@ -385,7 +384,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Cost value");
                     ColumnHeaders.Add("Margin");
 
-                    foreach (var row in await svc.GetInventoryValuationAsync(_locationCode))
+                    using var api = await CreateApiAsync();
+                    var summary = await api.GetReportSummaryAsync(fromUtc, toUtc);
+                    foreach (var row in summary.InventoryValuation)
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
@@ -411,7 +412,8 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Reorder");
 
                     var rangeDays = Math.Clamp((int)Math.Ceiling((toUtc - fromUtc).TotalDays), 1, 90);
-                    foreach (var row in await svc.GetLowStockAsync(_locationCode, rangeDays, suggestedReorderDays: 7m))
+                    using var api = await CreateApiAsync();
+                    foreach (var row in await api.GetLowStockAsync(_locationCode, rangeDays))
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
@@ -434,7 +436,9 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                     ColumnHeaders.Add("Qty");
                     ColumnHeaders.Add("Gross");
 
-                    foreach (var row in await svc.GetTopProductsAsync(fromUtc, toUtc, 50))
+                    using var api = await CreateApiAsync();
+                    var summary = await api.GetReportSummaryAsync(fromUtc, toUtc);
+                    foreach (var row in summary.TopProducts)
                     {
                         token.ThrowIfCancellationRequested();
                         Rows.Add(new ExportRow(new Dictionary<string, string>
@@ -530,9 +534,13 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-                await using var db = CreateLocalDb();
-                await db.Database.EnsureCreatedAsync();
-            var items = await LoadItemOrSkuListAsync(db, CancellationToken.None);
+            var summary = await api.GetReportSummaryAsync(fromUtc, toUtc);
+            var items = summary.InventoryValuation
+                .Select(row => string.IsNullOrWhiteSpace(row.Sku) ? row.Name : $"{row.Sku} - {row.Name}")
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             PaymentTypes.Clear(); PaymentTypes.Add("All");
             foreach (var p in paymentTypes)

@@ -161,6 +161,15 @@ public sealed class RemoteServerApi : IDisposable
         {
             // Older servers may not expose sales-log; fall back to legacy export endpoints.
         }
+        catch (JsonException)
+        {
+            // Some deployed servers have returned malformed sales-log JSON for particular
+            // periods. The flat export endpoints are simpler and still period-scoped.
+        }
+        catch (NotSupportedException)
+        {
+            // Treat unsupported/non-JSON sales-log responses the same as malformed JSON.
+        }
 
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
         var candidates = new[]

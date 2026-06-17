@@ -576,10 +576,12 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
             .Select(p => string.IsNullOrWhiteSpace(p.Sku) ? p.Name : $"{p.Sku} - {p.Name}")
             .ToListAsync(ct);
 
-    public Task ExportAsync(string filePath)
+    public async Task ExportAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            return Task.CompletedTask;
+            return;
+
+        await LoadAsync();
 
         using var workbook = new XLWorkbook();
         var worksheet = workbook.AddWorksheet("Export");
@@ -610,7 +612,6 @@ public sealed class ExportTemplateDialogViewModel : INotifyPropertyChanged
         workbook.SaveAs(filePath);
 
         Status = $"Exported {Rows.Count} rows.";
-        return Task.CompletedTask;
     }
 
      private static bool TryWriteTypedValue(IXLCell cell, string header, string? value)

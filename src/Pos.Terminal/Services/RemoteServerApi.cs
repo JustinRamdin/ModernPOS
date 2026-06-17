@@ -151,26 +151,6 @@ public sealed class RemoteServerApi : IDisposable
 
     public async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportAsync(DateTime fromUtc, DateTime toUtc)
     {
-         // Prefer sales-log because it is generated from the same dataset used by the Sales Register UI,
-        // which avoids stale/partial implementations of legacy export endpoints.
-        try
-        {
-            return await GetSalesExportFromSalesLogAsync(fromUtc, toUtc);
-        }
-        catch (HttpRequestException ex) when ((int?)ex.StatusCode == 404)
-        {
-            // Older servers may not expose sales-log; fall back to legacy export endpoints.
-        }
-        catch (JsonException)
-        {
-            // Some deployed servers have returned malformed sales-log JSON for particular
-            // periods. The flat export endpoints are simpler and still period-scoped.
-        }
-        catch (NotSupportedException)
-        {
-            // Treat unsupported/non-JSON sales-log responses the same as malformed JSON.
-        }
-
         var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
         var candidates = new[]
         {
@@ -178,30 +158,9 @@ public sealed class RemoteServerApi : IDisposable
             $"api/sales/export?{query}"
         };
 
-         return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
-            candidates,
-            "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
-    }
-
-
-    private async Task<IReadOnlyList<ServerSalesExportRowDto>> GetSalesExportFromSalesLogAsync(DateTime fromUtc, DateTime toUtc)
-    {
-        var salesLog = await GetSalesLogAsync(fromUtc, toUtc);
-        return salesLog
-            .Select(entry =>
-            {
-                var vat = Math.Max(0m, entry.Total - entry.Subtotal);
-                return new ServerSalesExportRowDto(
-                    entry.SoldAtUtc,
-                    entry.ReceiptNo,
-                    "Completed",
-                    entry.PaymentType,
-                    string.Empty,
-                    entry.Subtotal,
-                    vat,
-                    entry.Total);
-            })
-            .ToList();
+        return await GetFromJsonWithFallbackAsync<List<ServerSalesExportRowDto>>(
+           candidates,
+           "Your server does not expose a sales export endpoint. Update the server to use sales reports.") ?? [];
     }
 
     public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)

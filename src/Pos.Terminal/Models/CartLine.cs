@@ -8,6 +8,7 @@ namespace Pos.Terminal.Models;
 public sealed class CartLine : INotifyPropertyChanged
 {
     public Guid ProductId { get; set; }
+    public int InventoryBucket { get; set; } = 1;
      public string ItemNumber { get; set; } = "";
     public string Name { get; set; } = "";
 

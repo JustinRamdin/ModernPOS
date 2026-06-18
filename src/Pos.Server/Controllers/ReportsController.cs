@@ -15,7 +15,7 @@ public class ReportsController : ControllerBase
     public ReportsController(PosDbContext db) => _db = db;
 
     [HttpGet("summary")]
-    public async Task<ActionResult<ReportSummaryDto>> Summary([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    public async Task<ActionResult<ReportSummaryDto>> Summary([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, [FromQuery] int? inventoryBucket, CancellationToken ct)
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
 
@@ -26,11 +26,17 @@ public class ReportsController : ControllerBase
             .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
             .ToListAsync(ct);
 
-        var lines = sales.SelectMany(s => s.Lines).ToList();
         var products = await _db.Products.AsNoTracking().ToDictionaryAsync(p => p.Id, ct);
+        var bucket = NormalizeInventoryBucket(inventoryBucket);
+        var lines = sales.SelectMany(s => s.Lines)
+            .Where(l => bucket is null || (products.TryGetValue(l.ProductId, out var p) && p.InventoryBucket == bucket.Value))
+            .ToList();
+        var salesForBucket = bucket is null
+            ? sales
+            : sales.Where(s => s.Lines.Any(l => products.TryGetValue(l.ProductId, out var p) && p.InventoryBucket == bucket.Value)).ToList();
 
-        var salesByDay = sales.GroupBy(s => DateOnly.FromDateTime(s.SoldAtUtc.Date)).OrderBy(g => g.Key)
-            .Select(g => new SalesByDayRowDto(g.Key, g.Count(), g.Sum(x => x.Total))).ToList();
+        var salesByDay = lines.GroupBy(l => DateOnly.FromDateTime(l.Sale?.SoldAtUtc.Date ?? fromUtc.Date)).OrderBy(g => g.Key)
+            .Select(g => new SalesByDayRowDto(g.Key, g.Select(x => x.SaleId).Distinct().Count(), g.Sum(x => x.LineTotal))).ToList();
 
         var lineGroups = lines.GroupBy(l => l.ProductId)
             .Select(g =>
@@ -48,7 +54,7 @@ public class ReportsController : ControllerBase
         var profitByProduct = lineGroups.OrderByDescending(x => x.revenue - x.cogs).Take(50)
             .Select(x => new ProfitByProductRowDto(x.p?.Name ?? "Unknown", x.p?.Sku, x.qty, x.revenue, x.cogs, x.revenue - x.cogs)).ToList();
 
-        var inventory = (await _db.Products.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(ct))
+        var inventory = (await _db.Products.AsNoTracking().Where(p => p.IsActive && (bucket == null || p.InventoryBucket == bucket.Value)).OrderBy(p => p.Name).ToListAsync(ct))
            .Select(p =>
             {
                 var quantity = p.IsLength ? p.OnHandInches : p.OnHand;
@@ -62,7 +68,7 @@ public class ReportsController : ControllerBase
             .OrderBy(c => c.Name)
             .ToListAsync(ct);
 
-        var salesByCustomer = sales
+        var salesByCustomer = salesForBucket
             .Where(s => s.CustomerId is not null)
             .GroupBy(s => s.CustomerId!.Value)
             .ToDictionary(g => g.Key, g => new { ReceiptCount = g.Count(), GrossTotal = g.Sum(s => s.Total) });
@@ -79,20 +85,20 @@ public class ReportsController : ControllerBase
             })
             .ToList();
 
-        var unassignedSales = sales.Where(s => s.CustomerId is null).ToList();
+        var unassignedSales = salesForBucket.Where(s => s.CustomerId is null).ToList();
         if (unassignedSales.Count > 0)
         {
             customers.Insert(0, new CustomerSalesRowDto("Unassigned", unassignedSales.Count, unassignedSales.Sum(s => s.Total), 0m));
         }
-        var gross = sales.Sum(x => x.Total);
+        var gross = lines.Sum(x => x.LineTotal);
         var salesGross = lines.Sum(x => x.LineTotal);
         var cogsTotal = lineGroups.Sum(x => x.cogs);
 
-        return new ReportSummaryDto(sales.Count, gross, salesGross, cogsTotal, salesGross - cogsTotal, salesByDay, topProducts, profitByProduct, inventory, customers);
+        return new ReportSummaryDto(salesForBucket.Count, gross, salesGross, cogsTotal, salesGross - cogsTotal, salesByDay, topProducts, profitByProduct, inventory, customers);
     }
 
     [HttpGet("sales-log")]
-    public async Task<ActionResult<IReadOnlyList<SaleLogEntryDto>>> SalesLog([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    public async Task<ActionResult<IReadOnlyList<SaleLogEntryDto>>> SalesLog([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, [FromQuery] int? inventoryBucket, CancellationToken ct)
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
 
@@ -102,6 +108,13 @@ public class ReportsController : ControllerBase
             .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
             .OrderByDescending(s => s.SoldAtUtc)
             .ToListAsync(ct);
+        var bucket = NormalizeInventoryBucket(inventoryBucket);
+        if (bucket is not null)
+        {
+            sales = sales
+                .Where(s => s.Lines.Any(l => l.Product?.InventoryBucket == bucket.Value))
+                .ToList();
+        }
 
         return sales.Select(s => new SaleLogEntryDto(
             s.Id,
@@ -110,7 +123,7 @@ public class ReportsController : ControllerBase
             s.Subtotal,
             s.Total,
             s.Payments.Count == 0 ? "Unknown" : string.Join(", ", s.Payments.Select(p => p.Method.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)),
-            s.Lines.Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()
+            s.Lines.Where(l => bucket is null || l.Product?.InventoryBucket == bucket.Value).Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()
         )).ToList();
     }
 
@@ -160,7 +173,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("inventory-movements")]
-    public async Task<ActionResult<IReadOnlyList<InventoryMovementRowDto>>> InventoryMovements([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, [FromQuery] string? locationCode, CancellationToken ct)
+    public async Task<ActionResult<IReadOnlyList<InventoryMovementRowDto>>> InventoryMovements([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, [FromQuery] string? locationCode, [FromQuery] int? inventoryBucket, CancellationToken ct)
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
 
@@ -170,7 +183,8 @@ public class ReportsController : ControllerBase
             .OrderByDescending(s => s.SoldAtUtc)
             .ToListAsync(ct);
 
-        var rows = sales.SelectMany(s => s.Lines.Select(l =>
+        var bucket = NormalizeInventoryBucket(inventoryBucket);
+        var rows = sales.SelectMany(s => s.Lines.Where(l => bucket is null || l.Product?.InventoryBucket == bucket.Value).Select(l =>
         {
             var isLength = l.Product?.IsLength ?? false;
             var qtyText = isLength ? $"-{Math.Round(l.Qty * 12m, 0):0} in" : $"-{l.Qty:0.##}";
@@ -181,7 +195,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("low-stock")]
-    public async Task<ActionResult<IReadOnlyList<LowStockRowDto>>> LowStock([FromQuery] string? locationCode, [FromQuery] int lookbackDays = 14, CancellationToken ct = default)
+    public async Task<ActionResult<IReadOnlyList<LowStockRowDto>>> LowStock([FromQuery] string? locationCode, [FromQuery] int lookbackDays = 14, [FromQuery] int? inventoryBucket = null, CancellationToken ct = default)
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
 
@@ -193,7 +207,8 @@ public class ReportsController : ControllerBase
             .Select(g => new { ProductId = g.Key, Qty = g.Sum(x => x.Qty) })
             .ToDictionaryAsync(x => x.ProductId, x => x.Qty, ct);
 
-        var products = await _db.Products.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(ct);
+        var bucket = NormalizeInventoryBucket(inventoryBucket);
+        var products = await _db.Products.AsNoTracking().Where(p => p.IsActive && (bucket == null || p.InventoryBucket == bucket.Value)).OrderBy(p => p.Name).ToListAsync(ct);
         var rows = products.Select(p =>
         {
             var usage = lineUsage.TryGetValue(p.Id, out var qty) ? qty / Math.Max(1, lookbackDays) : 0m;
@@ -205,6 +220,9 @@ public class ReportsController : ControllerBase
 
         return rows;
     }
+
+    private static int? NormalizeInventoryBucket(int? inventoryBucket)
+        => inventoryBucket is null ? null : Math.Clamp(inventoryBucket.Value, 1, 2);
 
 
     [HttpPost("sales/{saleId:guid}/refund-item")]

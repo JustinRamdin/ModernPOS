@@ -54,6 +54,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         get => _useTspReceiptStyle;
         set { _useTspReceiptStyle = value; OnPropertyChanged(); }
     }
+    private bool _isDualInventoryEnabled;
+    public bool IsDualInventoryEnabled
+    {
+        get => _isDualInventoryEnabled;
+        set { _isDualInventoryEnabled = value; OnPropertyChanged(); }
+    }
     private bool _isPracticeMode;
     public bool IsPracticeMode
     {
@@ -131,6 +137,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
         IsPracticeMode = settings.IsPracticeMode;
+        IsDualInventoryEnabled = settings.IsDualInventoryEnabled;
 
         await _store.ClearLegacyReceiptIdentityAsync();
         LoadPrinters();
@@ -183,7 +190,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             UseTspReceiptStyle = UseTspReceiptStyle,
             IsVatEnabled = IsVatEnabled,
              VatRatePercent = ParseVatRatePercent(),
-            IsPracticeMode = IsPracticeMode
+            IsPracticeMode = IsPracticeMode,
+            IsDualInventoryEnabled = IsDualInventoryEnabled
         };
 
         await _store.SaveAsync(settings);

@@ -10,7 +10,13 @@ namespace Pos.Terminal.ViewModels;
 
 public sealed class InventoryViewModel : INotifyPropertyChanged
 {
-    public InventoryViewModel() { }
+    public InventoryViewModel(int inventoryBucket = 1)
+    {
+        InventoryBucket = Math.Clamp(inventoryBucket, 1, 2);
+    }
+
+    public int InventoryBucket { get; }
+    public string InventoryTitle => $"Inventory {InventoryBucket}";
 
     public ObservableCollection<ProductListItemVm> Products { get; } = new();
     private List<ProductListItemVm> _all = [];    
@@ -96,7 +102,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
 
             using var api = await CreateApiAsync();
             var items = await api.GetInventoryAsync();
-            _all = items.Select(ProductListItemVm.From).ToList();
+            _all = items.Where(x => x.InventoryBucket == InventoryBucket).Select(ProductListItemVm.From).ToList();
 
             ApplySearch();
             ListStatus = _all.Count == 0
@@ -120,7 +126,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             var norm = LengthConverter.Normalize(ft, inch);
             var onHandInches = LengthConverter.ToTotalInches(norm.Feet, norm.Inches);
 
-            var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), string.IsNullOrWhiteSpace(EditLocation) ? null : EditLocation.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, onHandInches, true);
+            var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), string.IsNullOrWhiteSpace(EditLocation) ? null : EditLocation.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, onHandInches, InventoryBucket, true);
             using var api = await CreateApiAsync();
             if (_editingId is null) await api.CreateInventoryAsync(req); else await api.UpdateInventoryAsync(_editingId.Value, req);
             EditorStatus = "Saved to server.";
@@ -192,4 +198,5 @@ public sealed class ProductListItemVm
     public string LocationLine => $"Location: {Location ?? "Main Store"}";
 
     public string StockLine => !IsLength ? $"Stock: {OnHandQty:0.###}" : $"Stock: {OnHandInches / 12} ft {OnHandInches % 12} in";
-    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, Location = p.Location, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches };}
+    public int InventoryBucket { get; init; } = 1;
+    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, Location = p.Location, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches, InventoryBucket = p.InventoryBucket };}

@@ -23,6 +23,7 @@ public sealed class ProductDto
     // optional stock info (for quick cashier feedback)
     public decimal OnHand { get; set; }
     public int OnHandInches { get; set; }
+    public int InventoryBucket { get; set; } = 1;
 
     public bool IsOutOfStock => IsLength ? OnHandInches <= 0 : OnHand <= 0m;
 

@@ -69,6 +69,7 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "IsLength", "ALTER TABLE \"Products\" ADD COLUMN \"IsLength\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHand", "ALTER TABLE \"Products\" ADD COLUMN \"OnHand\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHandInches", "ALTER TABLE \"Products\" ADD COLUMN \"OnHandInches\" INTEGER NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "Products", "InventoryBucket", "ALTER TABLE \"Products\" ADD COLUMN \"InventoryBucket\" INTEGER NOT NULL DEFAULT 1;");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
         await EnsureColumnAsync(db, "Sales", "CustomerId", "ALTER TABLE \"Sales\" ADD COLUMN \"CustomerId\" TEXT NULL;");
 

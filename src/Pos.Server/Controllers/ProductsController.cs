@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
          var items = await _db.Products.AsNoTracking()
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
-            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.Location, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.IsActive))
+            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.Location, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.InventoryBucket, x.IsActive))
             .ToListAsync(ct);
 
         return items;
@@ -52,6 +52,7 @@ public class ProductsController : ControllerBase
             IsLength = req.IsLength,
             OnHand = req.IsLength ? 0 : req.OnHand,
             OnHandInches = req.IsLength ? req.OnHandInches : 0,
+            InventoryBucket = Math.Clamp(req.InventoryBucket, 1, 2),
             IsActive = req.IsActive,
             CreatedAtUtc = DateTime.UtcNow
         };
@@ -69,7 +70,7 @@ public class ProductsController : ControllerBase
             return Problem(title: "Failed to save inventory item", detail: dbError, statusCode: StatusCodes.Status500InternalServerError);
         }
         
-        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive));
+        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive));
     }
 
     [HttpPut("{id:guid}")]
@@ -89,10 +90,11 @@ public class ProductsController : ControllerBase
         p.IsLength = req.IsLength;
         p.OnHand = req.IsLength ? 0 : req.OnHand;
         p.OnHandInches = req.IsLength ? req.OnHandInches : 0;
+        p.InventoryBucket = Math.Clamp(req.InventoryBucket, 1, 2);
         p.IsActive = req.IsActive;
 
         await _db.SaveChangesAsync(ct);
-        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.IsActive);
+        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive);
     }
 
     [HttpDelete("{id:guid}")]

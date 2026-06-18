@@ -12,6 +12,8 @@
             <ComboBox ItemsSource="{Binding Printers}" SelectedItem="{Binding SelectedPrinter}"/>
             <CheckBox Content="Print all receipts in TSP style"
                       IsChecked="{Binding UseTspReceiptStyle}"/>
+            <CheckBox Content="Dual Inventory"
+                      IsChecked="{Binding IsDualInventoryEnabled}"/>
             <TextBlock Text="{Binding PrinterStatus}" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <Button Content="Refresh Printers" Click="RefreshPrinters_Click" HorizontalAlignment="Left"/>
           </StackPanel>

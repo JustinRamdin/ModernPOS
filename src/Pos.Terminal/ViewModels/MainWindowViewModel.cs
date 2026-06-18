@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using Avalonia.Controls;
 using Avalonia.Threading;
 using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
 
@@ -342,9 +343,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public async void ShowInventory()
     {
         PageTitle = "Inventory";
-        var vm = new InventoryViewModel();
-        CurrentView = new InventoryView { DataContext = vm };
-        await vm.LoadAsync();
+        var settings = await _settingsStore.LoadAsync();
+        CurrentView = BuildInventoryTabs(settings.IsDualInventoryEnabled);
     }
 
     public async void ShowCustomers()
@@ -367,9 +367,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public async void ShowReports()
     {
         PageTitle = "Reports";
-        var vm = new ReportsViewModel();
-        CurrentView = new ReportsView { DataContext = vm };
-        await vm.LoadAllAsync();
+        var settings = await _settingsStore.LoadAsync();
+        CurrentView = BuildReportsTabs(settings.IsDualInventoryEnabled);
     }
 
      public async void ShowSettings()
@@ -378,6 +377,39 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         var vm = new SettingsViewModel(_settingsStore, ApplyHeaderSettings);
         CurrentView = new SettingsView { DataContext = vm };
         await vm.LoadAsync();
+    }
+
+    private static TabControl BuildInventoryTabs(bool isDualInventoryEnabled)
+    {
+        var inventory1 = new InventoryView { DataContext = new InventoryViewModel(1) };
+        var inventory2 = new InventoryView { DataContext = new InventoryViewModel(2) };
+
+        return new TabControl
+        {
+            Items =
+            {
+                new TabItem { Header = "Inventory 1", Content = inventory1 },
+                new TabItem { Header = "Inventory 2", Content = inventory2, IsEnabled = isDualInventoryEnabled }
+            }
+        };
+    }
+
+    private static TabControl BuildReportsTabs(bool isDualInventoryEnabled)
+    {
+        var reports1Vm = new ReportsViewModel(1);
+        var reports2Vm = new ReportsViewModel(2);
+        _ = reports1Vm.LoadAllAsync();
+        if (isDualInventoryEnabled)
+            _ = reports2Vm.LoadAllAsync();
+
+        return new TabControl
+        {
+            Items =
+            {
+                new TabItem { Header = "Reports 1", Content = new ReportsView { DataContext = reports1Vm } },
+                new TabItem { Header = "Reports 2", Content = new ReportsView { DataContext = reports2Vm }, IsEnabled = isDualInventoryEnabled }
+            }
+        };
     }
 
     public async void ShowUserManagement()
@@ -452,11 +484,13 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         {
             Status = "Loading products from server...";
             var deploy = await _settingsStore.LoadDeploymentAsync();
+            var settings = await _settingsStore.LoadAsync();
 
             using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
             var remoteProducts = await api.GetProductsAsync();
 
              _allProducts = remoteProducts
+                .Where(p => settings.IsDualInventoryEnabled || p.InventoryBucket == 1)
                 .OrderBy(p => p.Name)
                 .Select(p => new ProductDto
                 {
@@ -470,7 +504,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     IsLength = p.IsLength,
                     Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
                     OnHand = p.OnHand,
-                    OnHandInches = p.OnHandInches
+                    OnHandInches = p.OnHandInches,
+                    InventoryBucket = p.InventoryBucket
                 })
                 .ToList();
 
@@ -606,6 +641,14 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     // -----------------------------
     public void AddToCart(ProductDto p)
     {
+        var existingBucket = CartLines.FirstOrDefault()?.InventoryBucket;
+        if (existingBucket is not null && existingBucket.Value != p.InventoryBucket)
+        {
+            Toast($"Cannot mix Inventory {existingBucket.Value} and Inventory {p.InventoryBucket} items in one sale.");
+            Status = "Sale blocked: inventory lists cannot be mixed.";
+            return;
+        }
+
         var existing = CartLines.FirstOrDefault(x => x.ProductId == p.Id);
         if (existing != null)
         {
@@ -628,7 +671,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             VatInclusive = p.VatInclusive,
             IsLength = p.IsLength,
             Qty = p.IsLength ? 0m : 1m,
-            QtyInches = p.IsLength ? 1 : 0
+            QtyInches = p.IsLength ? 1 : 0,
+            InventoryBucket = p.InventoryBucket
         };
 
         line.PropertyChanged += (_, __) => RaiseTotalsChanged();

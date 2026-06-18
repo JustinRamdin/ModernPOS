@@ -148,9 +148,9 @@ public sealed class RemoteServerApi : IDisposable
     public async Task DeleteCustomerAsync(Guid id)
         => (await _http.DeleteAsync($"api/customers/{id}")).EnsureSuccessStatusCode();
 
-    public async Task<ReportSummaryDto> GetReportSummaryAsync(DateTime fromUtc, DateTime toUtc)
+    public async Task<ReportSummaryDto> GetReportSummaryAsync(DateTime fromUtc, DateTime toUtc, int? inventoryBucket = null)
     {
-        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}{BuildInventoryBucketQuery(inventoryBucket)}";
         var candidates = new[]
         {
             $"api/reports/summary?{query}",
@@ -163,21 +163,21 @@ public sealed class RemoteServerApi : IDisposable
             ?? throw new InvalidOperationException("Empty reports response");
     }
 
-    public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc)
+    public async Task<IReadOnlyList<SaleLogEntryDto>> GetSalesLogAsync(DateTime fromUtc, DateTime toUtc, int? inventoryBucket = null)
     {
-        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}{BuildInventoryBucketQuery(inventoryBucket)}";
         return await GetFromJsonBodyAsync<List<SaleLogEntryDto>>($"api/reports/sales-log?{query}") ?? [];
     }
 
-    public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode)
+    public async Task<IReadOnlyList<InventoryMovementRowDto>> GetInventoryMovementsAsync(DateTime fromUtc, DateTime toUtc, string locationCode, int? inventoryBucket = null)
     {
-        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}&locationCode={Uri.EscapeDataString(locationCode)}";
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}&locationCode={Uri.EscapeDataString(locationCode)}{BuildInventoryBucketQuery(inventoryBucket)}";
         return await GetFromJsonBodyAsync<List<InventoryMovementRowDto>>($"api/reports/inventory-movements?{query}") ?? [];
     }
 
-    public async Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays)
+    public async Task<IReadOnlyList<LowStockRowDto>> GetLowStockAsync(string locationCode, int lookbackDays, int? inventoryBucket = null)
     {
-        var query = $"locationCode={Uri.EscapeDataString(locationCode)}&lookbackDays={lookbackDays}";
+        var query = $"locationCode={Uri.EscapeDataString(locationCode)}&lookbackDays={lookbackDays}{BuildInventoryBucketQuery(inventoryBucket)}";
         return await GetFromJsonBodyAsync<List<LowStockRowDto>>($"api/reports/low-stock?{query}") ?? [];
     }
 
@@ -234,4 +234,7 @@ public sealed class RemoteServerApi : IDisposable
 
         return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions);
     }
+
+    private static string BuildInventoryBucketQuery(int? inventoryBucket)
+        => inventoryBucket is null ? string.Empty : $"&inventoryBucket={Math.Clamp(inventoryBucket.Value, 1, 2)}";
 }

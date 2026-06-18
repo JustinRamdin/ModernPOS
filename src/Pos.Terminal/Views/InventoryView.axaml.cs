@@ -12,10 +12,11 @@ public partial class InventoryView : UserControl
     {
         InitializeComponent();
 
-        // ✅ Keep inventory self-contained and always load when opened
-        DataContext = new InventoryViewModel();
-
-        AttachedToVisualTree += async (_, __) => await VM.LoadAsync();
+        AttachedToVisualTree += async (_, __) =>
+        {
+            if (DataContext is InventoryViewModel vm)
+                await vm.LoadAsync();
+        };
     }
 
     public void New_Click(object? sender, RoutedEventArgs e) => VM.NewItem();

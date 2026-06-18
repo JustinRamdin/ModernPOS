@@ -84,7 +84,7 @@ public class SalesController : ControllerBase
                 .Where(p => productIds.Contains(p.Id) && p.IsActive)
                 .ToDictionaryAsync(p => p.Id, ct);
 
-        foreach (var line in req.Lines)
+            foreach (var line in req.Lines)
             {
                 if (!products.ContainsKey(line.ProductId))
                     return BadRequest($"Unknown or inactive product: {line.ProductId}");
@@ -92,6 +92,9 @@ public class SalesController : ControllerBase
             if (line.Qty <= 0)
                     return BadRequest("Line quantity must be greater than zero.");
             }
+
+            if (products.Values.Select(p => p.InventoryBucket).Distinct().Count() > 1)
+                return BadRequest("Items from Inventory 1 and Inventory 2 cannot be mixed in one sale.");
 
             var sale = new Sale
             {

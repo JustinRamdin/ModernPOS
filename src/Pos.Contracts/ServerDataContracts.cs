@@ -12,6 +12,7 @@ public sealed record InventoryItemDto(
     bool IsLength,
     decimal OnHand,
     int OnHandInches,
+    int InventoryBucket,
     bool IsActive);
 
 public sealed record UpsertInventoryItemRequest(
@@ -25,6 +26,7 @@ public sealed record UpsertInventoryItemRequest(
     bool IsLength,
     decimal OnHand,
     int OnHandInches,
+    int InventoryBucket = 1,
     bool IsActive = true);
 
 public sealed record CustomerDto(

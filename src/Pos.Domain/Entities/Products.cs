@@ -13,6 +13,7 @@ public class Product
     public bool IsLength { get; set; }
     public decimal OnHand { get; set; }
     public int OnHandInches { get; set; }
+    public int InventoryBucket { get; set; } = 1;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

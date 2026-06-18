@@ -30,6 +30,7 @@ public class PosDbContext : DbContext
             e.Property(x => x.CostPrice).HasColumnType("numeric(18,2)");
             e.Property(x => x.Price).HasColumnType("numeric(18,2)");
             e.Property(x => x.OnHand).HasColumnType("numeric(18,3)");
+            e.Property(x => x.InventoryBucket).HasDefaultValue(1);
         });
 
         b.Entity<Customer>(e =>

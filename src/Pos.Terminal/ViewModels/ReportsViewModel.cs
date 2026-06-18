@@ -79,8 +79,12 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
     public ICommand RefreshInventoryCommand { get; }
     public ICommand RefreshLowStockCommand { get; }
 
-    public ReportsViewModel()
+    public int? InventoryBucket { get; }
+    public string ReportsTitle => InventoryBucket is null ? "Reports" : $"Reports {InventoryBucket}";
+
+    public ReportsViewModel(int? inventoryBucket = null)
     {
+        InventoryBucket = inventoryBucket is null ? null : Math.Clamp(inventoryBucket.Value, 1, 2);
 
         RefreshAllCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
         ApplyDateRangeCommand = new AsyncRelayCommand(async _ => await LoadAllAsync());
@@ -95,7 +99,7 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
             Status = "Loading reports...";
             var (fromUtc, toUtc) = GetUtcRange();
 using var api = await CreateApiAsync();
-            var report = await api.GetReportSummaryAsync(fromUtc, toUtc);
+            var report = await api.GetReportSummaryAsync(fromUtc, toUtc, InventoryBucket);
 
             ReceiptCount = report.ReceiptCount; GrossTotal = report.GrossTotal; NetTotal = report.GrossTotal; VatTotal = 0m;
             AvgGross = ReceiptCount == 0 ? 0m : GrossTotal / ReceiptCount;
@@ -107,9 +111,9 @@ using var api = await CreateApiAsync();
             ProfitByProduct.Clear(); foreach (var r in report.ProfitByProduct) ProfitByProduct.Add(r);
             CustomerSales.Clear(); foreach (var r in report.CustomerSales) CustomerSales.Add(r);
             InventoryValuation.Clear(); foreach (var r in report.InventoryValuation) InventoryValuation.Add(r);
-            var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode);
+            var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode, InventoryBucket);
             InventoryMovements.Clear(); foreach (var r in movements) InventoryMovements.Add(r);
-            var salesLog = await api.GetSalesLogAsync(fromUtc, toUtc);
+            var salesLog = await api.GetSalesLogAsync(fromUtc, toUtc, InventoryBucket);
             SalesLog.Clear();
             foreach (var sale in salesLog.Where(s => string.IsNullOrWhiteSpace(SalesSearchText) || s.ReceiptNo.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase) || s.Lines.Any(l => l.ProductName.Contains(SalesSearchText, StringComparison.OrdinalIgnoreCase))))
                 SalesLog.Add(sale);
@@ -128,7 +132,7 @@ using var api = await CreateApiAsync();
         try
         {
             using var api = await CreateApiAsync();
-            var rows = await api.GetLowStockAsync(LocationCode, LookbackDays);
+            var rows = await api.GetLowStockAsync(LocationCode, LookbackDays, InventoryBucket);
             LowStock.Clear();
             foreach (var row in rows) LowStock.Add(row);
             Status = rows.Count == 0 ? "No low-stock items from server." : "Low stock loaded.";
@@ -377,10 +381,10 @@ using var api = await CreateApiAsync();
         var (fromUtc, toUtc) = GetUtcRange(from, to);
         using var api = await CreateApiAsync();
         var settings = await new SettingsStore().LoadAsync();
-        var report = await api.GetReportSummaryAsync(fromUtc, toUtc);
-        var salesLog = (await api.GetSalesLogAsync(fromUtc, toUtc)).OrderBy(s => s.SoldAtUtc).ThenBy(s => s.ReceiptNo).ToList();
-        var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode);
-        var lowStock = await api.GetLowStockAsync(LocationCode, LookbackDays);
+        var report = await api.GetReportSummaryAsync(fromUtc, toUtc, InventoryBucket);
+        var salesLog = (await api.GetSalesLogAsync(fromUtc, toUtc, InventoryBucket)).OrderBy(s => s.SoldAtUtc).ThenBy(s => s.ReceiptNo).ToList();
+        var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode, InventoryBucket);
+        var lowStock = await api.GetLowStockAsync(LocationCode, LookbackDays, InventoryBucket);
         var customerReceivables = await api.GetCustomerReceivablesAsync(fromUtc, toUtc);
 
         using var workbook = new XLWorkbook();

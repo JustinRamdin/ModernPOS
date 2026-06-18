@@ -19,18 +19,11 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-using DataLocalDb = Pos.Local.Data.LocalDb;
-
 using Avalonia.Threading;
 using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
-using Microsoft.EntityFrameworkCore;
 
 using Pos.Application.Checkout;
 using Pos.Application.Tax;
-
-using Pos.Local.Data;
-using Pos.Local.Entities;
-using Pos.Local.Services;
 
 using Pos.Terminal.Commands;
 using Pos.Terminal.Models;
@@ -39,7 +32,6 @@ using Pos.Terminal.Views;
 
 // enum aliases for mapping
 using AppLineKind = Pos.Application.Checkout.LineQuantityKind;
-using LocalLineKind = Pos.Local.Entities.LineQuantityKind;
 
 namespace Pos.Terminal.ViewModels;
 
@@ -350,7 +342,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public async void ShowInventory()
     {
         PageTitle = "Inventory";
-        var vm = new InventoryViewModel(IsPracticeMode);
+        var vm = new InventoryViewModel();
         CurrentView = new InventoryView { DataContext = vm };
         await vm.LoadAsync();
     }
@@ -427,19 +419,16 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 if (pickedId != null)
                 {
                     var selected = vm?.Selected;
-                    await using var db2 = CreateLocalDb();
-                    var c = await db2.Customers.AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.Id == pickedId.Value);
 
                      _selectedCustomerName = !string.IsNullOrWhiteSpace(selected?.Name)
                         ? selected.Name
-                        : c?.Name ?? "Unknown";
+                        : "Unknown";
                     _selectedCustomerPhone = !string.IsNullOrWhiteSpace(selected?.Phone)
                         ? selected.Phone
-                        : string.IsNullOrWhiteSpace(c?.Phone) ? "N/A" : c.Phone;
+                        : "N/A";
                     _selectedCustomerEmail = !string.IsNullOrWhiteSpace(selected?.Email)
                         ? selected.Email
-                        : string.IsNullOrWhiteSpace(c?.Email) ? "N/A" : c.Email;
+                        : "N/A";
                     SelectedCustomerId = pickedId.Value;
 
                     OnPropertyChanged(nameof(SelectedCustomerLabel));
@@ -461,50 +450,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
-            if (IsPracticeMode)
-            {
-                Status = "Loading products from local practice data...";
-                await using var localDb = CreateLocalDb();
-                await localDb.Database.EnsureCreatedAsync();
-
-                var products = await localDb.Products
-                    .AsNoTracking()
-                    .Where(p => p.IsActive && p.DeletedAtUtc == null)
-                    .OrderBy(p => p.Name)
-                    .ToListAsync();
-
-                var balances = await localDb.Inventory
-                    .AsNoTracking()
-                    .Where(i => i.LocationCode == "DEFAULT")
-                    .ToDictionaryAsync(i => i.ProductId);
-
-                _allProducts = products
-                    .Select(p =>
-                    {
-                        balances.TryGetValue(p.Id, out var bal);
-                        return new ProductDto
-                        {
-                            Id = p.Id,
-                            Name = p.Name,
-                            Sku = p.Sku,
-                            Description = p.Description ?? "",
-                            Location = "DEFAULT",
-                            Price = p.Price,
-                            VatInclusive = p.VatInclusive,
-                            IsLength = p.IsLength,
-                            Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
-                            OnHand = bal?.OnHand ?? 0m,
-                            OnHandInches = bal?.OnHandInches ?? 0
-                        };
-                    })
-                    .ToList();
-
-                BuildCategories();
-                ApplyFilters();
-                Status = $"Loaded {_allProducts.Count} products from local practice data";
-                return;
-            }
-
             Status = "Loading products from server...";
             var deploy = await _settingsStore.LoadDeploymentAsync();
 
@@ -546,9 +491,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
     public async Task<bool> IsServerReachableAsync()
     {
-         if (IsPracticeMode)
-            return true;
-
         try
         {
             var deploy = await _settingsStore.LoadDeploymentAsync();
@@ -785,11 +727,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 ClearCustomer();
                 return;
             }
-
-            Status = IsPracticeMode
-                ? "Practice mode enabled; saving CASH sale locally..."
-                : "Server checkout unavailable; saving CASH sale locally...";
-            await SaveCashSaleLocallyAsync(cashGiven);
         }
         catch (Exception ex)
         {
@@ -812,7 +749,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         try
         {
             var totalDue = TotalDue;
-            var serverResult = await TryCheckoutServerAsync(paymentMethod: method, paymentMethodCode: 2, paidAmount: totalDue);
+            var paymentCode = string.Equals(method, "DEBIT", StringComparison.OrdinalIgnoreCase) ? 3 : 4;
+            var serverResult = await TryCheckoutServerAsync(paymentMethod: method, paymentMethodCode: paymentCode, paidAmount: totalDue);
             if (serverResult != null)
             {
                 await PrintReceiptAsync(
@@ -829,11 +767,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 ClearCustomer();
                 return;
             }
-
-            Status = IsPracticeMode
-                ? $"Practice mode enabled; saving {method} sale locally..."
-                : $"Server checkout unavailable; saving {method} sale locally...";
-            await SaveCardSaleLocallyAsync(method);
         }
         catch (Exception ex)
         {
@@ -855,10 +788,23 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {   
-            // Server checkout endpoint currently supports only Cash/Card payment methods.
-            Status = "Saving ON ACCOUNT sale locally...";
+            var totalDue = TotalDue;
+            var serverResult = await TryCheckoutServerAsync(paymentMethod: "ON ACCOUNT", paymentMethodCode: 5, paidAmount: 0m);
+            if (serverResult != null)
+            {
+                await PrintReceiptAsync(
+                    receiptNo: $"SRV-{serverResult.SaleId.ToString("N")[..8]}",
+                    paymentMethod: "ON ACCOUNT",
+                    subtotal: Subtotal,
+                    discount: DiscountAmount,
+                    vat: VatTotal,
+                    totalDue: totalDue,
+                    cashGiven: 0m,
+                    change: 0m);
 
-            await SaveOnAccountSaleLocallyAsync();
+                ClearCart();
+                ClearCustomer();
+            }
         }
         catch (Exception ex)
         {
@@ -869,12 +815,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
      private async Task<RemoteServerApi.ServerCheckoutResponse?> TryCheckoutServerAsync(string paymentMethod, int paymentMethodCode, decimal paidAmount)
     {
-        if (IsPracticeMode)
-        {
-            Status = $"Practice mode enabled; saving {paymentMethod} sale locally.";
-            return null;
-        }
-
         try
         {
             Status = $"Submitting {paymentMethod} checkout to server...";
@@ -886,7 +826,9 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 CartLines.Select(x => new Pos.Contracts.CheckoutLineRequest(
                     ProductId: x.ProductId,
                     Qty: x.IsLength ? x.QtyInches : x.Qty)).ToList(),
-                [new Pos.Contracts.CheckoutPaymentRequest(paymentMethodCode, paidAmount)]);
+                [new Pos.Contracts.CheckoutPaymentRequest(paymentMethodCode, paidAmount)],
+                SelectedCustomerId,
+                DiscountAmount);
 
             var result = await api.CheckoutAsync(request);
             Status = $"Checkout completed on server. Sale {result.SaleId}";
@@ -896,8 +838,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         catch (HttpRequestException ex) when (ex.StatusCode is null or HttpStatusCode.RequestTimeout or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout)
         {
             Status = BuildServerStatusMessage(ex, "submit checkout");
-            Toast("Server checkout unavailable; using local fallback.");
-            return null;
+            Toast("Server checkout unavailable.");
+            throw;
         }
          catch (HttpRequestException ex)
         {
@@ -906,142 +848,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             throw;
         }
     }
-    
-
-    private async Task SaveCashSaleLocallyAsync(decimal cashGiven)
-    {
-        await using var db = CreateLocalDb();
-        await db.Database.EnsureCreatedAsync();
-
-        var saleService = new LocalSaleService(db);
-
-        var result = await saleService.CreateCashSaleAsync(
-            terminalId: TerminalId,
-            lines: CartLines.Select(x => new LocalCartLine
-            {
-                ProductId = x.ProductId,
-                ProductName = x.Name,
-                UnitPrice = x.UnitPrice,
-                VatInclusive = x.VatInclusive,
-                IsLength = x.IsLength,
-                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                Qty = x.Qty,
-                QtyInches = x.QtyInches
-            }).ToList(),
-            cashGiven: cashGiven,
-            discountAmount: DiscountAmount,
-            customerId: SelectedCustomerId,
-            allowNegativeStock: false
-        );
-
-        Status = $"Saved locally. Receipt {result.ReceiptNo} Total {result.Total:0.00} Change {result.Change:0.00}";
-        Toast($"Saved: {result.ReceiptNo}");
-
-        var totalDue = TotalDue;
-        var changeDue = Math.Round(cashGiven - totalDue, 2, MidpointRounding.AwayFromZero);
-
-        await PrintReceiptAsync(
-            receiptNo: result.ReceiptNo,
-            paymentMethod: "CASH",
-            subtotal: Subtotal,
-            discount: DiscountAmount,
-            vat: VatTotal,
-            totalDue: totalDue,
-            cashGiven: cashGiven,
-            change: changeDue);
-
-        ClearCart();
-        ClearCustomer();
-    }
-
-    private async Task SaveCardSaleLocallyAsync(string method)
-    {
-        await using var db = CreateLocalDb();
-        await db.Database.EnsureCreatedAsync();
-
-        var saleService = new LocalSaleService(db);
-
-        var result = await saleService.CreateCardSaleAsync(
-            terminalId: TerminalId,
-            lines: CartLines.Select(x => new LocalCartLine
-            {
-                ProductId = x.ProductId,
-                ProductName = x.Name,
-                UnitPrice = x.UnitPrice,
-                VatInclusive = x.VatInclusive,
-                IsLength = x.IsLength,
-                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                Qty = x.Qty,
-                QtyInches = x.QtyInches
-            }).ToList(),
-            method: method,
-            discountAmount: DiscountAmount,
-            customerId: SelectedCustomerId,
-            allowNegativeStock: false
-        );
-
-        Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} ({method})";
-        Toast($"Saved: {result.ReceiptNo}");
-
-        var totalDue = TotalDue;
-        await PrintReceiptAsync(
-            receiptNo: result.ReceiptNo,
-            paymentMethod: method,
-            subtotal: Subtotal,
-            discount: DiscountAmount,
-            vat: VatTotal,
-            totalDue: totalDue,
-            cashGiven: totalDue,
-            change: 0m);
-
-        ClearCart();
-        ClearCustomer();
-    }
-
-    private async Task SaveOnAccountSaleLocallyAsync()
-    {
-        await using var db = CreateLocalDb();
-        await db.Database.EnsureCreatedAsync();
-
-        var saleService = new LocalSaleService(db);
-
-        var result = await saleService.CreateOnAccountSaleAsync(
-            terminalId: TerminalId,
-            lines: CartLines.Select(x => new LocalCartLine
-            {
-                ProductId = x.ProductId,
-                ProductName = x.Name,
-                UnitPrice = x.UnitPrice,
-                VatInclusive = x.VatInclusive,
-                IsLength = x.IsLength,
-                QuantityKind = x.IsLength ? LocalLineKind.Inches : LocalLineKind.Unit,
-                Qty = x.Qty,
-                QtyInches = x.QtyInches
-            }).ToList(),
-            customerId: SelectedCustomerId!.Value,
-            discountAmount: DiscountAmount,
-            allowNegativeStock: false
-        );
-
-        Status = $"Saved locally. Receipt {result.ReceiptNo} Total ${result.Total:0.00} (ON ACCOUNT)";
-        Toast($"Saved: {result.ReceiptNo}");
-
-        var totalDue = TotalDue;
-
-        await PrintReceiptAsync(
-            receiptNo: result.ReceiptNo,
-            paymentMethod: "ON ACCOUNT",
-            subtotal: Subtotal,
-            discount: DiscountAmount,
-            vat: VatTotal,
-            totalDue: totalDue,
-            cashGiven: 0m,
-            change: 0m);
-
-        ClearCart();
-        ClearCustomer();
-    }
-    
     // -----------------------------
     // Helpers
     // -----------------------------
@@ -1175,21 +981,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             var phone = _selectedCustomerPhone;
             var email = _selectedCustomerEmail;
 
-            if (SelectedCustomerId is not null)
-            {
-                await using var db = CreateLocalDb();
-                var customer = await db.Customers
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.Id == SelectedCustomerId.Value);
-
-                if (customer is not null)
-                {
-                    name = string.IsNullOrWhiteSpace(customer.Name) ? name : customer.Name;
-                    phone = string.IsNullOrWhiteSpace(customer.Phone) ? phone : customer.Phone;
-                    email = string.IsNullOrWhiteSpace(customer.Email) ? email : customer.Email;
-                }
-            }
-
             customerInfo = new PhysicalReceiptRenderer.ReceiptCustomerInfo(name, phone, email);
         }
 
@@ -1316,16 +1107,6 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     }
 
     // ✅ The ONE shared DB config used by ALL modules
-    private static DbContextOptions<PosLocalDbContext> BuildDbOptions()
-    => DataLocalDb.BuildOptions();
-
-    private static PosLocalDbContext CreateLocalDb()
-    {
-        var options = BuildDbOptions();
-        return new PosLocalDbContext(options);
-    }
-
-
      private static string BuildServerStatusMessage(Exception ex, string operation)
     {
         if (ex is HttpRequestException httpEx)

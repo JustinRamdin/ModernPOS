@@ -4,6 +4,8 @@ public class Sale
 {
     public Guid Id { get; set; } = Guid.NewGuid();   // SaleId used for idempotent sync
     public string TerminalId { get; set; } = "";
+    public Guid? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
     public DateTime SoldAtUtc { get; set; } = DateTime.UtcNow;
 
     public decimal Subtotal { get; set; }

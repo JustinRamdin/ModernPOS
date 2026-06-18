@@ -30,6 +30,7 @@ public class SalesController : ControllerBase
         var sales = await _db.Sales
             .AsNoTracking()
             .Include(s => s.Payments)
+            .Include(s => s.Customer)
             .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
             .OrderByDescending(s => s.SoldAtUtc)
             .ToListAsync(ct);
@@ -48,7 +49,7 @@ public class SalesController : ControllerBase
                 sale.Id.ToString("N")[..8].ToUpperInvariant(),
                 "Completed",
                 paymentType,
-                string.Empty,
+                sale.Customer?.Name ?? string.Empty,
                 sale.Subtotal,
                 0m,
                 sale.Total);
@@ -66,6 +67,13 @@ public class SalesController : ControllerBase
 
         if (req.Payments is null || req.Payments.Count == 0)
             return BadRequest("No payments.");
+
+        if (req.CustomerId is not null && !await _db.Customers.AnyAsync(c => c.Id == req.CustomerId.Value && c.IsActive, ct))
+            return BadRequest("Selected customer was not found.");
+
+        var isOnAccount = req.Payments.Any(p => (PaymentMethod)p.Method == PaymentMethod.OnAccount);
+        if (isOnAccount && req.CustomerId is null)
+            return BadRequest("Customer is required for on-account checkout.");
 
         await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         try
@@ -89,6 +97,7 @@ public class SalesController : ControllerBase
             {
                 Id = Guid.NewGuid(),
                 TerminalId = req.TerminalId ?? "",
+                CustomerId = req.CustomerId,
                 SoldAtUtc = DateTime.UtcNow
             };
 
@@ -173,8 +182,12 @@ WHERE Id = {adj.ProductId}
                 _logger.LogInformation("Stock deducted for length product {ProductId}. Inches={Inches}", adj.ProductId, inchesToSubtract);
             }
 
-               sale.Subtotal = sale.Lines.Sum(x => x.LineTotal);
-            sale.Total = sale.Subtotal;
+            sale.Subtotal = Math.Round(sale.Lines.Sum(x => x.LineTotal), 2, MidpointRounding.AwayFromZero);
+            var discountAmount = Math.Round(Math.Max(0m, req.DiscountAmount), 2, MidpointRounding.AwayFromZero);
+            if (discountAmount > sale.Subtotal)
+                return BadRequest("Discount cannot be greater than subtotal.");
+
+            sale.Total = Math.Round(sale.Subtotal - discountAmount, 2, MidpointRounding.AwayFromZero);
 
 
                 foreach (var pay in req.Payments)
@@ -188,11 +201,22 @@ WHERE Id = {adj.ProductId}
                 });
             }
 
-         var paid = sale.Payments.Sum(x => x.Amount);
-            if (paid < sale.Total)
+            var paid = sale.Payments.Sum(x => x.Amount);
+            if (!isOnAccount && paid < sale.Total)
                 return BadRequest($"Insufficient payment. Total={sale.Total}, Paid={paid}");
 
-        _db.Sales.Add(sale);
+            if (isOnAccount)
+            {
+                foreach (var payment in sale.Payments.Where(payment => payment.Method == PaymentMethod.OnAccount))
+                    payment.Amount = sale.Total;
+
+                var customer = await _db.Customers.FirstAsync(c => c.Id == req.CustomerId!.Value, ct);
+                customer.Balance = Math.Round(customer.Balance + sale.Total, 2, MidpointRounding.AwayFromZero);
+                customer.UpdatedAtUtc = DateTime.UtcNow;
+                paid = sale.Total;
+            }
+
+            _db.Sales.Add(sale);
 
             var payload = JsonSerializer.Serialize(new { saleId = sale.Id, terminalId = sale.TerminalId, soldAtUtc = sale.SoldAtUtc });
             _db.OutboxEvents.Add(new OutboxEvent

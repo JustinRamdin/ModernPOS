@@ -54,7 +54,9 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
     public decimal Balance { get; set; }
     public string BalanceLabel => $"Balance: {Balance:0.00}";
     public string PayAmount { get; set; } = "";
-    public object? PayMethod { get; set; }
+    public string? PayMethod { get; set; }
+    public string PayNote { get; set; } = "";
+    public IReadOnlyList<string> PaymentMethods { get; } = ["CASH", "CREDIT", "DEBIT", "TRANSFER", "CHEQUE"];
     public ICommand NewCommand { get; }
     public ICommand SaveCommand { get; }
     public ICommand DeleteCommand { get; }
@@ -97,7 +99,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         _editId = Selected.Id; EditName = Selected.Name; EditPhone = Selected.Phone; EditEmail = Selected.Email; EditArea = Selected.Area; Balance = Selected.Balance; NotifyEditor();
     }
 
-     private void New() { Selected = null; _editId = null; EditName = EditPhone = EditEmail = EditArea = PayAmount = ""; Balance = 0m; NotifyEditor(); Raise(nameof(PayAmount)); }
+     private void New() { Selected = null; _editId = null; EditName = EditPhone = EditEmail = EditArea = PayAmount = PayNote = ""; PayMethod = null; Balance = 0m; NotifyEditor(); Raise(nameof(PayAmount)); Raise(nameof(PayMethod)); Raise(nameof(PayNote)); }
 
     private async Task SaveAsync()
     {
@@ -107,8 +109,19 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
         await LoadAsync();
     }
      private async Task DeleteAsync() { if (Selected == null) return; using var api = await CreateApiAsync(); await api.DeleteCustomerAsync(Selected.Id); Selected = null; await LoadAsync(); }
-    private async Task ApplyPaymentAsync() { if (Selected == null) return; if (!decimal.TryParse(PayAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out var amt)) return; Balance = Math.Max(0m, Balance - amt); await SaveAsync(); ClearPayment(); }
-    private void ClearPayment() { PayAmount = ""; PayMethod = null; }
+    private async Task ApplyPaymentAsync()
+    {
+        if (Selected == null) return;
+        if (!decimal.TryParse(PayAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out var amt)) return;
+
+        using var api = await CreateApiAsync();
+        var updated = await api.ApplyCustomerPaymentAsync(Selected.Id, new CustomerPaymentRequest(amt, PayMethod ?? "Payment", Note: PayNote));
+        Balance = updated.Balance;
+        Selected.Balance = updated.Balance;
+        ClearPayment();
+        await LoadAsync();
+    }
+    private void ClearPayment() { PayAmount = ""; PayMethod = null; PayNote = ""; Raise(nameof(PayAmount)); Raise(nameof(PayMethod)); Raise(nameof(PayNote)); }
     private async Task PickSelectedAsync() { if (_onPicked != null) await _onPicked(Selected?.Id); }
     private async Task CancelPickAsync() { if (_onPicked != null) await _onPicked(null); }
     private void NotifyEditor() { foreach (var n in new[]{ nameof(EditName), nameof(EditPhone), nameof(EditEmail), nameof(EditArea), nameof(Balance), nameof(BalanceLabel) }) Raise(n); }

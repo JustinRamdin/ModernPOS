@@ -51,6 +51,18 @@ public static class Seeder
             );
             """);
 
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "CustomerPayments" (
+                "Id" TEXT NOT NULL PRIMARY KEY,
+                "CustomerId" TEXT NOT NULL,
+                "Amount" TEXT NOT NULL DEFAULT 0,
+                "Method" TEXT NOT NULL DEFAULT '',
+                "ReferenceNo" TEXT NULL,
+                "Note" TEXT NULL,
+                "PaidAtUtc" TEXT NOT NULL DEFAULT '0001-01-01T00:00:00.0000000Z'
+            );
+            """);
+
         await EnsureColumnAsync(db, "Products", "Description", "ALTER TABLE \"Products\" ADD COLUMN \"Description\" TEXT NULL;");
         await EnsureColumnAsync(db, "Products", "CostPrice", "ALTER TABLE \"Products\" ADD COLUMN \"CostPrice\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "VatInclusive", "ALTER TABLE \"Products\" ADD COLUMN \"VatInclusive\" INTEGER NOT NULL DEFAULT 0;");
@@ -58,6 +70,7 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "OnHand", "ALTER TABLE \"Products\" ADD COLUMN \"OnHand\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHandInches", "ALTER TABLE \"Products\" ADD COLUMN \"OnHandInches\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
+        await EnsureColumnAsync(db, "Sales", "CustomerId", "ALTER TABLE \"Sales\" ADD COLUMN \"CustomerId\" TEXT NULL;");
 
         await EnsureColumnAsync(db, "UserAccounts", "DisplayName", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");

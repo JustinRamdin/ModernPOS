@@ -61,4 +61,32 @@ public class CustomersController : ControllerBase
         await _db.SaveChangesAsync(ct);
         return NoContent();
     }
+
+    [HttpPost("{id:guid}/payments")]
+    public async Task<ActionResult<CustomerDto>> ApplyPayment(Guid id, CustomerPaymentRequest req, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.SuperUser, UserRole.Accountant, UserRole.Cashier)) return Forbid();
+        if (req.Amount <= 0m) return BadRequest("Payment amount must be greater than zero.");
+
+        var c = await _db.Customers.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
+        if (c is null) return NotFound();
+
+        var payment = new CustomerPayment
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = c.Id,
+            Amount = Math.Round(req.Amount, 2, MidpointRounding.AwayFromZero),
+            Method = string.IsNullOrWhiteSpace(req.Method) ? "Payment" : req.Method.Trim(),
+            ReferenceNo = string.IsNullOrWhiteSpace(req.ReferenceNo) ? null : req.ReferenceNo.Trim(),
+            Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note.Trim(),
+            PaidAtUtc = DateTime.UtcNow
+        };
+
+        c.Balance = Math.Round(Math.Max(0m, c.Balance - payment.Amount), 2, MidpointRounding.AwayFromZero);
+        c.UpdatedAtUtc = DateTime.UtcNow;
+        _db.CustomerPayments.Add(payment);
+        await _db.SaveChangesAsync(ct);
+
+        return new CustomerDto(c.Id, c.Name, c.Phone, c.Email, c.Area, c.Balance, c.IsActive);
+    }
 }

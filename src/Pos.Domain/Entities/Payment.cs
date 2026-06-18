@@ -1,6 +1,6 @@
 namespace Pos.Domain.Entities;
 
-public enum PaymentMethod { Cash = 1, Card = 2 }
+public enum PaymentMethod { Cash = 1, Card = 2, Debit = 3, Credit = 4, OnAccount = 5 }
 
 public class Payment
 {

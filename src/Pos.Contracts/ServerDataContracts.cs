@@ -44,6 +44,15 @@ public sealed record UpsertCustomerRequest(
     decimal Balance,
     bool IsActive = true);
 
+public sealed record CustomerPaymentRequest(decimal Amount, string Method, string? ReferenceNo = null, string? Note = null);
+
+public sealed record CustomerReceivablesRowDto(
+    string CustomerName,
+    int ReceiptCount,
+    decimal Receivables,
+    decimal PaymentsMade,
+    decimal RemainingBalance);
+
 public sealed record CompanyProfileDto(
     Guid CompanyId,
     string CompanyName,

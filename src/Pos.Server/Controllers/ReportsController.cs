@@ -62,21 +62,27 @@ public class ReportsController : ControllerBase
             .OrderBy(c => c.Name)
             .ToListAsync(ct);
 
-        // Sales are not linked to customers yet, so attribute all register sales to an "Unassigned" bucket
-        // to keep Customer Sales aligned with the same source data used by Sales Register.
-        var totalCustomerReceipts = sales.Count;
-        var totalCustomerGross = sales.Sum(s => s.Total);
+        var salesByCustomer = sales
+            .Where(s => s.CustomerId is not null)
+            .GroupBy(s => s.CustomerId!.Value)
+            .ToDictionary(g => g.Key, g => new { ReceiptCount = g.Count(), GrossTotal = g.Sum(s => s.Total) });
+
         var customers = customerEntities
-            .Select(c => new CustomerSalesRowDto(
-                c.Name,
-                0,
-                0m,
-                c.Balance))
+            .Select(c =>
+            {
+                salesByCustomer.TryGetValue(c.Id, out var customerSales);
+                return new CustomerSalesRowDto(
+                    c.Name,
+                    customerSales?.ReceiptCount ?? 0,
+                    customerSales?.GrossTotal ?? 0m,
+                    c.Balance);
+            })
             .ToList();
 
-            if (totalCustomerReceipts > 0 || totalCustomerGross > 0m)
+        var unassignedSales = sales.Where(s => s.CustomerId is null).ToList();
+        if (unassignedSales.Count > 0)
         {
-            customers.Insert(0, new CustomerSalesRowDto("Unassigned", totalCustomerReceipts, totalCustomerGross, 0m));
+            customers.Insert(0, new CustomerSalesRowDto("Unassigned", unassignedSales.Count, unassignedSales.Sum(s => s.Total), 0m));
         }
         var gross = sales.Sum(x => x.Total);
         var salesGross = lines.Sum(x => x.LineTotal);
@@ -106,6 +112,51 @@ public class ReportsController : ControllerBase
             s.Payments.Count == 0 ? "Unknown" : string.Join(", ", s.Payments.Select(p => p.Method.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)),
             s.Lines.Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()
         )).ToList();
+    }
+
+    [HttpGet("customer-receivables")]
+    public async Task<ActionResult<IReadOnlyList<CustomerReceivablesRowDto>>> CustomerReceivables([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser, UserRole.Cashier)) return Unauthorized();
+
+        var customers = await _db.Customers.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.Name)
+            .ToListAsync(ct);
+
+        var onAccountSales = await _db.Sales.AsNoTracking()
+            .Include(s => s.Payments)
+            .Where(s => s.CustomerId != null && s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .Where(s => s.Payments.Any(p => p.Method == PaymentMethod.OnAccount))
+            .GroupBy(s => s.CustomerId!.Value)
+            .Select(g => new { CustomerId = g.Key, ReceiptCount = g.Count(), Receivables = g.Sum(s => s.Total) })
+            .ToListAsync(ct);
+
+        var payments = await _db.CustomerPayments.AsNoTracking()
+            .Where(p => p.PaidAtUtc >= fromUtc && p.PaidAtUtc < toUtc)
+            .GroupBy(p => p.CustomerId)
+            .Select(g => new { CustomerId = g.Key, PaymentsMade = g.Sum(p => p.Amount) })
+            .ToListAsync(ct);
+
+        var salesByCustomer = onAccountSales.ToDictionary(x => x.CustomerId);
+        var paymentsByCustomer = payments.ToDictionary(x => x.CustomerId);
+
+        return customers
+            .Select(c =>
+            {
+                salesByCustomer.TryGetValue(c.Id, out var sales);
+                paymentsByCustomer.TryGetValue(c.Id, out var payment);
+                var receivables = sales?.Receivables ?? 0m;
+                var paymentsMade = payment?.PaymentsMade ?? 0m;
+                return new CustomerReceivablesRowDto(
+                    c.Name,
+                    sales?.ReceiptCount ?? 0,
+                    receivables,
+                    paymentsMade,
+                    receivables - paymentsMade);
+            })
+            .Where(r => r.Receivables != 0m || r.PaymentsMade != 0m || r.RemainingBalance != 0m)
+            .ToList();
     }
 
     [HttpGet("inventory-movements")]
@@ -173,6 +224,7 @@ public class ReportsController : ControllerBase
         {
             Id = Guid.NewGuid(),
             TerminalId = sale.TerminalId,
+            CustomerId = sale.CustomerId,
             SoldAtUtc = DateTime.UtcNow,
             Subtotal = -refundLineTotal,
             Total = -refundLineTotal,
@@ -205,6 +257,7 @@ public class ReportsController : ControllerBase
         var sales = await _db.Sales
             .AsNoTracking()
             .Include(s => s.Payments)
+            .Include(s => s.Customer)
             .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
             .OrderByDescending(s => s.SoldAtUtc)
             .ToListAsync(ct);
@@ -223,7 +276,7 @@ public class ReportsController : ControllerBase
                 sale.Id.ToString("N")[..8].ToUpperInvariant(),
                 "Completed",
                 paymentType,
-                string.Empty,
+                sale.Customer?.Name ?? string.Empty,
                 sale.Subtotal,
                 0m,
                 sale.Total);

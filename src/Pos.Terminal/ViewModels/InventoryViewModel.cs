@@ -2,24 +2,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using Microsoft.EntityFrameworkCore;
 using Pos.Application.Measurements;
 using Pos.Contracts;
-using Pos.Local.Data;
-using Pos.Local.Entities;
 using Pos.Terminal.Services;
 
 namespace Pos.Terminal.ViewModels;
 
 public sealed class InventoryViewModel : INotifyPropertyChanged
 {
-    private readonly bool _isPracticeMode;
-    private const string PracticeLocationCode = "DEFAULT";
-
-    public InventoryViewModel(bool isPracticeMode = false)
-    {
-        _isPracticeMode = isPracticeMode;
-    }
+    public InventoryViewModel() { }
 
     public ObservableCollection<ProductListItemVm> Products { get; } = new();
     private List<ProductListItemVm> _all = [];    
@@ -103,51 +94,13 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             ListStatus = "Loading...";
             Products.Clear();
 
-           if (_isPracticeMode)
-            {
-                await using var db = CreateLocalDb();
-                await db.Database.EnsureCreatedAsync();
-
-                var localProducts = await db.Products
-                    .AsNoTracking()
-                    .Where(p => p.IsActive && p.DeletedAtUtc == null)
-                    .OrderBy(p => p.Name)
-                    .ToListAsync();
-
-                var localBalances = await db.Inventory
-                    .AsNoTracking()
-                    .Where(i => i.LocationCode == PracticeLocationCode)
-                    .ToDictionaryAsync(i => i.ProductId);
-
-                _all = localProducts.Select(p =>
-                {
-                    localBalances.TryGetValue(p.Id, out var bal);
-                    return new ProductListItemVm
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Sku = p.Sku,
-                        Description = p.Description,
-                        Location = PracticeLocationCode,
-                        CostPrice = p.CostPrice,
-                        SellingPrice = p.Price,
-                        VatInclusive = p.VatInclusive,
-                        IsLength = p.IsLength,
-                        OnHandQty = bal?.OnHand ?? 0m,
-                        OnHandInches = bal?.OnHandInches ?? 0
-                    };
-                }).ToList();
-            }
-            else
-            {
-                using var api = await CreateApiAsync();
-                var items = await api.GetInventoryAsync();
-                _all = items.Select(ProductListItemVm.From).ToList();
-            }
+            using var api = await CreateApiAsync();
+            var items = await api.GetInventoryAsync();
+            _all = items.Select(ProductListItemVm.From).ToList();
 
             ApplySearch();
             ListStatus = _all.Count == 0
-                ? (_isPracticeMode ? "No inventory items in practice mode." : "No inventory items on server.")
+                ? "No inventory items on server."
                 : $"Loaded {_all.Count} items.";
         }
         catch (Exception ex) { ListStatus = "Load failed."; EditorStatus = BuildServerStatusMessage(ex, "load inventory"); }
@@ -167,57 +120,10 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
             var norm = LengthConverter.Normalize(ft, inch);
             var onHandInches = LengthConverter.ToTotalInches(norm.Feet, norm.Inches);
 
-            if (_isPracticeMode)
-            {
-                await using var db = CreateLocalDb();
-                await db.Database.EnsureCreatedAsync();
-
-                Product product;
-                if (_editingId is null)
-                {
-                    product = new Product { Id = Guid.NewGuid() };
-                    db.Products.Add(product);
-                }
-                else
-                {
-                    product = await db.Products.FirstOrDefaultAsync(p => p.Id == _editingId.Value)
-                        ?? throw new InvalidOperationException("Product not found.");
-                }
-
-                product.Sku = EditSku.Trim();
-                product.Name = EditName.Trim();
-                product.Description = string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim();
-                product.CostPrice = cost;
-                product.Price = sell;
-                product.VatInclusive = EditVatInclusive;
-                product.IsLength = EditIsLength;
-                product.IsActive = true;
-                product.DeletedAtUtc = null;
-
-                var balance = await db.Inventory.FirstOrDefaultAsync(i => i.ProductId == product.Id && i.LocationCode == PracticeLocationCode);
-                if (balance == null)
-                {
-                    balance = new InventoryBalance
-                    {
-                        ProductId = product.Id,
-                        LocationCode = PracticeLocationCode
-                    };
-                    db.Inventory.Add(balance);
-                }
-
-                balance.OnHand = qty;
-                balance.OnHandInches = onHandInches;
-
-                await db.SaveChangesAsync();
-                EditorStatus = "Saved locally in practice mode.";
-            }
-            else
-            {
-                var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), string.IsNullOrWhiteSpace(EditLocation) ? null : EditLocation.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, onHandInches, true);
-                using var api = await CreateApiAsync();
-                if (_editingId is null) await api.CreateInventoryAsync(req); else await api.UpdateInventoryAsync(_editingId.Value, req);
-                EditorStatus = "Saved to server.";
-            }
+            var req = new UpsertInventoryItemRequest(EditSku.Trim(), EditName.Trim(), string.IsNullOrWhiteSpace(EditDescription) ? null : EditDescription.Trim(), string.IsNullOrWhiteSpace(EditLocation) ? null : EditLocation.Trim(), cost, sell, EditVatInclusive, EditIsLength, qty, onHandInches, true);
+            using var api = await CreateApiAsync();
+            if (_editingId is null) await api.CreateInventoryAsync(req); else await api.UpdateInventoryAsync(_editingId.Value, req);
+            EditorStatus = "Saved to server.";
 
             await LoadAsync();
         }
@@ -229,30 +135,9 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         if (_editingId is null) return;
          try
         {
-            if (_isPracticeMode)
-            {
-                await using var db = CreateLocalDb();
-                await db.Database.EnsureCreatedAsync();
-                var product = await db.Products.FirstOrDefaultAsync(p => p.Id == _editingId.Value);
-                if (product != null)
-                {
-                    product.IsActive = false;
-                    product.DeletedAtUtc = DateTime.UtcNow;
-                }
-
-                var balances = await db.Inventory.Where(i => i.ProductId == _editingId.Value).ToListAsync();
-                if (balances.Count > 0)
-                    db.Inventory.RemoveRange(balances);
-
-                await db.SaveChangesAsync();
-                EditorStatus = "Deleted locally in practice mode.";
-            }
-            else
-            {
-                using var api = await CreateApiAsync();
-                await api.DeleteInventoryAsync(_editingId.Value);
-                EditorStatus = "Deleted from server.";
-            }
+            using var api = await CreateApiAsync();
+            await api.DeleteInventoryAsync(_editingId.Value);
+            EditorStatus = "Deleted from server.";
 
             NewItem();
             await LoadAsync();
@@ -271,7 +156,6 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         return new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
     }
 
-     private static PosLocalDbContext CreateLocalDb() => new(LocalDb.BuildOptions());
      private static string BuildServerStatusMessage(Exception ex, string operation)
     {
         if (ex is HttpRequestException httpEx)

@@ -13,6 +13,7 @@ public class PosDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<OutboxEvent> OutboxEvents => Set<OutboxEvent>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerPayment> CustomerPayments => Set<CustomerPayment>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
 
@@ -41,10 +42,24 @@ public class PosDbContext : DbContext
             e.Property(x => x.Balance).HasColumnType("numeric(18,2)");
         });
 
+        b.Entity<CustomerPayment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.CustomerId);
+            e.HasIndex(x => x.PaidAtUtc);
+            e.Property(x => x.Amount).HasColumnType("numeric(18,2)");
+            e.Property(x => x.Method).HasMaxLength(64);
+            e.Property(x => x.ReferenceNo).HasMaxLength(128);
+            e.Property(x => x.Note).HasMaxLength(500);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         b.Entity<Sale>(e =>
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.TerminalId).HasMaxLength(50);
+            e.HasIndex(x => x.CustomerId);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.SetNull);
             e.HasMany(x => x.Lines).WithOne(x => x.Sale!).HasForeignKey(x => x.SaleId);
             e.HasMany(x => x.Payments).WithOne(x => x.Sale!).HasForeignKey(x => x.SaleId);
             e.Property(x => x.Subtotal).HasColumnType("numeric(18,2)");

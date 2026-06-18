@@ -244,12 +244,19 @@
               <Grid ColumnDefinitions="120,*" Margin="0,0,0,12">
                 <TextBlock VerticalAlignment="Center" Text="Method" />
                 <ComboBox Grid.Column="1"
-                          SelectedItem="{Binding PayMethod}">
-                  <ComboBoxItem Content="CASH" />
-                  <ComboBoxItem Content="CREDIT" />
-                  <ComboBoxItem Content="DEBIT" />
-                  <ComboBoxItem Content="TRANSFER" />
-                </ComboBox>
+                          ItemsSource="{Binding PaymentMethods}"
+                          SelectedItem="{Binding PayMethod}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="120,*" Margin="0,0,0,12">
+                <TextBlock VerticalAlignment="Top" Margin="0,8,0,0" Text="Notes" />
+                <TextBox Grid.Column="1"
+                         Classes="field"
+                         MinHeight="72"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Watermark="Payment notes..."
+                         Text="{Binding PayNote}" />
               </Grid>
 
               <StackPanel Orientation="Horizontal">

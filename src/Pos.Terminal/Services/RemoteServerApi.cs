@@ -132,6 +132,13 @@ public sealed class RemoteServerApi : IDisposable
         return await response.Content.ReadFromJsonAsync<CustomerDto>() ?? throw new InvalidOperationException("Empty customer update response");
     }
 
+    public async Task<CustomerDto> ApplyCustomerPaymentAsync(Guid id, CustomerPaymentRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/customers/{id}/payments", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CustomerDto>() ?? throw new InvalidOperationException("Empty customer payment response");
+    }
+
     public async Task DeleteCustomerAsync(Guid id)
         => (await _http.DeleteAsync($"api/customers/{id}")).EnsureSuccessStatusCode();
 
@@ -166,6 +173,12 @@ public sealed class RemoteServerApi : IDisposable
     {
         var query = $"locationCode={Uri.EscapeDataString(locationCode)}&lookbackDays={lookbackDays}";
         return await GetFromJsonBodyAsync<List<LowStockRowDto>>($"api/reports/low-stock?{query}") ?? [];
+    }
+
+    public async Task<IReadOnlyList<CustomerReceivablesRowDto>> GetCustomerReceivablesAsync(DateTime fromUtc, DateTime toUtc)
+    {
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        return await GetFromJsonBodyAsync<List<CustomerReceivablesRowDto>>($"api/reports/customer-receivables?{query}") ?? [];
     }
 
     public async Task RefundSaleItemAsync(Guid saleId, Guid saleLineId, decimal quantity)

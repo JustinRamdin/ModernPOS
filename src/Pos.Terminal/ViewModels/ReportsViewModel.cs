@@ -63,6 +63,7 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         new ReportExportOption("Sales by Cashier Report"),
         new ReportExportOption("Customer Purchase History Report"),
         new ReportExportOption("Customer Outstanding Balances Report"),
+        new ReportExportOption("Customer Payments and Receivables Report"),
         new ReportExportOption("Purchase History/Receiving Report"),
         new ReportExportOption("Stock Adjustment Report"),
         new ReportExportOption("Transaction Audit Report")
@@ -380,10 +381,11 @@ using var api = await CreateApiAsync();
         var salesLog = (await api.GetSalesLogAsync(fromUtc, toUtc)).OrderBy(s => s.SoldAtUtc).ThenBy(s => s.ReceiptNo).ToList();
         var movements = await api.GetInventoryMovementsAsync(fromUtc, toUtc, LocationCode);
         var lowStock = await api.GetLowStockAsync(LocationCode, LookbackDays);
+        var customerReceivables = await api.GetCustomerReceivablesAsync(fromUtc, toUtc);
 
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add(SheetName(reportName));
-        BuildSelectedReportSheet(sheet, reportName, from, to, settings.IsVatEnabled, settings.VatRatePercent, report, salesLog, movements, lowStock);
+        BuildSelectedReportSheet(sheet, reportName, from, to, settings.IsVatEnabled, settings.VatRatePercent, report, salesLog, movements, lowStock, customerReceivables);
         workbook.SaveAs(exportPath);
         Status = $"{reportName} exported: {exportPath}";
     }
@@ -398,7 +400,8 @@ using var api = await CreateApiAsync();
         ReportSummaryDto report,
         IReadOnlyList<SaleLogEntryDto> salesLog,
         IReadOnlyList<InventoryMovementRowDto> movements,
-        IReadOnlyList<LowStockRowDto> lowStock)
+        IReadOnlyList<LowStockRowDto> lowStock,
+        IReadOnlyList<CustomerReceivablesRowDto> customerReceivables)
     {
         var rows = new List<object?[]>();
         string[] headers;
@@ -493,6 +496,19 @@ using var api = await CreateApiAsync();
                 headers = ["Customer", "Outstanding Balance"];
                 rows.AddRange(report.CustomerSales.Where(x => x.CurrentBalance != 0m).OrderBy(x => x.CustomerName).Select(x => new object?[] { x.CustomerName, x.CurrentBalance }));
                 totalColumns = [2];
+                break;
+            case "Customer Payments and Receivables Report":
+                headers = ["Customer", "Receivables", "Payments Made", "Remaining Balance"];
+                rows.AddRange(customerReceivables
+                    .OrderBy(x => x.CustomerName)
+                    .Select(x => new object?[]
+                    {
+                        x.CustomerName,
+                        x.Receivables,
+                        x.PaymentsMade,
+                        x.RemainingBalance
+                    }));
+                totalColumns = [2, 3, 4];
                 break;
             case "Purchase History/Receiving Report":
                 headers = ["Time", "Type", "SKU", "Reason", "Delta"];
@@ -635,8 +651,11 @@ using var api = await CreateApiAsync();
             || header.Contains("Discount", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Gross", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Margin", StringComparison.OrdinalIgnoreCase) && !header.Contains("%", StringComparison.OrdinalIgnoreCase)
+            || header.Contains("Payment", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Profit", StringComparison.OrdinalIgnoreCase)
+            || header.Contains("Payable", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Refund", StringComparison.OrdinalIgnoreCase)
+            || header.Contains("Receivable", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Revenue", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Sales", StringComparison.OrdinalIgnoreCase)
             || header.Contains("Subtotal", StringComparison.OrdinalIgnoreCase)

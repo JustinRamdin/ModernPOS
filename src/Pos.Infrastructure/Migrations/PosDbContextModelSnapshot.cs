@@ -70,6 +70,43 @@ namespace Pos.Infrastructure.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("Pos.Domain.Entities.CustomerPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("PaidAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("PaidAtUtc");
+
+                    b.ToTable("CustomerPayments");
+                });
+
             modelBuilder.Entity("Pos.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -113,6 +150,9 @@ namespace Pos.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("SoldAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -128,6 +168,8 @@ namespace Pos.Infrastructure.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("Sales");
                 });
@@ -173,6 +215,17 @@ namespace Pos.Infrastructure.Migrations
                     b.Navigation("Sale");
                 });
 
+            modelBuilder.Entity("Pos.Domain.Entities.CustomerPayment", b =>
+                {
+                    b.HasOne("Pos.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("Pos.Domain.Entities.SaleLine", b =>
                 {
                     b.HasOne("Pos.Domain.Entities.Product", "Product")
@@ -194,6 +247,13 @@ namespace Pos.Infrastructure.Migrations
 
             modelBuilder.Entity("Pos.Domain.Entities.Sale", b =>
                 {
+                    b.HasOne("Pos.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Customer");
+
                     b.Navigation("Lines");
 
                     b.Navigation("Payments");

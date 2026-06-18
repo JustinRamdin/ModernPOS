@@ -24,6 +24,47 @@ public class CustomersController : ControllerBase
             .ToListAsync(ct);
     }
 
+    [HttpGet("{id:guid}/activity")]
+    public async Task<ActionResult<IReadOnlyList<CustomerActivityRowDto>>> Activity(Guid id, [FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+    {
+        if (!HttpContext.RequireRole(UserRole.Cashier, UserRole.Manager, UserRole.Accountant, UserRole.SuperUser)) return Unauthorized();
+
+        var customerExists = await _db.Customers.AsNoTracking().AnyAsync(x => x.Id == id && x.IsActive, ct);
+        if (!customerExists) return NotFound();
+
+        var sales = await _db.Sales.AsNoTracking()
+            .Include(s => s.Payments)
+            .Include(s => s.Lines).ThenInclude(l => l.Product)
+            .Where(s => s.CustomerId == id && s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
+            .ToListAsync(ct);
+
+        var payments = await _db.CustomerPayments.AsNoTracking()
+            .Where(p => p.CustomerId == id && p.PaidAtUtc >= fromUtc && p.PaidAtUtc < toUtc)
+            .ToListAsync(ct);
+
+        var rows = sales.Select(s => new CustomerActivityRowDto(
+                s.SoldAtUtc,
+                "Receipt",
+                s.Payments.Count == 0 ? "Unknown" : string.Join(", ", s.Payments.Select(p => p.Method.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)),
+                s.Total,
+                s.Id.ToString("N")[..8].ToUpperInvariant(),
+                string.Join("; ", s.Lines.Select(l => $"{l.Product?.Name ?? "Unknown"} x {l.Qty:0.###}")),
+                s.Id,
+                s.Subtotal,
+                s.Lines.Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()))
+            .Concat(payments.Select(p => new CustomerActivityRowDto(
+                p.PaidAtUtc,
+                "Payment",
+                p.Method,
+                p.Amount,
+                p.Note ?? string.Empty,
+                string.IsNullOrWhiteSpace(p.ReferenceNo) ? string.Empty : $"Reference: {p.ReferenceNo}")))
+            .OrderByDescending(x => x.OccurredAtUtc)
+            .ToList();
+
+        return rows;
+    }
+
     [HttpPost]
     public async Task<ActionResult<CustomerDto>> Create(UpsertCustomerRequest req, CancellationToken ct)
     {

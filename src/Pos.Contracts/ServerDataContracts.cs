@@ -53,6 +53,17 @@ public sealed record CustomerReceivablesRowDto(
     decimal PaymentsMade,
     decimal RemainingBalance);
 
+public sealed record CustomerActivityRowDto(
+    DateTime OccurredAtUtc,
+    string Type,
+    string Method,
+    decimal Amount,
+    string Note,
+    string Details,
+    Guid? SaleId = null,
+    decimal Subtotal = 0m,
+    IReadOnlyList<SaleLogLineDto>? Lines = null);
+
 public sealed record CompanyProfileDto(
     Guid CompanyId,
     string CompanyName,

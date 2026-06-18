@@ -136,7 +136,8 @@
                   Command="{Binding NewCommand}" />
         </Grid>
 
-        <ListBox Grid.Row="2"
+        <ListBox x:Name="CustomerList"
+                 Grid.Row="2"
                  ItemsSource="{Binding Customers}"
                  SelectedItem="{Binding Selected}">
           <ListBox.ItemTemplate>

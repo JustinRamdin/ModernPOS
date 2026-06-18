@@ -139,6 +139,12 @@ public sealed class RemoteServerApi : IDisposable
         return await response.Content.ReadFromJsonAsync<CustomerDto>() ?? throw new InvalidOperationException("Empty customer payment response");
     }
 
+    public async Task<IReadOnlyList<CustomerActivityRowDto>> GetCustomerActivityAsync(Guid id, DateTime fromUtc, DateTime toUtc)
+    {
+        var query = $"fromUtc={Uri.EscapeDataString(fromUtc.ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToString("O"))}";
+        return await GetFromJsonBodyAsync<List<CustomerActivityRowDto>>($"api/customers/{id}/activity?{query}") ?? [];
+    }
+
     public async Task DeleteCustomerAsync(Guid id)
         => (await _http.DeleteAsync($"api/customers/{id}")).EnsureSuccessStatusCode();
 

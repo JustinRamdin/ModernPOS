@@ -1,0 +1,117 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+        x:Class="Pos.Terminal.Views.CustomerDetailsWindow"
+        Width="980"
+        Height="680"
+        MinWidth="820"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Title="{Binding Title}">
+
+  <Window.Styles>
+    <Style Selector="Border.panel">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="14,6" />
+    </Style>
+
+    <Style Selector="Button.ghost">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,6" />
+    </Style>
+
+    <Style Selector="DatePicker.wide-date /template/ ComboBox#PART_MonthPicker">
+      <Setter Property="MinWidth" Value="96" />
+    </Style>
+
+    <Style Selector="DatePicker.wide-date /template/ ComboBox#PART_DayPicker">
+      <Setter Property="MinWidth" Value="72" />
+    </Style>
+
+    <Style Selector="DatePicker.wide-date /template/ ComboBox#PART_YearPicker">
+      <Setter Property="MinWidth" Value="96" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel>
+        <TextBlock Text="{Binding CustomerName}" FontSize="22" FontWeight="Bold" />
+        <TextBlock Text="{Binding Status}" Opacity="0.75" />
+      </StackPanel>
+
+      <Button Grid.Column="1"
+              Classes="ghost"
+              Content="Close"
+              Click="Close_Click" />
+    </Grid>
+
+    <Border Grid.Row="1" Classes="panel" Margin="0,12,0,12">
+      <Grid ColumnDefinitions="Auto,300,Auto,300,Auto,140,Auto,Auto,*" RowDefinitions="Auto">
+        <TextBlock VerticalAlignment="Center" Text="Start" Margin="0,0,8,0" />
+        <DatePicker Grid.Column="1"
+                    Classes="wide-date"
+                    MinWidth="300"
+                    SelectedDate="{Binding FromDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="End" Margin="16,0,8,0" />
+        <DatePicker Grid.Column="3"
+                    Classes="wide-date"
+                    MinWidth="300"
+                    SelectedDate="{Binding ToDate, Mode=TwoWay, Converter={StaticResource NullableDateTimeOffsetConverter}}" />
+
+        <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="Show" Margin="16,0,8,0" />
+        <ComboBox Grid.Column="5"
+                  ItemsSource="{Binding FilterOptions}"
+                  SelectedItem="{Binding SelectedFilter}" />
+
+        <Button Grid.Column="6"
+                Classes="primary"
+                Content="Filter"
+                Margin="16,0,0,0"
+                Command="{Binding LoadCommand}" />
+
+        <Button Grid.Column="7"
+                Classes="ghost"
+                Content="Reprint"
+                Margin="10,0,0,0"
+                Click="Reprint_Click" />
+      </Grid>
+    </Border>
+
+    <dg:DataGrid x:Name="ActivityGrid"
+                 Grid.Row="2"
+                 ItemsSource="{Binding Rows}"
+                 SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                 AutoGenerateColumns="False"
+                 IsReadOnly="True"
+                 CanUserResizeColumns="True"
+                 GridLinesVisibility="Horizontal"
+                 HeadersVisibility="Column">
+      <dg:DataGrid.Columns>
+        <dg:DataGridTextColumn Header="Date" Binding="{Binding OccurredAt, StringFormat={}{0:yyyy-MM-dd h:mm tt}}" Width="150" />
+        <dg:DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="95" />
+        <dg:DataGridTextColumn Header="Method" Binding="{Binding Method}" Width="120" />
+        <dg:DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:0.00}}" Width="110" />
+        <dg:DataGridTextColumn Header="Notes" Binding="{Binding Note}" Width="180" />
+        <dg:DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="*" />
+      </dg:DataGrid.Columns>
+    </dg:DataGrid>
+
+    <Border Grid.Row="3" Classes="panel" Margin="0,12,0,0">
+      <Grid ColumnDefinitions="*,*,*">
+        <TextBlock Text="{Binding TotalReceiptsLabel}" FontWeight="SemiBold" />
+        <TextBlock Grid.Column="1" Text="{Binding TotalPaymentsLabel}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="2" Text="{Binding RemainingLabel}" FontWeight="Bold" HorizontalAlignment="Right" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

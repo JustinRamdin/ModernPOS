@@ -55,7 +55,7 @@
     </Grid>
 
     <Border Grid.Row="1" Classes="panel" Margin="0,12,0,12">
-      <Grid ColumnDefinitions="Auto,300,Auto,300,Auto,140,Auto,Auto,*" RowDefinitions="Auto">
+      <Grid ColumnDefinitions="Auto,300,Auto,300,Auto,140,Auto,Auto,Auto,*" RowDefinitions="Auto">
         <TextBlock VerticalAlignment="Center" Text="Start" Margin="0,0,8,0" />
         <DatePicker Grid.Column="1"
                     Classes="wide-date"
@@ -84,6 +84,12 @@
                 Content="Reprint"
                 Margin="10,0,0,0"
                 Click="Reprint_Click" />
+
+        <Button Grid.Column="8"
+                Classes="ghost"
+                Content="Export"
+                Margin="10,0,0,0"
+                Click="Export_Click" />
       </Grid>
     </Border>
 

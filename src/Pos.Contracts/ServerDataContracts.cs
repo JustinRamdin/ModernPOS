@@ -169,6 +169,18 @@ public sealed record SaleLogLineDto(
     public string RefundDisplay => $"{ProductName} — {RemainingQuantity:0.###} of {Qty:0.###} remaining";
 }
 
-public sealed record SaleLogEntryDto(Guid SaleId, DateTime SoldAtUtc, string ReceiptNo, decimal Subtotal, decimal Total, string PaymentType, IReadOnlyList<SaleLogLineDto> Lines, decimal VatTotal = 0m);
+public sealed record SaleLogEntryDto(
+    Guid SaleId,
+    DateTime SoldAtUtc,
+    string ReceiptNo,
+    decimal Subtotal,
+    decimal Total,
+    string PaymentType,
+    IReadOnlyList<SaleLogLineDto> Lines,
+    decimal VatTotal = 0m,
+    string? ReceiptFooterOverride = null,
+    string CustomerName = "",
+    string CustomerPhone = "",
+    string CustomerEmail = "");
 
 public sealed record SaleItemRefundRequest(Guid SaleLineId, decimal Quantity);

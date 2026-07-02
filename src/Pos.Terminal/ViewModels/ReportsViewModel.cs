@@ -221,6 +221,12 @@ using var api = await CreateApiAsync();
         {
             using var api = await CreateApiAsync();
             var companyProfile = await api.GetCompanyProfileAsync();
+            if (SelectedSale.ReceiptFooterOverride is not null)
+                companyProfile = companyProfile with { ReceiptFooter = SelectedSale.ReceiptFooterOverride };
+            var receiptCustomer = new PhysicalReceiptRenderer.ReceiptCustomerInfo(
+                SelectedSale.CustomerName,
+                SelectedSale.CustomerPhone,
+                SelectedSale.CustomerEmail);
 
             var printerSettings = new PrinterSettings
             {
@@ -257,7 +263,7 @@ using var api = await CreateApiAsync();
                         companyProfile: companyProfile,
                         receiptNo: SelectedSale.ReceiptNo,
                         invoiceDate: SelectedSale.SoldAtUtc.ToLocalTime(),
-                        customer: new PhysicalReceiptRenderer.ReceiptCustomerInfo(null, null, null),
+                        customer: receiptCustomer,
                         paymentMethod: SelectedSale.PaymentType,
                         subtotal: SelectedSale.Subtotal,
                         discount: 0m,
@@ -277,7 +283,7 @@ using var api = await CreateApiAsync();
                     companyProfile: companyProfile,
                     receiptNo: SelectedSale.ReceiptNo,
                     invoiceDate: SelectedSale.SoldAtUtc.ToLocalTime(),
-                    customer: new PhysicalReceiptRenderer.ReceiptCustomerInfo(null, null, null),
+                    customer: receiptCustomer,
                     paymentMethod: SelectedSale.PaymentType,
                     subtotal: SelectedSale.Subtotal,
                     discount: 0m,

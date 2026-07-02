@@ -66,6 +66,7 @@ public class PosDbContext : DbContext
             e.Property(x => x.Subtotal).HasColumnType("numeric(18,2)");
             e.Property(x => x.VatTotal).HasColumnType("numeric(18,2)");
             e.Property(x => x.Total).HasColumnType("numeric(18,2)");
+            e.Property(x => x.ReceiptFooterOverride).HasMaxLength(2000);
         });
 
         b.Entity<SaleLine>(e =>

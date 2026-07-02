@@ -175,6 +175,10 @@ namespace Pos.Infrastructure.Migrations
                     b.Property<decimal>("Total")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("ReceiptFooterOverride")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<decimal>("VatTotal")
                         .HasColumnType("numeric(18,2)");
 

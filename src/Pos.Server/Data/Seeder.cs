@@ -74,6 +74,7 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
         await EnsureColumnAsync(db, "Sales", "CustomerId", "ALTER TABLE \"Sales\" ADD COLUMN \"CustomerId\" TEXT NULL;");
         await EnsureColumnAsync(db, "Sales", "VatTotal", "ALTER TABLE \"Sales\" ADD COLUMN \"VatTotal\" TEXT NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "Sales", "ReceiptFooterOverride", "ALTER TABLE \"Sales\" ADD COLUMN \"ReceiptFooterOverride\" TEXT NULL;");
         await EnsureColumnAsync(db, "SaleLines", "VatTotal", "ALTER TABLE \"SaleLines\" ADD COLUMN \"VatTotal\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "SaleLines", "RefundedFromSaleLineId", "ALTER TABLE \"SaleLines\" ADD COLUMN \"RefundedFromSaleLineId\" TEXT NULL;");
         await EnsureColumnAsync(db, "Customers", "IsCompany", "ALTER TABLE \"Customers\" ADD COLUMN \"IsCompany\" INTEGER NOT NULL DEFAULT 0;");

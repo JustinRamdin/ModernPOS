@@ -252,6 +252,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     private string _selectedCustomerPhone = "N/A";
     private string _selectedCustomerEmail = "N/A";
     private bool _selectedCustomerIsCompany;
+    private string? _receiptFooterOverride;
     public string SelectedCustomerLabel =>
         SelectedCustomerId == null ? "None" : _selectedCustomerName;
 
@@ -268,6 +269,18 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedCustomerLabel));
         RaiseTotalsChanged();
     }
+
+    public async Task<string> GetReceiptFooterForCurrentSaleAsync()
+    {
+        if (_receiptFooterOverride is not null)
+            return _receiptFooterOverride;
+
+        var profile = await _companyProfileService.GetAsync();
+        return profile.ReceiptFooter ?? string.Empty;
+    }
+
+    public void SetReceiptFooterForCurrentSale(string footer) =>
+        _receiptFooterOverride = footer ?? string.Empty;
 
     // -----------------------------
     // Ctor
@@ -748,6 +761,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         CartLines.Clear();
         DiscountAmount = 0m;
+        _receiptFooterOverride = null;
         RaiseTotalsChanged();
         Toast("Cart cleared");
     }
@@ -913,7 +927,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 DiscountAmount,
                 NetSubtotal: ComputeTotals().Net,
                 VatTotal: VatTotal,
-                TotalDue: TotalDue);
+                TotalDue: TotalDue,
+                ReceiptFooterOverride: _receiptFooterOverride);
 
             var result = await api.CheckoutAsync(request);
             Status = $"Checkout completed on server. Sale {result.SaleId}";
@@ -1087,6 +1102,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         try
         {
              var companyProfile = await _companyProfileService.GetAsync();
+             if (_receiptFooterOverride is not null)
+                 companyProfile = companyProfile with { ReceiptFooter = _receiptFooterOverride };
 
             var printerSettings = new PrinterSettings
             {

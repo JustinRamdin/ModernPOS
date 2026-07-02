@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Pos.Terminal.Views.ReceiptNotesDialog"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" Title="Receipt Notes">
+  <StackPanel Margin="20" Spacing="10">
+    <TextBlock Text="Receipt Footer Notes" FontSize="22" FontWeight="Bold" />
+    <TextBlock Text="This footer applies only to the current bill." Opacity="0.7" />
+    <TextBox x:Name="FooterBox" AcceptsReturn="True" TextWrapping="Wrap"
+             MinHeight="150" Watermark="Receipt footer message" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+      <Button Content="Cancel" Click="Cancel_Click" />
+      <Button Content="Save Notes" Click="Save_Click" />
+    </StackPanel>
+  </StackPanel>
+</Window>

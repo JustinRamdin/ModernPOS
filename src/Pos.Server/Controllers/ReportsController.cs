@@ -105,6 +105,7 @@ public class ReportsController : ControllerBase
 
         var sales = await _db.Sales.AsNoTracking()
             .Include(s => s.Payments)
+            .Include(s => s.Customer)
             .Include(s => s.Lines).ThenInclude(l => l.Product)
             .Where(s => s.SoldAtUtc >= fromUtc && s.SoldAtUtc < toUtc)
             .OrderByDescending(s => s.SoldAtUtc)
@@ -135,7 +136,11 @@ public class ReportsController : ControllerBase
             s.Lines.Where(l => bucket is null || l.Product?.InventoryBucket == bucket.Value).Select(l => new SaleLogLineDto(
                 l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal, l.VatTotal,
                 refundQuantities.GetValueOrDefault(l.Id))).ToList(),
-            s.VatTotal
+            s.VatTotal,
+            s.ReceiptFooterOverride,
+            s.Customer?.Name ?? string.Empty,
+            s.Customer?.Phone ?? string.Empty,
+            s.Customer?.Email ?? string.Empty
         )).ToList();
     }
 

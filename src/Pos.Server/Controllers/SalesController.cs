@@ -118,6 +118,7 @@ public class SalesController : ControllerBase
                 Id = Guid.NewGuid(),
                 TerminalId = req.TerminalId ?? "",
                 CustomerId = req.CustomerId,
+                ReceiptFooterOverride = string.IsNullOrWhiteSpace(req.ReceiptFooterOverride) ? null : req.ReceiptFooterOverride.Trim(),
                 SoldAtUtc = DateTime.UtcNow
             };
 

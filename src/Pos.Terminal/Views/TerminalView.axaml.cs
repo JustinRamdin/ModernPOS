@@ -50,6 +50,19 @@ public partial class TerminalView : UserControl
             vm.AddMiscellaneousItem(result.Name, result.Description, result.Quantity, result.UnitPrice, result.VatInclusive);
     }
 
+    public async void Notes_Click(object? sender, RoutedEventArgs e)
+    {
+        var vm = VM;
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        if (vm == null || owner == null || vm.SelectedCustomerId == null) return;
+
+        var currentFooter = await vm.GetReceiptFooterForCurrentSaleAsync();
+        var dialog = new ReceiptNotesDialog(currentFooter);
+        var result = await dialog.ShowDialog<string?>(owner);
+        if (result is not null)
+            vm.SetReceiptFooterForCurrentSale(result);
+    }
+
     private void View_KeyDown(object? sender, KeyEventArgs e)
     {
         var vm = VM;

@@ -11,6 +11,7 @@ public class Sale
     public decimal Subtotal { get; set; }
     public decimal VatTotal { get; set; }
     public decimal Total { get; set; }
+    public string? ReceiptFooterOverride { get; set; }
 
     public List<SaleLine> Lines { get; set; } = new();
     public List<Payment> Payments { get; set; } = new();

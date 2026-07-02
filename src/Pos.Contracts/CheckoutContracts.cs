@@ -8,7 +8,8 @@ public sealed record CheckoutRequest(
     decimal DiscountAmount = 0m,
     decimal? NetSubtotal = null,
     decimal? VatTotal = null,
-    decimal? TotalDue = null);
+    decimal? TotalDue = null,
+    string? ReceiptFooterOverride = null);
 
 public sealed record CheckoutLineRequest(
     Guid ProductId,

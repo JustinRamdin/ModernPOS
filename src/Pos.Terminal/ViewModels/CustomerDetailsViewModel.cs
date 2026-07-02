@@ -165,7 +165,9 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
                 PrinterSettings = printerSettings,
                 DocumentName = $"Invoice {receipt.Note}"
             };
-            doc.DefaultPageSettings.Margins = new Margins(3, 5, 25, 25);
+            doc.DefaultPageSettings.Margins = settings.UseTspReceiptStyle
+                ? new Margins(3, 5, 25, 25)
+                : new Margins(25, 60, 25, 25);
 
 #pragma warning disable CA1416
             doc.PrintPage += (_, e) =>

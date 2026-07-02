@@ -30,6 +30,12 @@ public partial class ReportsView : UserControl
         await vm.ReprintSelectedSaleAsync();
     }
 
+    public async void ReprintSaleA4_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not ReportsViewModel vm) return;
+        await vm.ReprintSelectedSaleAsync(useA4Printer: true);
+    }
+
     public void RefundSale_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not ReportsViewModel vm) return;

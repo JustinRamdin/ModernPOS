@@ -54,6 +54,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         get => _useTspReceiptStyle;
         set { _useTspReceiptStyle = value; OnPropertyChanged(); }
     }
+
+    private string _selectedA4Printer = "";
+    public string SelectedA4Printer
+    {
+        get => _selectedA4Printer;
+        set { _selectedA4Printer = value ?? ""; OnPropertyChanged(); }
+    }
     private bool _isDualInventoryEnabled;
     public bool IsDualInventoryEnabled
     {
@@ -133,6 +140,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         var settings = await _store.LoadAsync();
         SelectedPrinter = settings.ReceiptPrinterName;
+        SelectedA4Printer = settings.A4PrinterName;
         UseTspReceiptStyle = settings.UseTspReceiptStyle;
         IsVatEnabled = settings.IsVatEnabled;
         VatRatePercent = settings.VatRatePercent.ToString("0.##");
@@ -167,6 +175,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
         if (!string.IsNullOrWhiteSpace(SelectedPrinter) && !Printers.Contains(SelectedPrinter))
             Printers.Insert(0, SelectedPrinter);
+        if (!string.IsNullOrWhiteSpace(SelectedA4Printer) && !Printers.Contains(SelectedA4Printer))
+            Printers.Insert(0, SelectedA4Printer);
             }
 
     public async Task RefreshSharedProfileAsync()
@@ -187,6 +197,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         var settings = new AppSettings
         {
             ReceiptPrinterName = SelectedPrinter.Trim(),
+            A4PrinterName = SelectedA4Printer.Trim(),
             UseTspReceiptStyle = UseTspReceiptStyle,
             IsVatEnabled = IsVatEnabled,
              VatRatePercent = ParseVatRatePercent(),

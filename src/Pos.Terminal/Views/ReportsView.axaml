@@ -314,6 +314,7 @@
                   <ContextMenu>
                     <MenuItem Header="Refund" Click="RefundSale_Click" />
                     <MenuItem Header="Reprint" Click="ReprintSale_Click" />
+                    <MenuItem Header="Reprint A4" Click="ReprintSaleA4_Click" />
                   </ContextMenu>
                 </ListBox.ContextMenu>
               </ListBox>

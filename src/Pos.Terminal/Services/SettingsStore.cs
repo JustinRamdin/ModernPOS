@@ -11,6 +11,7 @@ public sealed class SettingsStore
     private const string CompanyAddressKey = "company.address";
     private const string CompanyContactKey = "company.contact";
     private const string ReceiptPrinterKey = "printer.receipt.name";
+    private const string A4PrinterKey = "printer.a4.name";
     private const string ReceiptPrinterTspStyleKey = "printer.receipt.tsp.style";
     private const string HeaderTitleKey = "header.title";
     private const string HeaderImagePathKey = "header.image.path";
@@ -43,6 +44,7 @@ public sealed class SettingsStore
         return new AppSettings
         {
             ReceiptPrinterName = GetValue(lookup, ReceiptPrinterKey),
+            A4PrinterName = GetValue(lookup, A4PrinterKey),
             UseTspReceiptStyle = GetBoolValue(lookup, ReceiptPrinterTspStyleKey, false),
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
             VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m),
@@ -96,6 +98,7 @@ public sealed class SettingsStore
         await db.Database.EnsureCreatedAsync(ct);
 
         await UpsertAsync(db, ReceiptPrinterKey, settings.ReceiptPrinterName, ct);
+        await UpsertAsync(db, A4PrinterKey, settings.A4PrinterName, ct);
         await UpsertAsync(db, ReceiptPrinterTspStyleKey, settings.UseTspReceiptStyle ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatEnabledKey, settings.IsVatEnabled ? "true" : "false", ct);
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);

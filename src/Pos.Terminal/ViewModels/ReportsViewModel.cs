@@ -188,15 +188,16 @@ using var api = await CreateApiAsync();
         await LoadAllAsync();
     }
 
-    public async Task ReprintSelectedSaleAsync()
+    public async Task ReprintSelectedSaleAsync(bool useA4Printer = false)
     {
         if (SelectedSale is null)
             return;
 
         var settings = await new SettingsStore().LoadAsync();
-        if (string.IsNullOrWhiteSpace(settings.ReceiptPrinterName))
+        var printerName = useA4Printer ? settings.A4PrinterName : settings.ReceiptPrinterName;
+        if (string.IsNullOrWhiteSpace(printerName))
         {
-            Status = "No receipt printer configured.";
+            Status = useA4Printer ? "No A4 printer configured in Settings." : "No receipt printer configured.";
             return;
         }
 
@@ -230,12 +231,12 @@ using var api = await CreateApiAsync();
 
             var printerSettings = new PrinterSettings
             {
-                PrinterName = settings.ReceiptPrinterName
+                PrinterName = printerName
             };
 
             if (!printerSettings.IsValid)
             {
-                Status = $"Printer not found: {settings.ReceiptPrinterName}";
+                Status = $"Printer not found: {printerName}";
                 return;
             }
 
@@ -244,7 +245,9 @@ using var api = await CreateApiAsync();
                 PrinterSettings = printerSettings,
                 DocumentName = $"Invoice {SelectedSale.ReceiptNo}"
             };
-            doc.DefaultPageSettings.Margins = new Margins(3, 5, 25, 25);
+            doc.DefaultPageSettings.Margins = !useA4Printer && settings.UseTspReceiptStyle
+                ? new Margins(3, 5, 25, 25)
+                : new Margins(25, 60, 25, 25);
 
 #pragma warning disable CA1416
             doc.PrintPage += (_, e) =>
@@ -255,7 +258,7 @@ using var api = await CreateApiAsync();
                     return;
                 }
 
-                if (settings.UseTspReceiptStyle)
+                if (!useA4Printer && settings.UseTspReceiptStyle)
                 {
                     PhysicalReceiptRenderer.DrawInvoiceTspPage(
                         g: e.Graphics,
@@ -296,7 +299,7 @@ using var api = await CreateApiAsync();
             };
 #pragma warning restore CA1416
             doc.Print();
-            Status = $"Receipt {SelectedSale.ReceiptNo} sent to {settings.ReceiptPrinterName}.";
+            Status = $"Receipt {SelectedSale.ReceiptNo} sent to {printerName}.";
         }
         catch (Exception ex)
         {

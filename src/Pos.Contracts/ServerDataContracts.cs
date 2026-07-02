@@ -13,7 +13,8 @@ public sealed record InventoryItemDto(
     decimal OnHand,
     int OnHandInches,
     int InventoryBucket,
-    bool IsActive);
+    bool IsActive,
+    bool ZeroRated = false);
 
 public sealed record UpsertInventoryItemRequest(
     string Sku,
@@ -27,7 +28,8 @@ public sealed record UpsertInventoryItemRequest(
     decimal OnHand,
     int OnHandInches,
     int InventoryBucket = 1,
-    bool IsActive = true);
+    bool IsActive = true,
+    bool ZeroRated = false);
 
 public sealed record CustomerDto(
     Guid Id,
@@ -36,7 +38,8 @@ public sealed record CustomerDto(
     string Email,
     string Area,
     decimal Balance,
-    bool IsActive);
+    bool IsActive,
+    bool IsCompany = false);
 
 public sealed record UpsertCustomerRequest(
     string Name,
@@ -44,7 +47,8 @@ public sealed record UpsertCustomerRequest(
     string Email,
     string Area,
     decimal Balance,
-    bool IsActive = true);
+    bool IsActive = true,
+    bool IsCompany = false);
 
 public sealed record CustomerPaymentRequest(decimal Amount, string Method, string? ReferenceNo = null, string? Note = null);
 
@@ -151,8 +155,20 @@ public sealed record ServerSalesExportRowDto(
     decimal VatTotal,
     decimal GrossTotal);
 
-public sealed record SaleLogLineDto(Guid SaleLineId, Guid ProductId, string ProductName, decimal Qty, decimal UnitPrice, decimal LineTotal);
+public sealed record SaleLogLineDto(
+    Guid SaleLineId,
+    Guid ProductId,
+    string ProductName,
+    decimal Qty,
+    decimal UnitPrice,
+    decimal LineTotal,
+    decimal VatTotal = 0m,
+    decimal RefundedQuantity = 0m)
+{
+    public decimal RemainingQuantity => Math.Max(0m, Qty - RefundedQuantity);
+    public string RefundDisplay => $"{ProductName} — {RemainingQuantity:0.###} of {Qty:0.###} remaining";
+}
 
-public sealed record SaleLogEntryDto(Guid SaleId, DateTime SoldAtUtc, string ReceiptNo, decimal Subtotal, decimal Total, string PaymentType, IReadOnlyList<SaleLogLineDto> Lines);
+public sealed record SaleLogEntryDto(Guid SaleId, DateTime SoldAtUtc, string ReceiptNo, decimal Subtotal, decimal Total, string PaymentType, IReadOnlyList<SaleLogLineDto> Lines, decimal VatTotal = 0m);
 
 public sealed record SaleItemRefundRequest(Guid SaleLineId, decimal Quantity);

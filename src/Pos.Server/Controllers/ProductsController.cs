@@ -26,9 +26,9 @@ public class ProductsController : ControllerBase
     {
         if (!HttpContext.RequireRole(UserRole.Cashier, UserRole.Manager, UserRole.Accountant, UserRole.SuperUser)) return Unauthorized();
          var items = await _db.Products.AsNoTracking()
-            .Where(x => x.IsActive)
+            .Where(x => x.IsActive && x.Id != CheckoutSpecialProducts.MiscellaneousId)
             .OrderBy(x => x.Name)
-            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.Location, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.InventoryBucket, x.IsActive))
+            .Select(x => new InventoryItemDto(x.Id, x.Sku, x.Name, x.Description, x.Location, x.CostPrice, x.Price, x.VatInclusive, x.IsLength, x.OnHand, x.OnHandInches, x.InventoryBucket, x.IsActive, x.ZeroRated))
             .ToListAsync(ct);
 
         return items;
@@ -49,6 +49,7 @@ public class ProductsController : ControllerBase
             CostPrice = req.CostPrice,
             Price = req.Price,
             VatInclusive = req.VatInclusive,
+            ZeroRated = req.ZeroRated,
             IsLength = req.IsLength,
             OnHand = req.IsLength ? 0 : req.OnHand,
             OnHandInches = req.IsLength ? req.OnHandInches : 0,
@@ -70,7 +71,7 @@ public class ProductsController : ControllerBase
             return Problem(title: "Failed to save inventory item", detail: dbError, statusCode: StatusCodes.Status500InternalServerError);
         }
         
-        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive));
+        return Created($"/api/products/{p.Id}", new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive, p.ZeroRated));
     }
 
     [HttpPut("{id:guid}")]
@@ -87,6 +88,7 @@ public class ProductsController : ControllerBase
         p.CostPrice = req.CostPrice;
         p.Price = req.Price;
         p.VatInclusive = req.VatInclusive;
+        p.ZeroRated = req.ZeroRated;
         p.IsLength = req.IsLength;
         p.OnHand = req.IsLength ? 0 : req.OnHand;
         p.OnHandInches = req.IsLength ? req.OnHandInches : 0;
@@ -94,7 +96,7 @@ public class ProductsController : ControllerBase
         p.IsActive = req.IsActive;
 
         await _db.SaveChangesAsync(ct);
-        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive);
+        return new InventoryItemDto(p.Id, p.Sku, p.Name, p.Description, p.Location, p.CostPrice, p.Price, p.VatInclusive, p.IsLength, p.OnHand, p.OnHandInches, p.InventoryBucket, p.IsActive, p.ZeroRated);
     }
 
     [HttpDelete("{id:guid}")]

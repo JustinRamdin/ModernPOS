@@ -78,6 +78,23 @@ public class SalesController : ControllerBase
         await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         try
         {
+            if (req.Lines.Any(line => line.ProductId == CheckoutSpecialProducts.MiscellaneousId) &&
+                !await _db.Products.AnyAsync(p => p.Id == CheckoutSpecialProducts.MiscellaneousId, ct))
+            {
+                _db.Products.Add(new Product
+                {
+                    Id = CheckoutSpecialProducts.MiscellaneousId,
+                    Sku = CheckoutSpecialProducts.MiscellaneousSku,
+                    Name = "Miscellaneous Item",
+                    Price = 0m,
+                    CostPrice = 0m,
+                    OnHand = 0m,
+                    InventoryBucket = 1,
+                    IsActive = true
+                });
+                await _db.SaveChangesAsync(ct);
+            }
+
              // Load products once for pricing/validation.
             var productIds = req.Lines.Select(x => x.ProductId).Distinct().ToList();
             var products = await _db.Products
@@ -93,7 +110,7 @@ public class SalesController : ControllerBase
                     return BadRequest("Line quantity must be greater than zero.");
             }
 
-            if (products.Values.Select(p => p.InventoryBucket).Distinct().Count() > 1)
+            if (products.Values.Where(p => p.Id != CheckoutSpecialProducts.MiscellaneousId).Select(p => p.InventoryBucket).Distinct().Count() > 1)
                 return BadRequest("Items from Inventory 1 and Inventory 2 cannot be mixed in one sale.");
 
             var sale = new Sale
@@ -107,8 +124,16 @@ public class SalesController : ControllerBase
             foreach (var line in req.Lines)
             {
                 var p = products[line.ProductId];
-                var unit = p.Price;
-                var total = Math.Round(unit * line.Qty, 2);
+                var unit = p.Id == CheckoutSpecialProducts.MiscellaneousId
+                    ? Math.Round(line.OverrideUnitPrice ?? 0m, 2, MidpointRounding.AwayFromZero)
+                    : p.Price;
+                if (p.Id == CheckoutSpecialProducts.MiscellaneousId && unit < 0m)
+                    return BadRequest("Miscellaneous item price cannot be negative.");
+                var enteredTotal = Math.Round(unit * line.Qty, 2, MidpointRounding.AwayFromZero);
+                var lineVat = Math.Round(Math.Max(0m, line.VatTotal ?? 0m), 2, MidpointRounding.AwayFromZero);
+                var total = Math.Round(line.GrossTotal ?? enteredTotal, 2, MidpointRounding.AwayFromZero);
+                if (total < 0m || lineVat > total)
+                    return BadRequest("Invalid line VAT or gross total.");
 
                 sale.Lines.Add(new SaleLine
                 {
@@ -117,18 +142,19 @@ public class SalesController : ControllerBase
                     ProductId = p.Id,
                     Qty = line.Qty,
                     UnitPrice = unit,
+                    VatTotal = lineVat,
                     LineTotal = total
                 });
             }
 
                 var unitAdjustments = req.Lines
-                .Where(l => !products[l.ProductId].IsLength)
+                .Where(l => l.ProductId != CheckoutSpecialProducts.MiscellaneousId && !products[l.ProductId].IsLength)
                 .GroupBy(l => l.ProductId)
                 .Select(g => new { ProductId = g.Key, Qty = Math.Round(g.Sum(x => x.Qty), 3) })
                 .ToList();
 
                 var lengthAdjustments = req.Lines
-                .Where(l => products[l.ProductId].IsLength)
+                .Where(l => l.ProductId != CheckoutSpecialProducts.MiscellaneousId && products[l.ProductId].IsLength)
                 .GroupBy(l => l.ProductId)
                 .Select(g => new { ProductId = g.Key, Inches = g.Sum(x => x.Qty) })
                 .ToList();
@@ -185,12 +211,20 @@ WHERE Id = {adj.ProductId}
                 _logger.LogInformation("Stock deducted for length product {ProductId}. Inches={Inches}", adj.ProductId, inchesToSubtract);
             }
 
-            sale.Subtotal = Math.Round(sale.Lines.Sum(x => x.LineTotal), 2, MidpointRounding.AwayFromZero);
+            var calculatedLineSubtotal = Math.Round(sale.Lines.Sum(x => x.LineTotal), 2, MidpointRounding.AwayFromZero);
             var discountAmount = Math.Round(Math.Max(0m, req.DiscountAmount), 2, MidpointRounding.AwayFromZero);
-            if (discountAmount > sale.Subtotal)
+            var netSubtotal = Math.Round(req.NetSubtotal ?? calculatedLineSubtotal, 2, MidpointRounding.AwayFromZero);
+            var vatTotal = Math.Round(Math.Max(0m, req.VatTotal ?? 0m), 2, MidpointRounding.AwayFromZero);
+            var totalDue = Math.Round(req.TotalDue ?? (netSubtotal + vatTotal - discountAmount), 2, MidpointRounding.AwayFromZero);
+
+            if (netSubtotal < 0m || totalDue < 0m)
+                return BadRequest("Sale totals cannot be negative.");
+            if (discountAmount > netSubtotal + vatTotal)
                 return BadRequest("Discount cannot be greater than subtotal.");
 
-            sale.Total = Math.Round(sale.Subtotal - discountAmount, 2, MidpointRounding.AwayFromZero);
+            sale.Subtotal = netSubtotal;
+            sale.VatTotal = vatTotal;
+            sale.Total = totalDue;
 
 
                 foreach (var pay in req.Payments)

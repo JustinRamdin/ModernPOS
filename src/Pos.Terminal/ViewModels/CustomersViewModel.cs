@@ -13,6 +13,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
     private readonly Func<Guid?, Task>? _onPicked;
     private readonly VmRelayCommand _deleteCommand;
     private readonly VmRelayCommand _pickSelectedCommand;
+    private readonly List<CustomerRow> _allCustomers = new();
     public bool IsPicker { get; set; }
     public bool IsNotPicker => !IsPicker;
     public bool IsHasSelection => Selected != null;
@@ -43,7 +44,20 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             LoadSelectedToEditor();
         }
     }
-    public string Search { get; set; } = "";
+    private string _search = "";
+    public string Search
+    {
+        get => _search;
+        set
+        {
+            var search = value ?? "";
+            if (_search == search) return;
+
+            _search = search;
+            Raise();
+            ApplySearch();
+        }
+    }
     public string ListStatus { get; set; } = "Ready";
     private Guid? _editId;
 
@@ -51,6 +65,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
     public string EditPhone { get; set; } = "";
     public string EditEmail { get; set; } = "";
     public string EditArea { get; set; } = "";
+    public bool EditIsCompany { get; set; }
     public decimal Balance { get; set; }
     public string BalanceLabel => $"Balance: {Balance:0.00}";
     public string PayAmount { get; set; } = "";
@@ -86,25 +101,48 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
             ListStatus = "Loading..."; Raise(nameof(ListStatus));
             using var api = await CreateApiAsync();
             var rows = await api.GetCustomersAsync();
-            var filtered = string.IsNullOrWhiteSpace(Search) ? rows : rows.Where(c => c.Name.Contains(Search, StringComparison.OrdinalIgnoreCase) || c.Phone.Contains(Search, StringComparison.OrdinalIgnoreCase) || c.Email.Contains(Search, StringComparison.OrdinalIgnoreCase)).ToList();
-            Customers.Clear(); foreach (var c in filtered) Customers.Add(new CustomerRow(c.Id, c.Name, c.Phone, c.Email, c.Area, c.Balance));
-            ListStatus = Customers.Count == 0 ? "No customers on server." : $"{Customers.Count} customer(s)"; Raise(nameof(ListStatus));
+            _allCustomers.Clear();
+            _allCustomers.AddRange(rows.Select(c => new CustomerRow(c.Id, c.Name, c.Phone, c.Email, c.Area, c.Balance, c.IsCompany)));
+            ApplySearch();
         }
         catch (Exception ex) { ListStatus = $"Error: {ex.Message}"; Raise(nameof(ListStatus)); }
     }
 
-    private void LoadSelectedToEditor()
+    private void ApplySearch()
     {
-        if (Selected == null) { _editId = null; EditName = EditPhone = EditEmail = EditArea = ""; Balance = 0; NotifyEditor(); return; }
-        _editId = Selected.Id; EditName = Selected.Name; EditPhone = Selected.Phone; EditEmail = Selected.Email; EditArea = Selected.Area; Balance = Selected.Balance; NotifyEditor();
+        var search = Search.Trim();
+        var filtered = string.IsNullOrEmpty(search)
+            ? _allCustomers
+            : _allCustomers.Where(c =>
+                c.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                c.Phone.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                c.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+        Customers.Clear();
+        foreach (var customer in filtered)
+            Customers.Add(customer);
+
+        if (Selected != null && !Customers.Contains(Selected))
+            Selected = null;
+
+        ListStatus = Customers.Count == 0
+            ? (_allCustomers.Count == 0 ? "No customers on server." : "No matching customers.")
+            : $"{Customers.Count} customer(s)";
+        Raise(nameof(ListStatus));
     }
 
-     private void New() { Selected = null; _editId = null; EditName = EditPhone = EditEmail = EditArea = PayAmount = PayNote = ""; PayMethod = null; Balance = 0m; NotifyEditor(); Raise(nameof(PayAmount)); Raise(nameof(PayMethod)); Raise(nameof(PayNote)); }
+    private void LoadSelectedToEditor()
+    {
+        if (Selected == null) { _editId = null; EditName = EditPhone = EditEmail = EditArea = ""; EditIsCompany = false; Balance = 0; NotifyEditor(); return; }
+        _editId = Selected.Id; EditName = Selected.Name; EditPhone = Selected.Phone; EditEmail = Selected.Email; EditArea = Selected.Area; EditIsCompany = Selected.IsCompany; Balance = Selected.Balance; NotifyEditor();
+    }
+
+     private void New() { Selected = null; _editId = null; EditName = EditPhone = EditEmail = EditArea = PayAmount = PayNote = ""; EditIsCompany = false; PayMethod = null; Balance = 0m; NotifyEditor(); Raise(nameof(PayAmount)); Raise(nameof(PayMethod)); Raise(nameof(PayNote)); }
 
     private async Task SaveAsync()
     {
          using var api = await CreateApiAsync();
-        var req = new UpsertCustomerRequest(EditName.Trim(), EditPhone.Trim(), EditEmail.Trim(), EditArea.Trim(), Balance, true);
+        var req = new UpsertCustomerRequest(EditName.Trim(), EditPhone.Trim(), EditEmail.Trim(), EditArea.Trim(), Balance, true, EditIsCompany);
         if (_editId is null) await api.CreateCustomerAsync(req); else await api.UpdateCustomerAsync(_editId.Value, req);
         await LoadAsync();
     }
@@ -124,7 +162,7 @@ public sealed class CustomersViewModel : INotifyPropertyChanged
     private void ClearPayment() { PayAmount = ""; PayMethod = null; PayNote = ""; Raise(nameof(PayAmount)); Raise(nameof(PayMethod)); Raise(nameof(PayNote)); }
     private async Task PickSelectedAsync() { if (_onPicked != null) await _onPicked(Selected?.Id); }
     private async Task CancelPickAsync() { if (_onPicked != null) await _onPicked(null); }
-    private void NotifyEditor() { foreach (var n in new[]{ nameof(EditName), nameof(EditPhone), nameof(EditEmail), nameof(EditArea), nameof(Balance), nameof(BalanceLabel) }) Raise(n); }
+    private void NotifyEditor() { foreach (var n in new[]{ nameof(EditName), nameof(EditPhone), nameof(EditEmail), nameof(EditArea), nameof(EditIsCompany), nameof(Balance), nameof(BalanceLabel) }) Raise(n); }
     private static async Task<RemoteServerApi> CreateApiAsync() { var d = await new SettingsStore().LoadDeploymentAsync(); return new RemoteServerApi(d.ServerHost, d.ServerPort, d.AuthToken); }
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Raise([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -139,11 +177,12 @@ public sealed class CustomerRow : INotifyPropertyChanged
     private string _email; public string Email { get => _email; set { _email = value; Raise(); } }
     private string _area; public string Area { get => _area; set { _area = value; Raise(); } }
     private decimal _balance; public decimal Balance { get => _balance; set { _balance = value; Raise(); } }
+    public bool IsCompany { get; }
 
     public string PhoneLine => string.IsNullOrWhiteSpace(Phone) ? "—" : Phone;
     public string EmailLine => string.IsNullOrWhiteSpace(Email) ? "—" : Email;
     public string AreaLine => string.IsNullOrWhiteSpace(Area) ? "—" : Area;
-public CustomerRow(Guid id, string name, string phone, string email, string area, decimal balance) { Id = id; _name = name; _phone = phone; _email = email; _area = area; _balance = balance; }
+public CustomerRow(Guid id, string name, string phone, string email, string area, decimal balance, bool isCompany) { Id = id; _name = name; _phone = phone; _email = email; _area = area; _balance = balance; IsCompany = isCompany; }
 }
 public sealed class VmRelayCommand : ICommand
 {

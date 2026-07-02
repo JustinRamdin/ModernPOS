@@ -17,6 +17,7 @@ public sealed class ProductDto
     public string? Department { get; set; }
 
     public bool VatInclusive { get; set; }
+    public bool ZeroRated { get; set; }
     public bool IsLength { get; set; }
     public string Unit => IsLength ? "in" : "ea";
 

@@ -62,6 +62,18 @@
     {
       "code": "NU1903",
       "level": "Warning",
+      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
       "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-37gx-xxp4-5rgx",
       "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
       "warningLevel": 1,

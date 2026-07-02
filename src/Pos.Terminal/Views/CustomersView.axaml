@@ -211,6 +211,11 @@
                          IsEnabled="{Binding IsNotPicker}"
                          Text="{Binding EditArea}" />
               </Grid>
+
+              <CheckBox Content="This is a company"
+                        IsChecked="{Binding EditIsCompany}"
+                        IsEnabled="{Binding IsNotPicker}"
+                        Margin="120,12,0,0" />
               
               <Border Margin="0,12,0,0"
                       Padding="10"

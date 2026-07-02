@@ -46,6 +46,7 @@ public static class PhysicalReceiptRenderer
         decimal subtotal,
         decimal discount,
         decimal vat,
+        decimal zeroRated,
         decimal totalDue,
         decimal totalTendered,
         decimal change,
@@ -274,6 +275,7 @@ public static class PhysicalReceiptRenderer
             ("DISCOUNT", discount.ToString("0.00", CultureInfo.CurrentCulture)),
             ("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount).ToString("0.00", CultureInfo.CurrentCulture)),
             ("TOTAL TAX (VAT)", vat.ToString("0.00", CultureInfo.CurrentCulture)),
+            ("ZERO RATED", zeroRated.ToString("0.00", CultureInfo.CurrentCulture)),
             ("PAYMENT", paymentMethod)
         };
 
@@ -325,6 +327,7 @@ public static class PhysicalReceiptRenderer
         decimal subtotal,
         decimal discount,
         decimal vat,
+        decimal zeroRated,
         decimal totalDue,
         decimal totalTendered,
         decimal change,
@@ -403,6 +406,7 @@ public static class PhysicalReceiptRenderer
         DrawLine(Pair("DISCOUNT", discount.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
         DrawLine(Pair("SUBTOTAL LESS DISCOUNT", Math.Max(0m, subtotal - discount).ToString("0.00", CultureInfo.CurrentCulture), paperChars));
         DrawLine(Pair("TOTAL TAX (VAT)", vat.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
+        DrawLine(Pair("ZERO RATED", zeroRated.ToString("0.00", CultureInfo.CurrentCulture), paperChars));
         DrawLine(Pair("PAID", Math.Max(0m, totalDue).ToString("0.00", CultureInfo.CurrentCulture), paperChars), bold: true);
 
         if (paymentMethod.Equals("CASH", StringComparison.OrdinalIgnoreCase))
@@ -429,25 +433,47 @@ public static class PhysicalReceiptRenderer
         if (string.IsNullOrWhiteSpace(text))
             yield break;
 
-        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (words.Length == 0)
-            yield break;
-
-        var line = words[0];
-        for (int i = 1; i < words.Length; i++)
+        foreach (var enteredLine in text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
         {
-            var candidate = $"{line} {words[i]}";
-            if (candidate.Length <= width)
+            if (string.IsNullOrWhiteSpace(enteredLine))
             {
-                line = candidate;
+                yield return string.Empty;
                 continue;
             }
 
-            yield return line;
-            line = words[i].Length > width ? words[i][..width] : words[i];
-        }
+            var words = enteredLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var line = string.Empty;
 
-        yield return line;
+            foreach (var word in words)
+            {
+                var remaining = word;
+                while (remaining.Length > width)
+                {
+                    if (line.Length > 0)
+                    {
+                        yield return line;
+                        line = string.Empty;
+                    }
+
+                    yield return remaining[..width];
+                    remaining = remaining[width..];
+                }
+
+                var candidate = line.Length == 0 ? remaining : $"{line} {remaining}";
+                if (candidate.Length <= width)
+                {
+                    line = candidate;
+                }
+                else
+                {
+                    yield return line;
+                    line = remaining;
+                }
+            }
+
+            if (line.Length > 0)
+                yield return line;
+        }
     }
     private static bool TryLoadLogoImage(byte[]? logoBytes, out Image? logoImage)
     {

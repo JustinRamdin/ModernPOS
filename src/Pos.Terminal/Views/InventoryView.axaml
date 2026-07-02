@@ -152,6 +152,10 @@
                         IsChecked="{Binding EditVatInclusive}"
                         Margin="0,0,0,6"/>
 
+              <CheckBox Content="Zero Rated (VAT is never charged)"
+                        IsChecked="{Binding EditZeroRated}"
+                        Margin="0,0,0,6"/>
+
               <CheckBox Content="Length (Stock measured in Feet &amp; Inches; stored as total inches)"
                         IsChecked="{Binding EditIsLength}"/>
             </StackPanel>

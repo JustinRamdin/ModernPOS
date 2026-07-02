@@ -194,6 +194,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     // -----------------------------
     public decimal Subtotal => Math.Round(CartLines.Sum(x => x.LineTotal), 2);
     public decimal VatTotal => Math.Round(ComputeTotals().Vat, 2);
+    public decimal ZeroRatedTotal => Math.Round(CartLines.Where(x => x.ZeroRated).Sum(x => x.LineTotal), 2);
     public decimal GrandTotal => Math.Round(ComputeTotals().Gross, 2);
 
     private decimal _discountAmount;
@@ -250,6 +251,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     private string _selectedCustomerName = "None";
     private string _selectedCustomerPhone = "N/A";
     private string _selectedCustomerEmail = "N/A";
+    private bool _selectedCustomerIsCompany;
     public string SelectedCustomerLabel =>
         SelectedCustomerId == null ? "None" : _selectedCustomerName;
 
@@ -259,10 +261,12 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         _selectedCustomerName = "None";
         _selectedCustomerPhone = "N/A";
         _selectedCustomerEmail = "N/A";
+        _selectedCustomerIsCompany = false;
 
         // SelectedCustomerId setter already raises most props,
         // but we also raise label to be safe.
         OnPropertyChanged(nameof(SelectedCustomerLabel));
+        RaiseTotalsChanged();
     }
 
     // -----------------------------
@@ -461,9 +465,11 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     _selectedCustomerEmail = !string.IsNullOrWhiteSpace(selected?.Email)
                         ? selected.Email
                         : "N/A";
+                    _selectedCustomerIsCompany = selected?.IsCompany == true;
                     SelectedCustomerId = pickedId.Value;
 
                     OnPropertyChanged(nameof(SelectedCustomerLabel));
+                    RaiseTotalsChanged();
                     Toast($"Customer: {_selectedCustomerName}");
                 }
 
@@ -501,6 +507,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     Location = p.Location,
                     Price = p.Price,
                     VatInclusive = p.VatInclusive,
+                    ZeroRated = p.ZeroRated,
                     IsLength = p.IsLength,
                     Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
                     OnHand = p.OnHand,
@@ -669,6 +676,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             Unit = p.Unit,
             UnitPrice = p.Price,
             VatInclusive = p.VatInclusive,
+            ZeroRated = p.ZeroRated,
             IsLength = p.IsLength,
             Qty = p.IsLength ? 0m : 1m,
             QtyInches = p.IsLength ? 1 : 0,
@@ -681,6 +689,30 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         SelectedCartLine = line;
         RaiseTotalsChanged();
         Toast($"Added: {p.Name}");
+    }
+
+    public void AddMiscellaneousItem(string name, string description, decimal quantity, decimal unitPrice, bool vatInclusive)
+    {
+        var line = new CartLine
+        {
+            IsMiscellaneous = true,
+            ProductId = Pos.Contracts.CheckoutSpecialProducts.MiscellaneousId,
+            ItemNumber = "MISC",
+            Name = name.Trim(),
+            ItemDescription = description.Trim(),
+            Unit = "ea",
+            UnitPrice = unitPrice,
+            VatInclusive = vatInclusive,
+            Qty = quantity,
+            QtyInches = 0,
+            InventoryBucket = CartLines.FirstOrDefault()?.InventoryBucket ?? 1
+        };
+
+        line.PropertyChanged += (_, __) => RaiseTotalsChanged();
+        CartLines.Add(line);
+        SelectedCartLine = line;
+        RaiseTotalsChanged();
+        Toast($"Added: {line.Name}");
     }
 
     public void IncreaseQty(CartLine line)
@@ -869,10 +901,19 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                 TerminalId,
                 CartLines.Select(x => new Pos.Contracts.CheckoutLineRequest(
                     ProductId: x.ProductId,
-                    Qty: x.IsLength ? x.QtyInches : x.Qty)).ToList(),
+                    Qty: x.IsLength ? x.QtyInches : x.Qty,
+                    OverrideUnitPrice: x.IsMiscellaneous ? x.UnitPrice : null,
+                    VatTotal: x.TaxAmount,
+                    GrossTotal: Math.Round(
+                        x.LineTotal + ((!x.VatInclusive || _selectedCustomerIsCompany) ? x.TaxAmount : 0m),
+                        2,
+                        MidpointRounding.AwayFromZero))).ToList(),
                 [new Pos.Contracts.CheckoutPaymentRequest(paymentMethodCode, paidAmount)],
                 SelectedCustomerId,
-                DiscountAmount);
+                DiscountAmount,
+                NetSubtotal: ComputeTotals().Net,
+                VatTotal: VatTotal,
+                TotalDue: TotalDue);
 
             var result = await api.CheckoutAsync(request);
             Status = $"Checkout completed on server. Sale {result.SaleId}";
@@ -899,6 +940,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     {
         OnPropertyChanged(nameof(Subtotal));
         OnPropertyChanged(nameof(VatTotal));
+        OnPropertyChanged(nameof(ZeroRatedTotal));
         OnPropertyChanged(nameof(GrandTotal));
         OnPropertyChanged(nameof(TotalDue));
         OnPropertyChanged(nameof(DiscountAmount));
@@ -923,13 +965,16 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
 
         foreach (var l in CartLines)
         {
+            var lineCheckout = new CheckoutCalculator(new VatCalculator(
+                _settings.VatRatePercent / 100m,
+                _settings.IsVatEnabled && !l.ZeroRated));
             var kind = l.IsLength ? AppLineKind.Inches : AppLineKind.Unit;
 
-            var calc = _checkout.CalculateLine(
+            var calc = lineCheckout.CalculateLine(
                 productId: l.ProductId,
                 productName: l.Name,
                 enteredSellingPrice: l.UnitPrice,
-                vatInclusive: l.VatInclusive,
+                vatInclusive: _selectedCustomerIsCompany ? false : l.VatInclusive,
                 quantityKind: kind,
                 qty: l.Qty,
                 qtyInches: l.QtyInches
@@ -1086,6 +1131,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                         subtotal: subtotal,
                         discount: discount,
                         vat: vat,
+                        zeroRated: ZeroRatedTotal,
                         totalDue: totalDue,
                         totalTendered: cashGiven,
                         change: change,
@@ -1106,6 +1152,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     subtotal: subtotal,
                     discount: discount,
                     vat: vat,
+                    zeroRated: ZeroRatedTotal,
                     totalDue: totalDue,
                     totalTendered: cashGiven,
                     change: change,

@@ -7,6 +7,7 @@ namespace Pos.Terminal.Models;
 
 public sealed class CartLine : INotifyPropertyChanged
 {
+    public bool IsMiscellaneous { get; set; }
     public Guid ProductId { get; set; }
     public int InventoryBucket { get; set; } = 1;
      public string ItemNumber { get; set; } = "";
@@ -36,6 +37,18 @@ public sealed class CartLine : INotifyPropertyChanged
         {
             if (_vatInclusive == value) return;
             _vatInclusive = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool _zeroRated;
+    public bool ZeroRated
+    {
+        get => _zeroRated;
+        set
+        {
+            if (_zeroRated == value) return;
+            _zeroRated = value;
             OnPropertyChanged();
         }
     }

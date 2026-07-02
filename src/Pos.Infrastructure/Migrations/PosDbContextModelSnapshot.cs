@@ -136,6 +136,9 @@ namespace Pos.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<bool>("ZeroRated")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Sku")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -172,6 +175,9 @@ namespace Pos.Infrastructure.Migrations
                     b.Property<decimal>("Total")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("VatTotal")
+                        .HasColumnType("numeric(18,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
@@ -191,6 +197,9 @@ namespace Pos.Infrastructure.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("RefundedFromSaleLineId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("Qty")
                         .HasColumnType("numeric(18,3)");
 
@@ -200,9 +209,14 @@ namespace Pos.Infrastructure.Migrations
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("VatTotal")
+                        .HasColumnType("numeric(18,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("RefundedFromSaleLineId");
 
                     b.HasIndex("SaleId");
 

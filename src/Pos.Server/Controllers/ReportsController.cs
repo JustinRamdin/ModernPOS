@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using Pos.Contracts;
 using Pos.Domain.Entities;
 using Pos.Infrastructure.Data;
@@ -116,6 +117,14 @@ public class ReportsController : ControllerBase
                 .ToList();
         }
 
+        var saleLineIds = sales.SelectMany(s => s.Lines).Select(l => l.Id).ToList();
+        var refundQuantities = (await _db.SaleLines.AsNoTracking()
+                .Where(l => l.RefundedFromSaleLineId != null && saleLineIds.Contains(l.RefundedFromSaleLineId.Value))
+                .Select(l => new { SourceId = l.RefundedFromSaleLineId!.Value, l.Qty })
+                .ToListAsync(ct))
+            .GroupBy(x => x.SourceId)
+            .ToDictionary(g => g.Key, g => Math.Abs(g.Sum(x => x.Qty)));
+
         return sales.Select(s => new SaleLogEntryDto(
             s.Id,
             s.SoldAtUtc,
@@ -123,7 +132,10 @@ public class ReportsController : ControllerBase
             s.Subtotal,
             s.Total,
             s.Payments.Count == 0 ? "Unknown" : string.Join(", ", s.Payments.Select(p => p.Method.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)),
-            s.Lines.Where(l => bucket is null || l.Product?.InventoryBucket == bucket.Value).Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal)).ToList()
+            s.Lines.Where(l => bucket is null || l.Product?.InventoryBucket == bucket.Value).Select(l => new SaleLogLineDto(
+                l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal, l.VatTotal,
+                refundQuantities.GetValueOrDefault(l.Id))).ToList(),
+            s.VatTotal
         )).ToList();
     }
 
@@ -230,29 +242,84 @@ public class ReportsController : ControllerBase
     {
         if (!HttpContext.RequireRole(UserRole.Manager, UserRole.Accountant, UserRole.SuperUser)) return Unauthorized();
 
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var sale = await _db.Sales.Include(s => s.Lines).FirstOrDefaultAsync(s => s.Id == saleId, ct);
         if (sale is null) return NotFound();
 
         var line = sale.Lines.FirstOrDefault(l => l.Id == request.SaleLineId);
         if (line is null) return NotFound();
-        if (request.Quantity <= 0 || request.Quantity > line.Qty) return BadRequest("Invalid refund quantity.");
+        var priorRefundQuantities = await _db.SaleLines
+            .Where(l => l.RefundedFromSaleLineId == line.Id)
+            .Select(l => l.Qty)
+            .ToListAsync(ct);
+        var alreadyRefunded = Math.Abs(priorRefundQuantities.Sum());
+        var remainingQuantity = Math.Max(0m, line.Qty - alreadyRefunded);
+        if (request.Quantity <= 0 || request.Quantity > remainingQuantity)
+            return BadRequest($"Invalid refund quantity. Only {remainingQuantity:0.###} remains refundable.");
 
-        var refundLineTotal = Math.Round(line.UnitPrice * request.Quantity, 2, MidpointRounding.AwayFromZero);
+        if (line.ProductId != CheckoutSpecialProducts.MiscellaneousId)
+        {
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == line.ProductId, ct);
+            if (product is null)
+                return BadRequest("The refunded product no longer exists in inventory.");
+
+            if (product.IsLength)
+            {
+                if (request.Quantity != decimal.Truncate(request.Quantity) || request.Quantity > int.MaxValue)
+                    return BadRequest("Length refund quantity must be a whole number of inches.");
+
+                product.OnHandInches = checked(product.OnHandInches + (int)request.Quantity);
+            }
+            else
+            {
+                product.OnHand = Math.Round(product.OnHand + request.Quantity, 3, MidpointRounding.AwayFromZero);
+            }
+        }
+
+        var refundRatio = request.Quantity / line.Qty;
+        decimal refundNetTotal;
+        decimal refundVatTotal;
+        decimal refundLineTotal;
+
+        if (line.VatTotal != 0m)
+        {
+            // Current sales store gross and VAT on every line.
+            refundLineTotal = Math.Round(line.LineTotal * refundRatio, 2, MidpointRounding.AwayFromZero);
+            refundVatTotal = Math.Round(line.VatTotal * refundRatio, 2, MidpointRounding.AwayFromZero);
+            refundNetTotal = Math.Round(refundLineTotal - refundVatTotal, 2, MidpointRounding.AwayFromZero);
+        }
+        else
+        {
+            // Compatibility for sales created before line-level VAT was stored.
+            // Their line totals are the entered net amounts, while VAT exists only on the sale.
+            var saleLineBase = sale.Lines.Where(l => l.Qty > 0m).Sum(l => Math.Abs(l.LineTotal));
+            var allocatedLineVat = saleLineBase == 0m
+                ? 0m
+                : Math.Round(sale.VatTotal * (Math.Abs(line.LineTotal) / saleLineBase), 2, MidpointRounding.AwayFromZero);
+
+            refundNetTotal = Math.Round(line.LineTotal * refundRatio, 2, MidpointRounding.AwayFromZero);
+            refundVatTotal = Math.Round(allocatedLineVat * refundRatio, 2, MidpointRounding.AwayFromZero);
+            refundLineTotal = Math.Round(refundNetTotal + refundVatTotal, 2, MidpointRounding.AwayFromZero);
+        }
         var refundSale = new Sale
         {
             Id = Guid.NewGuid(),
             TerminalId = sale.TerminalId,
             CustomerId = sale.CustomerId,
             SoldAtUtc = DateTime.UtcNow,
-            Subtotal = -refundLineTotal,
+            Subtotal = -refundNetTotal,
+            VatTotal = -refundVatTotal,
             Total = -refundLineTotal,
             Lines = new List<SaleLine>
             {
                 new()
                 {
                     ProductId = line.ProductId,
+                    RefundedFromSaleLineId = line.Id,
                     Qty = -request.Quantity,
                     UnitPrice = line.UnitPrice,
+                    VatTotal = -refundVatTotal,
                     LineTotal = -refundLineTotal
                 }
             },
@@ -264,6 +331,7 @@ public class ReportsController : ControllerBase
 
         _db.Sales.Add(refundSale);
         await _db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         return Ok();
     }
 

@@ -9,6 +9,7 @@ public class Customer
     public string Area { get; set; } = "";
     public decimal Balance { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsCompany { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }

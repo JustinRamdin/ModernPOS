@@ -66,12 +66,17 @@ public static class Seeder
         await EnsureColumnAsync(db, "Products", "Description", "ALTER TABLE \"Products\" ADD COLUMN \"Description\" TEXT NULL;");
         await EnsureColumnAsync(db, "Products", "CostPrice", "ALTER TABLE \"Products\" ADD COLUMN \"CostPrice\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "VatInclusive", "ALTER TABLE \"Products\" ADD COLUMN \"VatInclusive\" INTEGER NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "Products", "ZeroRated", "ALTER TABLE \"Products\" ADD COLUMN \"ZeroRated\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "IsLength", "ALTER TABLE \"Products\" ADD COLUMN \"IsLength\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHand", "ALTER TABLE \"Products\" ADD COLUMN \"OnHand\" TEXT NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "OnHandInches", "ALTER TABLE \"Products\" ADD COLUMN \"OnHandInches\" INTEGER NOT NULL DEFAULT 0;");
         await EnsureColumnAsync(db, "Products", "InventoryBucket", "ALTER TABLE \"Products\" ADD COLUMN \"InventoryBucket\" INTEGER NOT NULL DEFAULT 1;");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");
         await EnsureColumnAsync(db, "Sales", "CustomerId", "ALTER TABLE \"Sales\" ADD COLUMN \"CustomerId\" TEXT NULL;");
+        await EnsureColumnAsync(db, "Sales", "VatTotal", "ALTER TABLE \"Sales\" ADD COLUMN \"VatTotal\" TEXT NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "SaleLines", "VatTotal", "ALTER TABLE \"SaleLines\" ADD COLUMN \"VatTotal\" TEXT NOT NULL DEFAULT 0;");
+        await EnsureColumnAsync(db, "SaleLines", "RefundedFromSaleLineId", "ALTER TABLE \"SaleLines\" ADD COLUMN \"RefundedFromSaleLineId\" TEXT NULL;");
+        await EnsureColumnAsync(db, "Customers", "IsCompany", "ALTER TABLE \"Customers\" ADD COLUMN \"IsCompany\" INTEGER NOT NULL DEFAULT 0;");
 
         await EnsureColumnAsync(db, "UserAccounts", "DisplayName", "ALTER TABLE \"UserAccounts\" ADD COLUMN \"DisplayName\" TEXT NOT NULL DEFAULT ''; ");
         await EnsureColumnAsync(db, "Products", "Location", "ALTER TABLE \"Products\" ADD COLUMN \"Location\" TEXT NULL;");

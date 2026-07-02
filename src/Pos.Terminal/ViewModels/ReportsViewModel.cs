@@ -69,9 +69,23 @@ public sealed class ReportsViewModel : INotifyPropertyChanged
         new ReportExportOption("Transaction Audit Report")
     });
     private SaleLogEntryDto? _selectedSale;
-    public SaleLogEntryDto? SelectedSale { get => _selectedSale; set { _selectedSale = value; SelectedSaleLines.Clear(); if (value is not null) foreach (var l in value.Lines) SelectedSaleLines.Add(l); OnPropertyChanged(); } }
+    public SaleLogEntryDto? SelectedSale { get => _selectedSale; set { _selectedSale = value; SelectedRefundLine = null; SelectedSaleLines.Clear(); if (value is not null) foreach (var l in value.Lines) SelectedSaleLines.Add(l); OnPropertyChanged(); } }
     public string SalesSearchText { get; set; } = string.Empty;
-    public SaleLogLineDto? SelectedRefundLine { get; set; }
+    private SaleLogLineDto? _selectedRefundLine;
+    public SaleLogLineDto? SelectedRefundLine
+    {
+        get => _selectedRefundLine;
+        set
+        {
+            if (ReferenceEquals(_selectedRefundLine, value)) return;
+            _selectedRefundLine = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(RefundRemainingMessage));
+        }
+    }
+    public string RefundRemainingMessage => SelectedRefundLine is null
+        ? string.Empty
+        : $"{SelectedRefundLine.RemainingQuantity:0.###} of {SelectedRefundLine.Qty:0.###} {SelectedRefundLine.ProductName} remain refundable.";
     public decimal RefundQuantity { get; set; } = 1;
 
     public ICommand RefreshAllCommand { get; }
@@ -163,6 +177,11 @@ using var api = await CreateApiAsync();
     public async Task RefundSelectedLineAsync()
     {
         if (SelectedSale is null || SelectedRefundLine is null || RefundQuantity <= 0) return;
+        if (RefundQuantity > SelectedRefundLine.RemainingQuantity)
+        {
+            Status = $"Only {SelectedRefundLine.RemainingQuantity:0.###} of {SelectedRefundLine.ProductName} remains refundable.";
+            return;
+        }
         using var api = await CreateApiAsync();
         await api.RefundSaleItemAsync(SelectedSale.SaleId, SelectedRefundLine.SaleLineId, RefundQuantity);
         Status = $"Refund posted for {SelectedRefundLine.ProductName}.";
@@ -242,7 +261,8 @@ using var api = await CreateApiAsync();
                         paymentMethod: SelectedSale.PaymentType,
                         subtotal: SelectedSale.Subtotal,
                         discount: 0m,
-                        vat: 0m,
+                        vat: SelectedSale.VatTotal,
+                        zeroRated: 0m,
                         totalDue: SelectedSale.Total,
                         totalTendered: SelectedSale.Total,
                         change: 0m,
@@ -261,7 +281,8 @@ using var api = await CreateApiAsync();
                     paymentMethod: SelectedSale.PaymentType,
                     subtotal: SelectedSale.Subtotal,
                     discount: 0m,
-                    vat: 0m,
+                    vat: SelectedSale.VatTotal,
+                    zeroRated: 0m,
                     totalDue: SelectedSale.Total,
                     totalTendered: SelectedSale.Total,
                     change: 0m,

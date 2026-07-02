@@ -38,6 +38,18 @@ public partial class TerminalView : UserControl
         vm.ItemLookupRequested = SelectItemFromInventoryAsync;
     }
 
+    public async void AddMisc_Click(object? sender, RoutedEventArgs e)
+    {
+        var vm = VM;
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        if (vm == null || owner == null) return;
+
+        var dialog = new MiscItemDialog();
+        var result = await dialog.ShowDialog<MiscItemResult?>(owner);
+        if (result != null)
+            vm.AddMiscellaneousItem(result.Name, result.Description, result.Quantity, result.UnitPrice, result.VatInclusive);
+    }
+
     private void View_KeyDown(object? sender, KeyEventArgs e)
     {
         var vm = VM;
@@ -89,12 +101,15 @@ public partial class TerminalView : UserControl
         var menu = new ContextMenu();
 
         var edit = new MenuItem { Header = "Edit Quantity" };
+        var zeroRated = new MenuItem { Header = line.ZeroRated ? "✓ Zero Rated" : "Zero Rated" };
         var del = new MenuItem { Header = "Delete Item" };
 
         edit.Click += async (_, __) => await EditQtyForLineAsync(line);
+        zeroRated.Click += (_, __) => line.ZeroRated = !line.ZeroRated;
         del.Click += (_, __) => vm.RemoveLine(line);
 
         menu.Items.Add(edit);
+        menu.Items.Add(zeroRated);
         menu.Items.Add(del);
 
         menu.PlacementTarget = row;

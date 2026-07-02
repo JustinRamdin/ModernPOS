@@ -64,14 +64,17 @@ public class PosDbContext : DbContext
             e.HasMany(x => x.Lines).WithOne(x => x.Sale!).HasForeignKey(x => x.SaleId);
             e.HasMany(x => x.Payments).WithOne(x => x.Sale!).HasForeignKey(x => x.SaleId);
             e.Property(x => x.Subtotal).HasColumnType("numeric(18,2)");
+            e.Property(x => x.VatTotal).HasColumnType("numeric(18,2)");
             e.Property(x => x.Total).HasColumnType("numeric(18,2)");
         });
 
         b.Entity<SaleLine>(e =>
         {
             e.HasKey(x => x.Id);
+            e.HasIndex(x => x.RefundedFromSaleLineId);
             e.Property(x => x.Qty).HasColumnType("numeric(18,3)");
             e.Property(x => x.UnitPrice).HasColumnType("numeric(18,2)");
+            e.Property(x => x.VatTotal).HasColumnType("numeric(18,2)");
             e.Property(x => x.LineTotal).HasColumnType("numeric(18,2)");
         });
 

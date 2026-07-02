@@ -9,6 +9,7 @@ public class Sale
     public DateTime SoldAtUtc { get; set; } = DateTime.UtcNow;
 
     public decimal Subtotal { get; set; }
+    public decimal VatTotal { get; set; }
     public decimal Total { get; set; }
 
     public List<SaleLine> Lines { get; set; } = new();

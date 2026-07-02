@@ -10,6 +10,7 @@ public class Product
     public decimal CostPrice { get; set; }
     public decimal Price { get; set; }
     public bool VatInclusive { get; set; }
+    public bool ZeroRated { get; set; }
     public bool IsLength { get; set; }
     public decimal OnHand { get; set; }
     public int OnHandInches { get; set; }

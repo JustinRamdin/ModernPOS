@@ -304,6 +304,7 @@
                       <StackPanel>
                         <TextBlock FontWeight="SemiBold" Text="{Binding ReceiptNo}" />
                         <TextBlock Classes="muted" Text="{Binding SoldAtUtc}" />
+                        <TextBlock Text="{Binding VatTotal, StringFormat='VAT: ${0:0.00}'}" />
                         <TextBlock Text="{Binding Total, StringFormat='Total: ${0:0.00}'}" />
                       </StackPanel>
                     </Border>
@@ -328,6 +329,7 @@
                 <TextBox Text="{Binding RefundQuantity, Mode=TwoWay}" Watermark="Qty" />
                 <Button Content="Submit Refund" Click="SubmitRefund_Click" />
                 <TextBlock Classes="muted" Text="Right click a sale to refund or reprint." />
+                <TextBlock Classes="muted" Text="{Binding RefundRemainingMessage}" TextWrapping="Wrap" />
               </StackPanel>
             </Grid>
           </DockPanel>

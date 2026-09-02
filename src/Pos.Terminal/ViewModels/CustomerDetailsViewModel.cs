@@ -34,9 +34,30 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
     public DateTime? ToDate { get; set; }
     public IReadOnlyList<string> FilterOptions { get; }
     public string SelectedFilter { get; set; }
-    public CustomerActivityRow? SelectedRow { get; set; }
+    private CustomerActivityRow? _selectedRow;
+    public CustomerActivityRow? SelectedRow
+    {
+        get => _selectedRow;
+        set
+        {
+            if (ReferenceEquals(_selectedRow, value)) return;
+            _selectedRow = value;
+            Raise();
+        }
+    }
+
     public ObservableCollection<CustomerActivityRow> Rows { get; } = new();
-    public string Status { get; set; } = "";
+    private string _status = "";
+    public string Status
+    {
+        get => _status;
+        set
+        {
+            if (_status == value) return;
+            _status = value;
+            Raise();
+        }
+    }
     public string TotalReceiptsLabel => $"Receipts: {Rows.Where(x => x.Type == "Receipt").Sum(x => x.Amount):0.00}";
     public string TotalPaymentsLabel => $"Payments: {Rows.Where(x => x.Type == "Payment").Sum(x => x.Amount):0.00}";
     public string RemainingLabel => $"Remaining: {Rows.Where(x => x.Type == "Receipt").Sum(x => x.Amount) - Rows.Where(x => x.Type == "Payment").Sum(x => x.Amount):0.00}";
@@ -67,6 +88,7 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
                     x.Amount,
                     x.Note,
                     x.Details,
+                    x.SaleId,
                     x.Subtotal,
                     x.Lines ?? []))
                 .OrderByDescending(x => x.OccurredAt)
@@ -190,7 +212,7 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
                         paymentMethod: receipt.Method,
                         subtotal: receipt.Subtotal,
                         discount: 0m,
-                        vat: 0m,
+                        vat: receipt.VatTotal,
                         zeroRated: 0m,
                         totalDue: receipt.Amount,
                         totalTendered: receipt.Amount,
@@ -210,7 +232,7 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
                     paymentMethod: receipt.Method,
                     subtotal: receipt.Subtotal,
                     discount: 0m,
-                    vat: 0m,
+                    vat: receipt.VatTotal,
                     zeroRated: 0m,
                     totalDue: receipt.Amount,
                     totalTendered: receipt.Amount,
@@ -228,6 +250,44 @@ public sealed class CustomerDetailsViewModel : INotifyPropertyChanged
         }
 
         Raise(nameof(Status));
+    }
+
+    public async Task RefundReceiptLineAsync(CustomerActivityRow receipt, SaleLogLineDto line, decimal quantity)
+    {
+        if (receipt.Type != "Receipt" || receipt.SaleId is null)
+        {
+            Status = "Select a receipt to refund.";
+            Raise(nameof(Status));
+            return;
+        }
+
+        if (quantity <= 0)
+        {
+            Status = "Enter a refund quantity greater than zero.";
+            Raise(nameof(Status));
+            return;
+        }
+
+        if (quantity > line.RemainingQuantity)
+        {
+            Status = $"Only {line.RemainingQuantity:0.###} of {line.ProductName} remains refundable.";
+            Raise(nameof(Status));
+            return;
+        }
+
+        try
+        {
+            using var api = await CreateApiAsync();
+            await api.RefundSaleItemAsync(receipt.SaleId.Value, line.SaleLineId, quantity);
+            Status = $"Refund posted for {line.ProductName}.";
+            Raise(nameof(Status));
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Status = $"Refund failed: {ex.Message}";
+            Raise(nameof(Status));
+        }
     }
 
     public void ExportCurrentRows(string path)
@@ -322,5 +382,10 @@ public sealed record CustomerActivityRow(
     decimal Amount,
     string Note,
     string Details,
+    Guid? SaleId,
     decimal Subtotal,
-    IReadOnlyList<SaleLogLineDto> Lines);
+    IReadOnlyList<SaleLogLineDto> Lines)
+{
+    public decimal VatTotal => Lines.Sum(x => x.VatTotal);
+    public IReadOnlyList<SaleLogLineDto> RefundableLines => Lines.Where(x => x.RemainingQuantity > 0m).ToList();
+}

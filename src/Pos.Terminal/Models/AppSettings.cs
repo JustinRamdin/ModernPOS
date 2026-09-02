@@ -9,4 +9,5 @@ public sealed class AppSettings
     public decimal VatRatePercent { get; set; } = 12.5m;
     public bool IsPracticeMode { get; set; }
     public bool IsDualInventoryEnabled { get; set; }
+    public bool UseEasyInventoryNames { get; set; }
 }

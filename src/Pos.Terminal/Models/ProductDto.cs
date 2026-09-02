@@ -29,6 +29,10 @@ public sealed class ProductDto
     public bool IsOutOfStock => IsLength ? OnHandInches <= 0 : OnHand <= 0m;
 
     public string DisplayPrice => $"${Price:0.00}";
+    public bool UseEasyInventoryName { get; set; }
+    public string DisplayName => UseEasyInventoryName
+        ? global::Pos.Terminal.Services.InventoryNameHelper.BuildEasyName(Name, Description)
+        : Name;
 
     public string DisplayStock
         => IsLength

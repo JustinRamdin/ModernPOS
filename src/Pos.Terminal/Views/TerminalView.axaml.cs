@@ -63,6 +63,89 @@ public partial class TerminalView : UserControl
             vm.SetReceiptFooterForCurrentSale(result);
     }
 
+    public void HoldBill_Click(object? sender, RoutedEventArgs e)
+        => VM?.HoldCurrentBill();
+
+    public async void RecallBill_Click(object? sender, RoutedEventArgs e)
+    {
+        var vm = VM;
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        if (vm == null || owner == null || vm.HeldBills.Count == 0) return;
+
+        var list = new ListBox
+        {
+            Height = 300,
+            ItemsSource = vm.HeldBills,
+            SelectedIndex = 0,
+            ItemTemplate = new FuncDataTemplate<HeldBillViewModel>((bill, _) =>
+            {
+                if (bill is null)
+                    return new TextBlock { Text = string.Empty };
+
+                return new StackPanel
+                {
+                    Margin = new Thickness(4),
+                    Children =
+                    {
+                        new TextBlock { Text = bill.DisplayTitle, FontWeight = Avalonia.Media.FontWeight.SemiBold },
+                        new TextBlock { Text = bill.DisplaySubtitle, Opacity = 0.72 }
+                    }
+                };
+            })
+        };
+
+        var recall = new Button { Content = "Recall", IsDefault = true };
+        var cancel = new Button { Content = "Cancel", IsCancel = true };
+
+        var win = new Window
+        {
+            Title = "Recall Held Bill",
+            Width = 520,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 10,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Choose a held bill to continue",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold
+                    },
+                    list,
+                    new TextBlock
+                    {
+                        Text = "Tip: hold or clear the current bill before recalling another one.",
+                        Opacity = 0.72,
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    },
+                    new StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { cancel, recall }
+                    }
+                }
+            }
+        };
+
+        void TryRecall()
+        {
+            if (list.SelectedItem is HeldBillViewModel held && vm.RecallHeldBill(held))
+                win.Close();
+        }
+
+        list.DoubleTapped += (_, __) => TryRecall();
+        recall.Click += (_, __) => TryRecall();
+        cancel.Click += (_, __) => win.Close();
+
+        await win.ShowDialog(owner);
+    }
+
     private void View_KeyDown(object? sender, KeyEventArgs e)
     {
         var vm = VM;
@@ -164,7 +247,7 @@ public partial class TerminalView : UserControl
                 [ToolTip.TipProperty] = string.IsNullOrWhiteSpace(item.Location) ? null : $"Location: {item.Location}"
             };
             row.Children.Add(new TextBlock { Text = item.Sku });
-            row.Children.Add(new TextBlock { Text = item.Name, [Grid.ColumnProperty] = 1 });
+            row.Children.Add(new TextBlock { Text = item.DisplayName, [Grid.ColumnProperty] = 1 });
             row.Children.Add(new TextBlock { Text = item.DisplayPrice, [Grid.ColumnProperty] = 2 });
             return row;
         });

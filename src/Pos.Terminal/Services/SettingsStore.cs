@@ -22,6 +22,7 @@ public sealed class SettingsStore
     private const string ReceiptRemarksKey = "receipt.remarks";
     private const string PracticeModeEnabledKey = "practice.mode.enabled";
     private const string DualInventoryEnabledKey = "inventory.dual.enabled";
+    private const string EasyInventoryNamesKey = "inventory.easy.names.enabled";
 
     private const string DeployConfiguredKey = "deploy.configured";
     private const string DeployModeKey = "deploy.mode";
@@ -49,7 +50,8 @@ public sealed class SettingsStore
             IsVatEnabled = GetBoolValue(lookup, FinanceVatEnabledKey, true),
             VatRatePercent = GetDecimalValue(lookup, FinanceVatRatePercentKey, 12.5m),
             IsPracticeMode = GetBoolValue(lookup, PracticeModeEnabledKey, false),
-            IsDualInventoryEnabled = GetBoolValue(lookup, DualInventoryEnabledKey, false)
+            IsDualInventoryEnabled = GetBoolValue(lookup, DualInventoryEnabledKey, false),
+            UseEasyInventoryNames = GetBoolValue(lookup, EasyInventoryNamesKey, false)
         };
     }
 
@@ -104,7 +106,17 @@ public sealed class SettingsStore
         await UpsertAsync(db, FinanceVatRatePercentKey, settings.VatRatePercent.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
         await UpsertAsync(db, PracticeModeEnabledKey, settings.IsPracticeMode ? "true" : "false", ct);
         await UpsertAsync(db, DualInventoryEnabledKey, settings.IsDualInventoryEnabled ? "true" : "false", ct);
+        await UpsertAsync(db, EasyInventoryNamesKey, settings.UseEasyInventoryNames ? "true" : "false", ct);
 
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task SaveEasyInventoryNamesAsync(bool enabled, CancellationToken ct = default)
+    {
+        await using var db = CreateLocalDb();
+        await db.Database.EnsureCreatedAsync(ct);
+
+        await UpsertAsync(db, EasyInventoryNamesKey, enabled ? "true" : "false", ct);
         await db.SaveChangesAsync(ct);
     }
    public async Task ClearLegacyReceiptIdentityAsync(CancellationToken ct = default)

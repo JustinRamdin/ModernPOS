@@ -135,11 +135,14 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<ProductDto> Products { get; } = new();
     public ObservableCollection<CartLine> CartLines { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
+    public ObservableCollection<HeldBillViewModel> HeldBills { get; } = new();
 
     public bool IsCartEmpty => CartLines.Count == 0;
     public bool IsCartNotEmpty => CartLines.Count > 0;
     public bool IsCustomerSelected => SelectedCustomerId != null;
     public bool IsCartNotEmptyAndCustomerSelected => IsCartNotEmpty && IsCustomerSelected;
+    public bool HasHeldBills => HeldBills.Count > 0;
+    public string HeldBillsLabel => HeldBills.Count == 0 ? "Recall Hold" : $"Recall Hold ({HeldBills.Count})";
 
     private List<ProductDto> _allProducts = new();
 
@@ -290,6 +293,12 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         CartLines.CollectionChanged += (_, __) =>
         {
             RaiseTotalsChanged();
+        };
+
+        HeldBills.CollectionChanged += (_, __) =>
+        {
+            OnPropertyChanged(nameof(HasHeldBills));
+            OnPropertyChanged(nameof(HeldBillsLabel));
         };
 
         _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -504,6 +513,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             Status = "Loading products from server...";
             var deploy = await _settingsStore.LoadDeploymentAsync();
             var settings = await _settingsStore.LoadAsync();
+            _settings = settings;
 
             using var api = new RemoteServerApi(deploy.ServerHost, deploy.ServerPort, deploy.AuthToken);
             var remoteProducts = await api.GetProductsAsync();
@@ -525,7 +535,8 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
                     Department = string.IsNullOrWhiteSpace(p.Department) ? "Uncategorized" : p.Department,
                     OnHand = p.OnHand,
                     OnHandInches = p.OnHandInches,
-                    InventoryBucket = p.InventoryBucket
+                    InventoryBucket = p.InventoryBucket,
+                    UseEasyInventoryName = settings.UseEasyInventoryNames
                 })
                 .ToList();
 
@@ -609,11 +620,14 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         {
             filtered = filtered.Where(p =>
                 (!string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (_settings.UseEasyInventoryNames && !string.IsNullOrWhiteSpace(p.DisplayName) && p.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
         Products.Clear();
-        foreach (var p in filtered.OrderBy(x => x.Name))
+        foreach (var p in filtered.OrderBy(x => x.DisplayName))
             Products.Add(p);
     }
 
@@ -626,11 +640,12 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             source = source.Where(p =>
                 (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                (_settings.UseEasyInventoryNames && !string.IsNullOrWhiteSpace(p.DisplayName) && p.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(query, StringComparison.OrdinalIgnoreCase)));
         }
 
-        return source.OrderBy(p => p.Name).ToList();
+        return source.OrderBy(p => p.DisplayName).ToList();
     }
 
     // Enter in search box calls this
@@ -644,7 +659,9 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             !string.IsNullOrWhiteSpace(p.Sku) && string.Equals(p.Sku, term, StringComparison.OrdinalIgnoreCase));
 
         var match = exactSku ?? _allProducts.FirstOrDefault(p =>
-            !string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
+            (!string.IsNullOrWhiteSpace(p.Name) && p.Name.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+            (_settings.UseEasyInventoryNames && !string.IsNullOrWhiteSpace(p.DisplayName) && p.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+            (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
 
         if (match == null)
         {
@@ -676,7 +693,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
             else existing.BumpInches(+1);
 
             RaiseTotalsChanged();
-            Toast($"Added: {p.Name}");
+            Toast($"Added: {p.DisplayName}");
             return;
         }
 
@@ -684,7 +701,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         {
             ProductId = p.Id,
             ItemNumber = p.Sku,
-            Name = p.Name,
+            Name = p.DisplayName,
             ItemDescription = p.Description,
             Unit = p.Unit,
             UnitPrice = p.Price,
@@ -701,7 +718,7 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         CartLines.Add(line);
         SelectedCartLine = line;
         RaiseTotalsChanged();
-        Toast($"Added: {p.Name}");
+        Toast($"Added: {p.DisplayName}");
     }
 
     public void AddMiscellaneousItem(string name, string description, decimal quantity, decimal unitPrice, bool vatInclusive)
@@ -764,6 +781,101 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
         _receiptFooterOverride = null;
         RaiseTotalsChanged();
         Toast("Cart cleared");
+    }
+
+    public void HoldCurrentBill()
+    {
+        if (CartLines.Count == 0)
+        {
+            Toast("No bill to hold");
+            Status = "Add items before placing a bill on hold.";
+            return;
+        }
+
+        var held = new HeldBillViewModel(
+            Id: Guid.NewGuid(),
+            HeldAt: DateTime.Now,
+            CustomerId: SelectedCustomerId,
+            CustomerName: _selectedCustomerName,
+            CustomerPhone: _selectedCustomerPhone,
+            CustomerEmail: _selectedCustomerEmail,
+            CustomerIsCompany: _selectedCustomerIsCompany,
+            ReceiptFooterOverride: _receiptFooterOverride,
+            DiscountAmount: DiscountAmount,
+            Lines: CartLines.Select(CloneCartLine).ToList());
+
+        HeldBills.Insert(0, held);
+        ClearActiveBillForHold();
+        Status = $"Bill placed on hold for {held.CustomerDisplay}.";
+        Toast($"Held bill: {held.DisplayTitle}");
+    }
+
+    public bool RecallHeldBill(HeldBillViewModel held)
+    {
+        if (CartLines.Count > 0)
+        {
+            Toast("Clear or hold this bill first");
+            Status = "Cannot recall a held bill while the current bill has items.";
+            return false;
+        }
+
+        HeldBills.Remove(held);
+
+        SelectedCustomerId = held.CustomerId;
+        _selectedCustomerName = held.CustomerName;
+        _selectedCustomerPhone = held.CustomerPhone;
+        _selectedCustomerEmail = held.CustomerEmail;
+        _selectedCustomerIsCompany = held.CustomerIsCompany;
+        _receiptFooterOverride = held.ReceiptFooterOverride;
+        DiscountAmount = held.DiscountAmount;
+
+        foreach (var source in held.Lines)
+        {
+            var line = CloneCartLine(source);
+            line.PropertyChanged += (_, __) => RaiseTotalsChanged();
+            CartLines.Add(line);
+        }
+
+        SelectedCartLine = CartLines.FirstOrDefault();
+        OnPropertyChanged(nameof(SelectedCustomerLabel));
+        RaiseTotalsChanged();
+        Status = $"Recalled held bill for {held.CustomerDisplay}.";
+        Toast($"Recalled: {held.DisplayTitle}");
+        return true;
+    }
+
+    private void ClearActiveBillForHold()
+    {
+        CartLines.Clear();
+        DiscountAmount = 0m;
+        _receiptFooterOverride = null;
+        ClearCustomer();
+        Search = string.Empty;
+        SelectedCartLine = null;
+        RaiseTotalsChanged();
+    }
+
+    private static CartLine CloneCartLine(CartLine source)
+    {
+        var clone = new CartLine
+        {
+            IsMiscellaneous = source.IsMiscellaneous,
+            ProductId = source.ProductId,
+            InventoryBucket = source.InventoryBucket,
+            ItemNumber = source.ItemNumber,
+            Name = source.Name,
+            ItemDescription = source.ItemDescription,
+            Unit = source.Unit,
+            VatInclusive = source.VatInclusive,
+            ZeroRated = source.ZeroRated,
+            UnitPrice = source.UnitPrice,
+            IsLength = source.IsLength,
+            Qty = source.Qty,
+            QtyInches = source.QtyInches,
+            TaxAmount = source.TaxAmount
+        };
+
+        return clone;
     }
 
     // -----------------------------
@@ -1233,4 +1345,25 @@ public sealed partial class MainWindowViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}
+
+public sealed record HeldBillViewModel(
+    Guid Id,
+    DateTime HeldAt,
+    Guid? CustomerId,
+    string CustomerName,
+    string CustomerPhone,
+    string CustomerEmail,
+    bool CustomerIsCompany,
+    string? ReceiptFooterOverride,
+    decimal DiscountAmount,
+    IReadOnlyList<CartLine> Lines)
+{
+    public string CustomerDisplay => CustomerId is null || string.IsNullOrWhiteSpace(CustomerName) || CustomerName == "None"
+        ? "No customer"
+        : CustomerName;
+
+    public decimal Total => Math.Round(Lines.Sum(x => x.LineTotal) - DiscountAmount, 2, MidpointRounding.AwayFromZero);
+    public string DisplayTitle => $"{CustomerDisplay} — {Lines.Count} item(s) — ${Total:0.00}";
+    public string DisplaySubtitle => $"Held {HeldAt:h:mm tt} • Discount ${DiscountAmount:0.00}";
 }

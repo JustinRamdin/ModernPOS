@@ -10,6 +10,9 @@ namespace Pos.Terminal.ViewModels;
 
 public sealed class InventoryViewModel : INotifyPropertyChanged
 {
+    private readonly SettingsStore _settingsStore = new();
+    private bool _isLoadingSettings;
+
     public InventoryViewModel(int inventoryBucket = 1)
     {
         InventoryBucket = Math.Clamp(inventoryBucket, 1, 2);
@@ -22,6 +25,24 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
     private List<ProductListItemVm> _all = [];    
     private string _search = "";
     public string Search { get => _search; set { if (_search == value) return; _search = value; OnPropertyChanged(); ApplySearch(); } }
+    private bool _useEasyInventoryNames;
+    public bool UseEasyInventoryNames
+    {
+        get => _useEasyInventoryNames;
+        set
+        {
+            if (_useEasyInventoryNames == value) return;
+            _useEasyInventoryNames = value;
+            OnPropertyChanged();
+            ApplySearch();
+            ListStatus = value
+                ? "Showing easy names based on item descriptions."
+                : _all.Count == 0 ? "No inventory items on server." : $"Loaded {_all.Count} items.";
+
+            if (!_isLoadingSettings)
+                _ = _settingsStore.SaveEasyInventoryNamesAsync(value);
+        }
+    }
 
     private string _listStatus = "Loading...";
     public string ListStatus { get => _listStatus; set { _listStatus = value; OnPropertyChanged(); } }
@@ -100,15 +121,19 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         {
             ListStatus = "Loading...";
             Products.Clear();
+            var settings = await _settingsStore.LoadAsync();
+            _isLoadingSettings = true;
+            UseEasyInventoryNames = settings.UseEasyInventoryNames;
+            _isLoadingSettings = false;
 
             using var api = await CreateApiAsync();
             var items = await api.GetInventoryAsync();
             _all = items.Where(x => x.InventoryBucket == InventoryBucket).Select(ProductListItemVm.From).ToList();
 
             ApplySearch();
-            ListStatus = _all.Count == 0
-                ? "No inventory items on server."
-                : $"Loaded {_all.Count} items.";
+            ListStatus = UseEasyInventoryNames
+                ? "Showing easy names based on item descriptions."
+                : _all.Count == 0 ? "No inventory items on server." : $"Loaded {_all.Count} items.";
         }
         catch (Exception ex) { ListStatus = "Load failed."; EditorStatus = BuildServerStatusMessage(ex, "load inventory"); }
     }
@@ -151,7 +176,27 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
         }
         catch (Exception ex) { EditorStatus = BuildServerStatusMessage(ex, "delete inventory item"); }
     }
-    private void ApplySearch() { var t = (Search ?? "").Trim(); var f = string.IsNullOrWhiteSpace(t) ? _all : _all.Where(p => p.Name.Contains(t, StringComparison.OrdinalIgnoreCase) || (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(t, StringComparison.OrdinalIgnoreCase)) || (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(t, StringComparison.OrdinalIgnoreCase))); Products.Clear(); foreach (var p in f) Products.Add(p); }    private void LoadSelectedIntoEditor()
+    private void ApplySearch()
+    {
+        var t = (Search ?? "").Trim();
+        var f = string.IsNullOrWhiteSpace(t)
+            ? _all
+            : _all.Where(p =>
+                p.Name.Contains(t, StringComparison.OrdinalIgnoreCase)
+                || (UseEasyInventoryNames && p.DisplayName.Contains(t, StringComparison.OrdinalIgnoreCase))
+                || (!string.IsNullOrWhiteSpace(p.Sku) && p.Sku.Contains(t, StringComparison.OrdinalIgnoreCase))
+                || (!string.IsNullOrWhiteSpace(p.Description) && p.Description.Contains(t, StringComparison.OrdinalIgnoreCase))
+                || (!string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(t, StringComparison.OrdinalIgnoreCase)));
+
+        Products.Clear();
+        foreach (var p in f)
+        {
+            p.UseEasyInventoryName = UseEasyInventoryNames;
+            Products.Add(p);
+        }
+    }
+
+    private void LoadSelectedIntoEditor()
     {
          if (Selected is null) { _editingId = null; return; }
         _editingId = Selected.Id; EditSku = Selected.Sku ?? ""; EditName = Selected.Name; EditDescription = Selected.Description ?? ""; EditLocation = Selected.Location ?? ""; EditCostPriceText = Selected.CostPrice.ToString(CultureInfo.InvariantCulture); EditSellingPriceText = Selected.SellingPrice.ToString(CultureInfo.InvariantCulture); EditVatInclusive = Selected.VatInclusive; EditZeroRated = Selected.ZeroRated; EditIsLength = Selected.IsLength; EditOnHandQtyText = Selected.OnHandQty.ToString(CultureInfo.InvariantCulture); var fi = LengthConverter.FromTotalInches(Selected.OnHandInches); EditFeetText = fi.Feet.ToString(); EditInchesText = fi.Inches.ToString(); NotifyEditor();    }
@@ -180,7 +225,7 @@ public sealed class InventoryViewModel : INotifyPropertyChanged
      private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed class ProductListItemVm
+public sealed class ProductListItemVm : INotifyPropertyChanged
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = "";
@@ -194,6 +239,20 @@ public sealed class ProductListItemVm
     public bool IsLength { get; init; }
     public decimal OnHandQty { get; init; }
     public int OnHandInches { get; init; }
+    private bool _useEasyInventoryName;
+    public bool UseEasyInventoryName
+    {
+        get => _useEasyInventoryName;
+        set
+        {
+            if (_useEasyInventoryName == value) return;
+            _useEasyInventoryName = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DisplayName));
+        }
+    }
+
+    public string DisplayName => UseEasyInventoryName ? InventoryNameHelper.BuildEasyName(Name, Description) : Name;
     public string SkuLine => $"SKU: {Sku}";
     public string PriceLine => $"Price: {SellingPrice:0.00}";
     public string FlagsLine => $"VAT Incl: {VatInclusive} | Zero Rated: {ZeroRated} | Length: {IsLength}";
@@ -201,4 +260,8 @@ public sealed class ProductListItemVm
 
     public string StockLine => !IsLength ? $"Stock: {OnHandQty:0.###}" : $"Stock: {OnHandInches / 12} ft {OnHandInches % 12} in";
     public int InventoryBucket { get; init; } = 1;
-    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, Location = p.Location, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, ZeroRated = p.ZeroRated, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches, InventoryBucket = p.InventoryBucket };}
+    public static ProductListItemVm From(InventoryItemDto p) => new() { Id = p.Id, Name = p.Name, Sku = p.Sku, Description = p.Description, Location = p.Location, CostPrice = p.CostPrice, SellingPrice = p.Price, VatInclusive = p.VatInclusive, ZeroRated = p.ZeroRated, IsLength = p.IsLength, OnHandQty = p.OnHand, OnHandInches = p.OnHandInches, InventoryBucket = p.InventoryBucket };
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}

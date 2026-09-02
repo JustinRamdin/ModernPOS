@@ -42,6 +42,14 @@ public class CustomersController : ControllerBase
             .Where(p => p.CustomerId == id && p.PaidAtUtc >= fromUtc && p.PaidAtUtc < toUtc)
             .ToListAsync(ct);
 
+        var saleLineIds = sales.SelectMany(s => s.Lines).Select(l => l.Id).ToList();
+        var refundQuantities = (await _db.SaleLines.AsNoTracking()
+                .Where(l => l.RefundedFromSaleLineId != null && saleLineIds.Contains(l.RefundedFromSaleLineId.Value))
+                .Select(l => new { SourceId = l.RefundedFromSaleLineId!.Value, l.Qty })
+                .ToListAsync(ct))
+            .GroupBy(x => x.SourceId)
+            .ToDictionary(g => g.Key, g => Math.Abs(g.Sum(x => x.Qty)));
+
         var rows = sales.Select(s => new CustomerActivityRowDto(
                 s.SoldAtUtc,
                 "Receipt",
@@ -51,7 +59,15 @@ public class CustomersController : ControllerBase
                 string.Join("; ", s.Lines.Select(l => $"{l.Product?.Name ?? "Unknown"} x {l.Qty:0.###}")),
                 s.Id,
                 s.Subtotal,
-                s.Lines.Select(l => new SaleLogLineDto(l.Id, l.ProductId, l.Product?.Name ?? "Unknown", l.Qty, l.UnitPrice, l.LineTotal, l.VatTotal)).ToList()))
+                s.Lines.Select(l => new SaleLogLineDto(
+                    l.Id,
+                    l.ProductId,
+                    l.Product?.Name ?? "Unknown",
+                    l.Qty,
+                    l.UnitPrice,
+                    l.LineTotal,
+                    l.VatTotal,
+                    refundQuantities.GetValueOrDefault(l.Id))).ToList()))
             .Concat(payments.Select(p => new CustomerActivityRowDto(
                 p.PaidAtUtc,
                 "Payment",

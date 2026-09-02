@@ -21,6 +21,10 @@
 
         <StackPanel DockPanel.Dock="Right"
                     Orientation="Horizontal">
+          <CheckBox Content="Easy Names"
+                    IsChecked="{Binding UseEasyInventoryNames}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,12,0"/>
           <Button Content="New" Margin="0,0,8,0" Click="New_Click"/>
           <Button Content="Save" Margin="0,0,8,0" Click="Save_Click"/>
           <Button Content="Delete" Margin="0,0,8,0" Click="Delete_Click"/>
@@ -39,7 +43,7 @@
       <DockPanel>
 
         <TextBox DockPanel.Dock="Top"
-                 Watermark="Search by name or SKU..."
+                 Watermark="Search by name, SKU, description, or location..."
                  Text="{Binding Search}"
                  Margin="0,0,0,10"/>
 
@@ -57,7 +61,7 @@
                       BorderThickness="1"
                       Margin="0,0,0,6">
                 <StackPanel>
-                  <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                  <TextBlock FontWeight="Bold" Text="{Binding DisplayName}" />
                   <TextBlock Opacity="0.7" Text="{Binding SkuLine}" />
                   <TextBlock Opacity="0.7" Text="{Binding PriceLine}" />
                   <TextBlock Opacity="0.7" Text="{Binding FlagsLine}" />

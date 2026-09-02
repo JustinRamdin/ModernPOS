@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "LxtJ3YWKDFY=",
+  "dgSpecHash": "xVkcgP3yiLM=",
   "success": true,
   "projectFilePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
   "expectedPackageFiles": [
@@ -56,7 +56,10 @@
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.0\\system.security.cryptography.protecteddata.9.0.0.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.cryptography.xml\\9.0.0\\system.security.cryptography.xml.9.0.0.nupkg.sha512",
     "C:\\Users\\Justin\\.nuget\\packages\\system.security.permissions\\9.0.0\\system.security.permissions.9.0.0.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512"
+    "C:\\Users\\Justin\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.2\\microsoft.netcore.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.2\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.2.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.2\\microsoft.aspnetcore.app.runtime.win-x64.10.0.2.nupkg.sha512"
   ],
   "logs": [
     {
@@ -68,7 +71,21 @@
       "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
       "targetGraphs": [
-        "net10.0"
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
       ]
     },
     {
@@ -80,7 +97,73 @@
       "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
-        "net10.0"
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-6588-8gv4-xfgh",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-g8r8-53c2-pm3f",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-mmjf-rqrv-855v",
+      "projectPath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
+      "libraryId": "System.Security.Cryptography.Xml",
+      "targetGraphs": [
+        "net10.0",
+        "net10.0/win-x64"
       ]
     },
     {
@@ -92,7 +175,8 @@
       "filePath": "C:\\ModernPOS\\src\\Pos.Local\\Pos.Local.csproj",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
-        "net10.0"
+        "net10.0",
+        "net10.0/win-x64"
       ]
     }
   ]
